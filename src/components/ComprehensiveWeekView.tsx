@@ -31,6 +31,30 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
   // Sort days chronologically
   const sortedDays = React.useMemo(() => Object.keys(week.menu).sort(), [week.menu]);
   const dayCount = sortedDays.length;
+  const [isScrolling, setIsScrolling] = React.useState(false);
+
+  const handleScroll = React.useCallback(() => {
+    setIsScrolling(true);
+    const scrollTimer = setTimeout(() => setIsScrolling(false), 150);
+    return () => clearTimeout(scrollTimer);
+  }, []);
+
+  React.useEffect(() => {
+    const scrollContainer = document.querySelector('.scroll-container');
+    if (scrollContainer) {
+      let cleanup: (() => void) | undefined;
+      const scrollHandler = () => {
+        cleanup?.();
+        cleanup = handleScroll();
+      };
+      scrollContainer.addEventListener('scroll', scrollHandler, { passive: true });
+
+      return () => {
+        cleanup?.();
+        scrollContainer.removeEventListener('scroll', scrollHandler);
+      };
+    }
+  }, [handleScroll]);
 
   return (
     <div className="space-y-8">
@@ -46,65 +70,117 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
 
       {/* Desktop View - Transposed grid: Meals as rows, Days as columns */}
       <div className="hidden lg:block">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto scroll-smooth snap-x snap-mandatory scroll-container"
+             style={{
+               scrollBehavior: 'smooth',
+               WebkitOverflowScrolling: 'touch',
+               willChange: 'scroll-position',
+               contain: 'layout style'
+             }}>
           <div
-            className="grid gap-3 min-w-max pb-4 items-start"
+            className={`grid gap-3 min-w-max pb-4 items-start ${isScrolling ? 'pointer-events-none' : ''}`}
             style={{
-              gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`
+              gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`,
+              scrollSnapType: 'x mandatory',
+              scrollPadding: '1rem',
+              contain: 'layout style',
+              willChange: 'transform'
             }}
           >
-            {/* Header row with days */}
-            <div className="sticky top-0 bg-background z-10 p-3">
-              <h3 className="font-semibold text-lg">Meals</h3>
-            </div>
-            {sortedDays.map((dateKey) => {
-              const day = week.menu[dateKey];
-              return (
-                <div key={dateKey} className="sticky top-0 bg-background z-10 p-3 text-center border-l border-border/50">
-                  <h3 className="font-semibold">{day.day}</h3>
-                  <p className="text-sm text-muted-foreground mt-1">{dateKey}</p>
+            {/* Fixed Header row with days */}
+            <div className="fixed top-0 left-0 right-0 bg-background/95 backdrop-blur-sm z-20 border-b border-border/50"
+                 style={{
+                   transform: 'translateZ(0)',
+                   willChange: 'transform',
+                   contain: 'layout style'
+                 }}>
+              <div className="grid gap-3 items-start max-w-screen-2xl mx-auto px-4 py-3"
+                   style={{
+                     gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`,
+                     transform: 'translateZ(0)'
+                   }}>
+                <div>
+                  <h3 className="font-semibold text-lg">Meals</h3>
                 </div>
-              );
-            })}
+                {sortedDays.map((dateKey) => {
+                  const day = week.menu[dateKey];
+                  return (
+                    <div key={`header-${dateKey}`} className="text-center">
+                      <h3 className="font-semibold">{day.day}</h3>
+                      <p className="text-sm text-muted-foreground mt-1">{dateKey}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Spacer for fixed header */}
+            <div className="h-20"></div>
+
+            {/* Content rows */}
+            <div className="grid gap-3 items-start"
+                 style={{
+                   gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`,
+                   paddingTop: '1rem'
+                 }}>
+              {/* Empty cell for meal type headers */}
+              <div></div>
+              {sortedDays.map((dateKey) => (
+                <div key={`spacer-${dateKey}`} className="snap-start"
+                     style={{ scrollSnapAlign: 'start' }}></div>
+              ))}
+            </div>
 
             {/* Meal rows */}
             {mealOrder.map((mealKey) => (
               <React.Fragment key={mealKey}>
-                {/* Meal type header */}
-                <div className="p-3 border-t border-border/50">
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/15">
-                      {React.createElement(mealIcons[mealKey], {
-                        className: "h-4 w-4 text-primary"
-                      })}
-                    </span>
-                    <div>
-                      <span className="font-medium">{mealTitles[mealKey]}</span>
+                {/* Meal type header and content row */}
+                <div className="grid gap-3 items-start border-t border-border/50"
+                     style={{
+                       gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`,
+                       contain: 'layout style'
+                     }}>
+                  {/* Meal type header */}
+                  <div className="p-3">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/15">
+                        {React.createElement(mealIcons[mealKey], {
+                          className: "h-4 w-4 text-primary"
+                        })}
+                      </span>
+                      <div>
+                        <span className="font-medium">{mealTitles[mealKey]}</span>
+                      </div>
                     </div>
                   </div>
+
+                  {/* Meal content for each day */}
+                  {sortedDays.map((dateKey) => {
+                    const day = week.menu[dateKey];
+                    const meal = day.meals[mealKey];
+
+                    return (
+                      <div key={`${mealKey}-${dateKey}`} className="p-3 snap-start"
+                           style={{
+                             scrollSnapAlign: 'start',
+                             contain: 'layout style'
+                           }}>
+                        {meal ? (
+                          <MealGridCard
+                            meal={meal}
+                            mealKey={mealKey}
+                            timeRange={`${meal.startTime} – ${meal.endTime} IST`}
+                            isScrolling={isScrolling}
+                          />
+                        ) : (
+                          <div className="p-4 rounded-lg border-2 border-dashed border-muted-foreground/20 flex items-center justify-center min-h-32">
+                            <span className="text-sm text-muted-foreground">No meal</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-
-                {/* Meal content for each day */}
-                {sortedDays.map((dateKey) => {
-                  const day = week.menu[dateKey];
-                  const meal = day.meals[mealKey];
-
-                  return (
-                    <div key={`${mealKey}-${dateKey}`} className="p-3 border-t border-l border-border/50">
-                      {meal ? (
-                        <MealGridCard
-                          meal={meal}
-                          mealKey={mealKey}
-                          timeRange={`${meal.startTime} – ${meal.endTime} IST`}
-                        />
-                      ) : (
-                        <div className="p-4 rounded-lg border-2 border-dashed border-muted-foreground/20 flex items-center justify-center min-h-32">
-                          <span className="text-sm text-muted-foreground">No meal</span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
               </React.Fragment>
             ))}
           </div>
@@ -148,17 +224,24 @@ function DaySection({ day, dateKey }: { day: DayMenu; dateKey: string }) {
 const MealGridCard = React.memo(function MealGridCard({
   meal,
   mealKey,
-  timeRange
+  timeRange,
+  isScrolling = false
 }: {
   meal: Meal;
   mealKey: MealKey;
   timeRange: string;
+  isScrolling?: boolean;
 }) {
   const Icon = mealIcons[mealKey];
   const filteredItems = React.useMemo(() => filterMenuItems(meal.items), [meal.items]);
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className={`${isScrolling ? '' : 'hover:shadow-md'} transition-shadow transform-gpu`}
+          style={{
+            willChange: 'transform',
+            contain: 'layout style',
+            pointerEvents: isScrolling ? 'none' : 'auto'
+          }}>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center justify-between gap-2 text-sm">
           <span className="flex items-center gap-1">
