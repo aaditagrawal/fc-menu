@@ -40,6 +40,9 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
   }, []);
 
   React.useEffect(() => {
+    // Only run on client side after hydration
+    if (typeof window === 'undefined') return;
+
     const scrollContainer = document.querySelector('.scroll-container');
     if (scrollContainer) {
       let cleanup: (() => void) | undefined;
@@ -87,14 +90,13 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
               willChange: 'transform'
             }}
           >
-            {/* Fixed Header row with days */}
-            <div className="fixed top-0 left-0 right-0 bg-background/95 backdrop-blur-sm z-20 border-b border-border/50"
+            {/* Sticky Header row with days */}
+            <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/50 col-span-full"
                  style={{
                    transform: 'translateZ(0)',
-                   willChange: 'transform',
-                   contain: 'layout style'
+                   willChange: 'transform'
                  }}>
-              <div className="grid gap-3 items-start max-w-screen-2xl mx-auto px-4 py-3"
+              <div className="grid gap-3 items-start px-4 py-3"
                    style={{
                      gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`,
                      transform: 'translateZ(0)'
@@ -114,11 +116,10 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
               </div>
             </div>
 
-            {/* Spacer for fixed header */}
-            <div className="h-20"></div>
+            
 
             {/* Content rows */}
-            <div className="grid gap-3 items-start"
+            <div className="grid gap-3 items-start col-span-full"
                  style={{
                    gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`,
                    paddingTop: '1rem'
@@ -135,7 +136,7 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
             {mealOrder.map((mealKey) => (
               <React.Fragment key={mealKey}>
                 {/* Meal type header and content row */}
-                <div className="grid gap-3 items-start border-t border-border/50"
+                <div className="grid gap-3 items-start border-t border-border/50 col-span-full"
                      style={{
                        gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`,
                        contain: 'layout style'

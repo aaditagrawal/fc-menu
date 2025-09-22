@@ -30,6 +30,13 @@ export function MenuViewer({
   const [year, setYear] = React.useState<string>(initialYear);
   const [foodCourt, setFoodCourt] = React.useState<string>(initialWeek.foodCourt);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [isHydrated, setIsHydrated] = React.useState(false);
+
+  // Mark component as hydrated after first render
+  React.useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
   // Sync state when server-provided props change (e.g., navigating between week routes)
   React.useEffect(() => {
     setWeekId(initialWeekId);
@@ -42,6 +49,7 @@ export function MenuViewer({
 
   // Read preferred foodCourt from cookie on client-side only
   React.useEffect(() => {
+    if (!isHydrated) return;
     try {
       const m = document.cookie.match(/(?:^|; )preferredFoodCourt=([^;]+)/);
       const fromCookie = m ? decodeURIComponent(m[1]) : null;
@@ -51,25 +59,27 @@ export function MenuViewer({
     } catch {
       // noop
     }
-  }, []);
+  }, [foodCourt, isHydrated]);
   // Fetch available week ids on mount
   React.useEffect(() => {
+    if (!isHydrated) return;
     fetchWeeksInfo().then(({ weekIds, meta }) => {
       setAllWeekIds(weekIds);
       setWeeksMeta(meta);
     }).catch(() => {});
-  }, []);
+  }, [isHydrated]);
 
   const [dateKey, setDateKey] = React.useState<string>(Object.keys(initialWeek.menu)[0]);
 
   // Set current/upcoming meal dateKey on client-side only
   React.useEffect(() => {
+    if (!isHydrated) return;
     const ptr = findCurrentOrUpcomingMeal(week);
     const currentDateKey = ptr?.dateKey ?? Object.keys(week.menu)[0];
     if (currentDateKey !== dateKey) {
       setDateKey(currentDateKey);
     }
-  }, [week, dateKey]);
+  }, [week, dateKey, isHydrated]);
 
   // When year changes, adjust week list for the selected mess and pick the latest
   React.useEffect(() => {
@@ -178,10 +188,10 @@ export function MenuViewer({
 
   // Update page title client-side when mess changes
   React.useEffect(() => {
-    if (!foodCourt) return;
+    if (!isHydrated || !foodCourt) return;
     const base = "The Indian Kitchen";
     document.title = `${foodCourt} Menu — ${base}`;
-  }, [foodCourt]);
+  }, [foodCourt, isHydrated]);
 
   return (
     <div className="space-y-4">
