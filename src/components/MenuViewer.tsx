@@ -28,19 +28,7 @@ export function MenuViewer({
   const [week, setWeek] = React.useState<WeekMenu>(initialWeek);
   const initialYear = React.useMemo(() => initialWeekId.slice(0, 4), [initialWeekId]);
   const [year, setYear] = React.useState<string>(initialYear);
-  const [foodCourt, setFoodCourt] = React.useState<string>(() => {
-    // Initialize with cookie value if available, otherwise use initialWeek value
-    if (typeof window !== 'undefined') {
-      try {
-        const m = document.cookie.match(/(?:^|; )preferredFoodCourt=([^;]+)/);
-        const fromCookie = m ? decodeURIComponent(m[1]) : null;
-        if (fromCookie) return fromCookie;
-      } catch {
-        // noop
-      }
-    }
-    return initialWeek.foodCourt;
-  });
+  const [foodCourt, setFoodCourt] = React.useState<string>(initialWeek.foodCourt);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   // Sync state when server-provided props change (e.g., navigating between week routes)
   React.useEffect(() => {
@@ -51,6 +39,19 @@ export function MenuViewer({
     const ptr = findCurrentOrUpcomingMeal(initialWeek);
     setDateKey(ptr?.dateKey ?? Object.keys(initialWeek.menu)[0]);
   }, [initialWeekId, initialWeek]);
+
+  // Read preferred foodCourt from cookie on client-side only
+  React.useEffect(() => {
+    try {
+      const m = document.cookie.match(/(?:^|; )preferredFoodCourt=([^;]+)/);
+      const fromCookie = m ? decodeURIComponent(m[1]) : null;
+      if (fromCookie && fromCookie !== foodCourt) {
+        setFoodCourt(fromCookie);
+      }
+    } catch {
+      // noop
+    }
+  }, []);
   // Fetch available week ids on mount
   React.useEffect(() => {
     fetchWeeksInfo().then(({ weekIds, meta }) => {
@@ -59,10 +60,16 @@ export function MenuViewer({
     }).catch(() => {});
   }, []);
 
-  const [dateKey, setDateKey] = React.useState<string>(() => {
-    const ptr = findCurrentOrUpcomingMeal(initialWeek);
-    return ptr?.dateKey ?? Object.keys(initialWeek.menu)[0];
-  });
+  const [dateKey, setDateKey] = React.useState<string>(Object.keys(initialWeek.menu)[0]);
+
+  // Set current/upcoming meal dateKey on client-side only
+  React.useEffect(() => {
+    const ptr = findCurrentOrUpcomingMeal(week);
+    const currentDateKey = ptr?.dateKey ?? Object.keys(week.menu)[0];
+    if (currentDateKey !== dateKey) {
+      setDateKey(currentDateKey);
+    }
+  }, [week, dateKey]);
 
   // When year changes, adjust week list for the selected mess and pick the latest
   React.useEffect(() => {
@@ -215,7 +222,7 @@ export function MenuViewer({
 
       <MealCarousel meals={meals} highlightKey={highlightKey} isPrimaryUpcoming={isPrimaryUpcoming} />
 
-      <div className="flex flex-col items-center gap-2 mt-6">
+      <div className="flex items-center justify-center gap-2 mt-6">
         <Button asChild variant="outline">
           <Link href={`/week/${weekId}/full`} title="View full week menu">
             <Grid3X3 className="h-4 w-4 mr-2" />
@@ -231,9 +238,8 @@ export function MenuViewer({
           className="text-xs"
           title="Clear cache and refresh data if no upcoming meal is available"
         >
-          {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+          {isRefreshing ? 'Refreshing...' : 'Reload Data'}
         </Button>
-
       </div>
     </div>
   );
