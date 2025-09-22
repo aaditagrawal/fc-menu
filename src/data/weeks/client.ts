@@ -1,7 +1,7 @@
 "use client";
 
 import type { WeekMenu, WeekMeta } from "@/lib/types";
-import { cache, CACHE_KEYS, CACHE_TTL } from "@/lib/cache";
+import { cache, CACHE_KEYS, CACHE_TTL, clearAllCache } from "@/lib/cache";
 import { findCurrentOrUpcomingMeal } from "@/lib/date";
 
 export type WeekId = string;
@@ -112,6 +112,9 @@ export async function refreshDataIfNeeded(week: WeekMenu): Promise<boolean> {
   console.log('⚠️ No upcoming meal data found, refreshing...');
 
   try {
+    // Clear all cache first to ensure fresh data
+    clearAllCache();
+
     // Get the latest week info
     const { weekIds } = await fetchWeeksInfoFresh();
 
@@ -129,5 +132,4 @@ export async function refreshDataIfNeeded(week: WeekMenu): Promise<boolean> {
 
   return false;
 }
-
 

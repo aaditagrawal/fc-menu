@@ -28,7 +28,19 @@ export function MenuViewer({
   const [week, setWeek] = React.useState<WeekMenu>(initialWeek);
   const initialYear = React.useMemo(() => initialWeekId.slice(0, 4), [initialWeekId]);
   const [year, setYear] = React.useState<string>(initialYear);
-  const [foodCourt, setFoodCourt] = React.useState<string>(initialWeek.foodCourt);
+  const [foodCourt, setFoodCourt] = React.useState<string>(() => {
+    // Initialize with cookie value if available, otherwise use initialWeek value
+    if (typeof window !== 'undefined') {
+      try {
+        const m = document.cookie.match(/(?:^|; )preferredFoodCourt=([^;]+)/);
+        const fromCookie = m ? decodeURIComponent(m[1]) : null;
+        if (fromCookie) return fromCookie;
+      } catch {
+        // noop
+      }
+    }
+    return initialWeek.foodCourt;
+  });
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   // Sync state when server-provided props change (e.g., navigating between week routes)
   React.useEffect(() => {
@@ -47,38 +59,6 @@ export function MenuViewer({
     }).catch(() => {});
   }, []);
 
-  // Handle smart refresh
-  const handleRefresh = React.useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      const wasRefreshed = await refreshDataIfNeeded(week);
-
-      if (wasRefreshed) {
-        // If data was refreshed, reload the page to get the latest data
-        window.location.reload();
-      }
-    } catch (error) {
-      console.error('Failed to refresh data:', error);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [week]);
-
-
-  // Load preferred mess from cookie on mount; default to "Food Court 2" if missing
-  React.useEffect(() => {
-    try {
-      const m = document.cookie.match(/(?:^|; )preferredFoodCourt=([^;]+)/);
-      const fromCookie = m ? decodeURIComponent(m[1]) : null;
-      if (fromCookie) {
-        setFoodCourt(fromCookie);
-      } else {
-        setFoodCourt("Food Court 2");
-      }
-    } catch {
-      // noop
-    }
-  }, []);
   const [dateKey, setDateKey] = React.useState<string>(() => {
     const ptr = findCurrentOrUpcomingMeal(initialWeek);
     return ptr?.dateKey ?? Object.keys(initialWeek.menu)[0];
@@ -111,6 +91,23 @@ export function MenuViewer({
       setFoodCourt(w.foodCourt);
     });
   }, [weekId, initialWeekId, router, routingMode]);
+
+  // Handle smart refresh
+  const handleRefresh = React.useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      const wasRefreshed = await refreshDataIfNeeded(week);
+
+      if (wasRefreshed) {
+        // If data was refreshed, reload the page to get the latest data
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Failed to refresh data:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [week]);
 
   // Ensure dateKey is valid for current week
   React.useEffect(() => {
@@ -232,10 +229,11 @@ export function MenuViewer({
           variant="ghost"
           size="sm"
           className="text-xs"
-          title="Refresh data if no upcoming meal is available"
+          title="Clear cache and refresh data if no upcoming meal is available"
         >
           {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
         </Button>
+
       </div>
     </div>
   );

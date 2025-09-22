@@ -150,11 +150,11 @@ export class LocalStorageCache {
   }
 }
 
-// Cache TTL configurations (in minutes) - aligned with 7-day frontend caching
+// Cache TTL configurations (in minutes) - aligned with weekly menu updates
 export const CACHE_TTL = {
-  WEEKS_INFO: 10080, // 7 days - weeks list doesn't change often
-  WEEK_MENU: 10080,  // 7 days - menu data can be cached longer
-  LATEST_WEEK: 10080, // 7 days - latest week info
+  WEEKS_INFO: 120, // 2 hours - weeks list updates weekly
+  WEEK_MENU: 120,  // 2 hours - menu data updates weekly
+  LATEST_WEEK: 120, // 2 hours - latest week info updates weekly
 } as const;
 
 // Cache key generators
@@ -166,6 +166,9 @@ export const CACHE_KEYS = {
 
 // Auto-clear expired cache on app start (simple cleanup)
 function autoClearExpiredCache(): void {
+  // Only run on client side and after hydration to avoid hydration mismatches
+  if (typeof window === 'undefined') return;
+
   try {
     const info = LocalStorageCache.getInstance().getCacheInfo();
     if (info.expiredEntries > 0) {
