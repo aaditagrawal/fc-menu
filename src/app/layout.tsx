@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Food Court 2 Menu — The Indian Kitchen",
+    default: "Food Court Menus — The Indian Kitchen",
     template: "%s — The Indian Kitchen",
   },
   description:

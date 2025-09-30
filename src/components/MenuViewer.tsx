@@ -5,7 +5,7 @@ import type { MealKey, WeekMenu } from "@/lib/types";
 import { findCurrentOrUpcomingMeal, pickHighlightMealForDay } from "@/lib/date";
 import { InlineSelect } from "@/components/InlineSelect";
 import { MealCarousel } from "@/components/MealCarousel";
-import { getWeekMenuClient, type WeekId, fetchWeeksInfo, getAllYearsFromList, refreshDataIfNeeded } from "@/data/weeks/client";
+import { getWeekMenuClient, type WeekId, fetchWeeksInfo, getAllYearsFromList, getWeekMenuClientFresh, fetchWeeksInfoFresh } from "@/data/weeks/client";
 import type { WeekMeta } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -69,17 +69,22 @@ export function MenuViewer({
     }).catch(() => {});
   }, [isHydrated]);
 
-  const [dateKey, setDateKey] = React.useState<string>(Object.keys(initialWeek.menu)[0]);
+  // Initialize dateKey to current/upcoming meal to match server and client
+  const initialDateKey = React.useMemo(() => {
+    const ptr = findCurrentOrUpcomingMeal(initialWeek);
+    return ptr?.dateKey ?? Object.keys(initialWeek.menu)[0];
+  }, [initialWeek]);
 
-  // Set current/upcoming meal dateKey on client-side only
+  const [dateKey, setDateKey] = React.useState<string>(initialDateKey);
+
+  // Update dateKey when week changes
   React.useEffect(() => {
-    if (!isHydrated) return;
     const ptr = findCurrentOrUpcomingMeal(week);
     const currentDateKey = ptr?.dateKey ?? Object.keys(week.menu)[0];
     if (currentDateKey !== dateKey) {
       setDateKey(currentDateKey);
     }
-  }, [week, dateKey, isHydrated]);
+  }, [week, dateKey]);
 
   // When year changes, adjust week list for the selected mess and pick the latest
   React.useEffect(() => {
@@ -109,22 +114,37 @@ export function MenuViewer({
     });
   }, [weekId, initialWeekId, router, routingMode]);
 
-  // Handle smart refresh
+  // Handle data refresh - force fetch fresh data for current week and update state
   const handleRefresh = React.useCallback(async () => {
     setIsRefreshing(true);
     try {
-      const wasRefreshed = await refreshDataIfNeeded(week);
-
-      if (wasRefreshed) {
-        // If data was refreshed, reload the page to get the latest data
-        window.location.reload();
-      }
+      console.log(`Refreshing data for week ${weekId}...`);
+      
+      // Fetch fresh data for the current week
+      const freshWeek = await getWeekMenuClientFresh(weekId);
+      
+      // Update the week data in state
+      setWeek(freshWeek);
+      
+      // Update the date key to show current/upcoming meal
+      const ptr = findCurrentOrUpcomingMeal(freshWeek);
+      setDateKey(ptr?.dateKey ?? Object.keys(freshWeek.menu)[0]);
+      
+      // Also refresh the weeks list in the background
+      fetchWeeksInfoFresh().then(({ weekIds, meta }) => {
+        setAllWeekIds(weekIds);
+        setWeeksMeta(meta);
+      }).catch((err) => {
+        console.error('Failed to refresh weeks info:', err);
+      });
+      
+      console.log('Data refreshed successfully');
     } catch (error) {
       console.error('Failed to refresh data:', error);
     } finally {
       setIsRefreshing(false);
     }
-  }, [week]);
+  }, [weekId]);
 
   // Ensure dateKey is valid for current week
   React.useEffect(() => {
@@ -232,7 +252,7 @@ export function MenuViewer({
 
       <MealCarousel meals={meals} highlightKey={highlightKey} isPrimaryUpcoming={isPrimaryUpcoming} />
 
-      <div className="flex items-center justify-center gap-2 mt-6">
+      <div className="flex flex-col items-center gap-2 mt-6">
         <Button asChild variant="outline">
           <Link href={`/week/${weekId}/full`} title="View full week menu">
             <Grid3X3 className="h-4 w-4 mr-2" />
@@ -246,9 +266,9 @@ export function MenuViewer({
           variant="ghost"
           size="sm"
           className="text-xs"
-          title="Clear cache and refresh data if no upcoming meal is available"
+          title="Refresh data if no upcoming meal is available"
         >
-          {isRefreshing ? 'Refreshing...' : 'Reload Data'}
+          {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
         </Button>
       </div>
     </div>
