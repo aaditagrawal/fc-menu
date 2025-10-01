@@ -66,7 +66,9 @@ export function InlineSelect<T extends string | number>({
                 "block w-full text-left px-3 py-2 rounded-md",
                 opt.value === value ? "bg-muted" : "hover:bg-muted"
               )}
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 onChange(opt.value);
                 setOpen(false);
               }}

@@ -84,7 +84,8 @@ export function MenuViewer({
     if (currentDateKey !== dateKey) {
       setDateKey(currentDateKey);
     }
-  }, [week, dateKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [week]);
 
   // When year changes, adjust week list for the selected mess and pick the latest
   React.useEffect(() => {
@@ -152,7 +153,8 @@ export function MenuViewer({
       const keys = Object.keys(week.menu).sort();
       setDateKey(keys[0]);
     }
-  }, [week, dateKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [week]);
 
   const pointer = findCurrentOrUpcomingMeal(week);
   const effectiveDateKey = dateKey ?? pointer?.dateKey ?? Object.keys(week.menu)[0];
@@ -244,7 +246,7 @@ export function MenuViewer({
         <span className="text-muted-foreground">/</span>
         <InlineSelect
           label="Day"
-          value={effectiveDateKey}
+          value={dateKey}
           options={dayOptions}
           onChange={(v) => setDateKey(String(v))}
         />
