@@ -7,6 +7,8 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const segments = url.pathname.split("/");
   const id = decodeURIComponent(segments[segments.length - 1] || "");
+  const forceFresh = url.searchParams.get('fresh') === 'true';
+  
   const all = await getAllWeeks();
   if (!all.includes(id)) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -16,8 +18,15 @@ export async function GET(req: Request) {
 
     // Add cache headers for client-side caching
     const response = NextResponse.json(menu);
-    response.headers.set('Cache-Control', 'public, s-maxage=900, max-age=300'); // 15 min server, 5 min client
-    response.headers.set('CDN-Cache-Control', 'max-age=900'); // 15 min on CDN
+    
+    if (forceFresh) {
+      // No cache when fresh data is requested
+      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    } else {
+      // Reduced cache: 10 minutes to ensure new weekly data appears faster
+      response.headers.set('Cache-Control', 'public, s-maxage=600, max-age=300');
+      response.headers.set('CDN-Cache-Control', 'max-age=600');
+    }
 
     return response;
   } catch {

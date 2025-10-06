@@ -150,11 +150,11 @@ export class LocalStorageCache {
   }
 }
 
-// Cache TTL configurations (in minutes) - aligned with weekly menu updates
+// Cache TTL configurations (in minutes) - reduced for faster updates
 export const CACHE_TTL = {
-  WEEKS_INFO: 120, // 2 hours - weeks list updates weekly
-  WEEK_MENU: 120,  // 2 hours - menu data updates weekly
-  LATEST_WEEK: 120, // 2 hours - latest week info updates weekly
+  WEEKS_INFO: 10, // 10 minutes - allows faster updates when new data is published
+  WEEK_MENU: 10,  // 10 minutes - allows faster updates when new data is published
+  LATEST_WEEK: 10, // 10 minutes - allows faster updates when new data is published
 } as const;
 
 // Cache key generators

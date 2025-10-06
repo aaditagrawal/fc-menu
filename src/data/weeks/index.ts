@@ -11,9 +11,9 @@ async function fetchMenuFromAPI(params?: { week?: string; weekStart?: string; da
   if (params?.weekStart) url.searchParams.set("weekStart", params.weekStart);
   if (params?.date) url.searchParams.set("date", params.date);
 
-  // Use fetch caching aligned with weekly updates
+  // Reduced cache: 10 minutes to ensure new weekly data appears faster
   const res = await fetch(url.toString(), {
-    next: { revalidate: 7200 } // Cache for 2 hours on the server (weekly menu updates)
+    next: { revalidate: 600 } // Cache for 10 minutes on the server
   });
 
   if (!res.ok) {

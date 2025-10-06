@@ -70,9 +70,16 @@ export function getLatestWeekIdForYearFromList(all: WeekId[], year: string): Wee
 export async function fetchWeeksInfoFresh(): Promise<{ weekIds: WeekId[]; meta: WeekMeta[] }>{
   const cacheKey = CACHE_KEYS.weeksInfo();
 
-  // Force fresh fetch
+  // Force fresh fetch with cache-busting parameter and timestamp
   console.log('🔄 Force fetching fresh weeks info');
-  const res = await fetch(`/api/weeks`, { cache: "no-store" });
+  const timestamp = Date.now();
+  const res = await fetch(`/api/weeks?fresh=true&t=${timestamp}`, { 
+    cache: "no-store",
+    headers: {
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache'
+    }
+  });
   if (!res.ok) throw new Error("Failed to fetch week ids");
   const data = (await res.json()) as { weekIds: WeekId[]; meta: WeekMeta[] };
 
@@ -85,9 +92,16 @@ export async function fetchWeeksInfoFresh(): Promise<{ weekIds: WeekId[]; meta: 
 export async function getWeekMenuClientFresh(id: WeekId): Promise<WeekMenu> {
   const cacheKey = CACHE_KEYS.weekMenu(id);
 
-  // Force fresh fetch
+  // Force fresh fetch with cache-busting parameter and timestamp
   console.log(`🔄 Force fetching fresh week menu for ${id}`);
-  const res = await fetch(`/api/week/${id}`, { cache: "no-store" });
+  const timestamp = Date.now();
+  const res = await fetch(`/api/week/${id}?fresh=true&t=${timestamp}`, { 
+    cache: "no-store",
+    headers: {
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache'
+    }
+  });
   if (!res.ok) throw new Error("Failed to fetch week menu");
   const data = (await res.json()) as WeekMenu;
 

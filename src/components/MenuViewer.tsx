@@ -115,37 +115,54 @@ export function MenuViewer({
     });
   }, [weekId, initialWeekId, router, routingMode]);
 
-  // Handle data refresh - force fetch fresh data for current week and update state
+  // Handle data refresh - force fetch fresh data and check for new weeks
   const handleRefresh = React.useCallback(async () => {
     setIsRefreshing(true);
     try {
-      console.log(`Refreshing data for week ${weekId}...`);
+      console.log('🔄 Starting data refresh...');
       
-      // Fetch fresh data for the current week
-      const freshWeek = await getWeekMenuClientFresh(weekId);
+      // First, fetch the latest weeks info to see if there's a new week
+      const { weekIds, meta } = await fetchWeeksInfoFresh();
+      setAllWeekIds(weekIds);
+      setWeeksMeta(meta);
       
-      // Update the week data in state
+      // Determine which week to load:
+      // If we're on the old "latest" week and there's a newer one, switch to it
+      let targetWeekId = weekId;
+      if (weekIds.length > 0) {
+        const latestWeekId = weekIds[0];
+        // If current week is not in the list or not the latest, switch to latest
+        if (!weekIds.includes(weekId) || weekId !== latestWeekId) {
+          targetWeekId = latestWeekId;
+          console.log(`📦 Switching to latest week: ${latestWeekId}`);
+        }
+      }
+      
+      // Fetch fresh data for the target week
+      const freshWeek = await getWeekMenuClientFresh(targetWeekId);
+      
+      // Update state with the fresh week data
+      if (targetWeekId !== weekId) {
+        setWeekId(targetWeekId);
+      }
       setWeek(freshWeek);
       
       // Update the date key to show current/upcoming meal
       const ptr = findCurrentOrUpcomingMeal(freshWeek);
       setDateKey(ptr?.dateKey ?? Object.keys(freshWeek.menu)[0]);
       
-      // Also refresh the weeks list in the background
-      fetchWeeksInfoFresh().then(({ weekIds, meta }) => {
-        setAllWeekIds(weekIds);
-        setWeeksMeta(meta);
-      }).catch((err) => {
-        console.error('Failed to refresh weeks info:', err);
-      });
+      // Navigate if we switched to a different week and we're in week mode
+      if (targetWeekId !== weekId && routingMode === "week") {
+        router.push(`/week/${targetWeekId}`);
+      }
       
-      console.log('Data refreshed successfully');
+      console.log('✅ Data refreshed successfully');
     } catch (error) {
-      console.error('Failed to refresh data:', error);
+      console.error('❌ Failed to refresh data:', error);
     } finally {
       setIsRefreshing(false);
     }
-  }, [weekId]);
+  }, [weekId, routingMode, router]);
 
   // Ensure dateKey is valid for current week
   React.useEffect(() => {

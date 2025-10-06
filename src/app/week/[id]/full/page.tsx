@@ -9,8 +9,8 @@ interface PageProps {
   params: Promise<{ id: WeekId }>;
 }
 
-// Regenerate full week pages every 7 days in background
-export const revalidate = 604800; // 7 days
+// Regenerate full week pages every 10 minutes in background
+export const revalidate = 600; // 10 minutes - allows faster updates when new data is published
 
 export default async function FullWeekPage({ params }: PageProps) {
   const { id } = await params;
