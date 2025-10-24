@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import type { Meal, MealKey } from "@/lib/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Coffee, UtensilsCrossed, Cookie, Moon } from "lucide-react";
 import { filterMenuItems } from "@/lib/exceptions";
@@ -34,24 +34,26 @@ export function MealCard({
 
   const card = (
     <Card className={cn("transition-transform", highlight ? "border-primary ring-1 ring-primary/30" : "")}> 
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between gap-4">
-          <span className="flex items-center gap-2">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/15">
-              <Icon className="h-4 w-4 text-primary" />
-            </span>
-            <span>{title}</span>
-          </span>
-          <span className="text-sm font-normal text-muted-foreground">{timeRange}</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+      <div className="relative p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/15">
+              <Icon className="h-5 w-5 text-primary dark:text-foreground" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg">{title}</h3>
+              <p className="text-sm text-muted-foreground">{timeRange}</p>
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {filterMenuItems(meal.items).map((item, idx) => (
-            <li key={idx} className="rounded-md bg-muted px-2 py-1">{item}</li>
+            <div key={idx} className="rounded-md bg-muted px-3 py-2 text-sm">
+              {item}
+            </div>
           ))}
-        </ul>
-      </CardContent>
+        </div>
+      </div>
     </Card>
   );
 

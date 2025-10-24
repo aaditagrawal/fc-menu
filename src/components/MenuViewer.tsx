@@ -5,7 +5,7 @@ import type { MealKey, WeekMenu } from "@/lib/types";
 import { findCurrentOrUpcomingMeal, pickHighlightMealForDay } from "@/lib/date";
 import { InlineSelect } from "@/components/InlineSelect";
 import { MealCarousel } from "@/components/MealCarousel";
-import { getWeekMenuClient, type WeekId, fetchWeeksInfo, getAllYearsFromList, getWeekMenuClientFresh, fetchWeeksInfoFresh } from "@/data/weeks/client";
+import { getWeekMenuClient, type WeekId, fetchWeeksInfo, getWeekMenuClientFresh, fetchWeeksInfoFresh } from "@/data/weeks/client";
 import type { WeekMeta } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -22,7 +22,7 @@ export function MenuViewer({
   routingMode?: "home" | "week";
 }) {
   const router = useRouter();
-  const [allWeekIds, setAllWeekIds] = React.useState<WeekId[]>([initialWeekId]);
+  const [, setAllWeekIds] = React.useState<WeekId[]>([initialWeekId]);
   const [weeksMeta, setWeeksMeta] = React.useState<WeekMeta[]>([]);
   const [weekId, setWeekId] = React.useState<WeekId>(initialWeekId);
   const [week, setWeek] = React.useState<WeekMenu>(initialWeek);
@@ -191,24 +191,12 @@ export function MenuViewer({
   const highlightKey = (picked?.mealKey ?? (meals[0]?.key ?? "breakfast")) as MealKey;
   const isPrimaryUpcoming = Boolean(picked?.isPrimaryUpcoming);
 
-  const yearOptions = getAllYearsFromList(allWeekIds).map((y) => ({ label: y, value: y }));
-  const weekOptions = React.useMemo(() => {
-    const ids = weeksMeta
-      .filter((m) => m.foodCourt === foodCourt && m.id.startsWith(`${year}-`))
-      .map((m) => m.id);
-    const uniqueSorted = Array.from(new Set(ids)).sort();
-    return uniqueSorted.map((id) => ({ label: id, value: id }));
-  }, [weeksMeta, foodCourt, year]);
+
+
   const dayOptions = Object.keys(week.menu)
     .sort()
     .map((k) => ({ label: `${week.menu[k].day} • ${k}`, value: k }));
-  const messOptions = React.useMemo(() => {
-    const set = new Set<string>();
-    for (const m of weeksMeta) set.add(m.foodCourt);
-    const list = Array.from(set);
-    list.sort();
-    return list.map((name) => ({ label: name, value: name }));
-  }, [weeksMeta]);
+
 
   // Handle mess changes: pick the latest week for the chosen mess, same year if possible
   React.useEffect(() => {
@@ -234,40 +222,21 @@ export function MenuViewer({
 
   return (
     <div className="space-y-4">
-      <header className="mb-2">
-        <div className="text-2xl sm:text-3xl font-semibold">
+      <header className="mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <h1 className="text-2xl sm:text-3xl font-semibold">
+            {foodCourt.replace(/Food Court (\d+)/, 'Food Court $1')}: Menu
+          </h1>
           <InlineSelect
-            label="Mess"
-            value={foodCourt}
-            options={messOptions}
-            onChange={(v) => setFoodCourt(String(v))}
-            menuClassName="text-sm"
+            label="Day"
+            value={dateKey}
+            options={dayOptions}
+            onChange={(v) => setDateKey(String(v))}
+            className="text-sm"
           />
         </div>
-        <p className="text-muted-foreground mt-1">{week.week}</p>
+        <p className="text-muted-foreground">{week.week}</p>
       </header>
-      <div className="flex flex-wrap items-center gap-2 text-sm">
-        <InlineSelect
-          label="Year"
-          value={year}
-          options={yearOptions}
-          onChange={(v) => setYear(String(v))}
-        />
-        <span className="text-muted-foreground">/</span>
-        <InlineSelect
-          label="Week"
-          value={weekId}
-          options={weekOptions}
-          onChange={(v) => setWeekId(v as WeekId)}
-        />
-        <span className="text-muted-foreground">/</span>
-        <InlineSelect
-          label="Day"
-          value={dateKey}
-          options={dayOptions}
-          onChange={(v) => setDateKey(String(v))}
-        />
-      </div>
 
       <MealCarousel meals={meals} highlightKey={highlightKey} isPrimaryUpcoming={isPrimaryUpcoming} />
 

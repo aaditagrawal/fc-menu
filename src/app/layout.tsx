@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
-import { MenuNotification } from "@/components/MenuNotification";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import "./globals.css";
 
@@ -51,45 +50,30 @@ export default function RootLayout({
           <div className="fixed top-4 right-4 z-50">
             <ThemeSwitcher />
           </div>
-          <MenuNotification />
           <main className="flex-1">{children}</main>
-          <footer className="border-t bg-secondary/40">
-            <div className="mx-auto max-w-4xl px-4 py-3 space-y-2">
-              <p className="text-sm text-foreground text-center">
+          <footer className="border-t bg-secondary/20">
+            <div className="mx-auto max-w-4xl px-4 py-6">
+              <p className="text-xs text-muted-foreground text-center">
                 Made by{" "}
                 <a
                   href="https://aadit.cc"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="underline hover:no-underline"
+                  className="hover:text-foreground transition-colors"
                 >
-                  Aadit (aadit.cc)
+                  Aadit
                 </a>
                 {" • "}
-                Thanks to The Indian Kitchen, Manipal for providing data for
-                this project. Use the{" "}
-                <a
-                  href="https://tikm.coolstuff.work/docs/reference"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline hover:no-underline"
-                >
-                  API docs
-                </a>{" "}
-                to integrate this data in your own app.
-                {" • "}
-                This project is{" "}
                 <a
                   href="https://github.com/aaditagrawal/fc-menu"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="underline hover:no-underline"
+                  className="hover:text-foreground transition-colors"
                 >
-                  open source on GitHub
+                  Open Source
                 </a>
-                . Contributions are welcome!
                 {" • "}
-                <a href="/changelog" className="underline hover:no-underline">
+                <a href="/changelog" className="hover:text-foreground transition-colors">
                   Changelog
                 </a>
               </p>

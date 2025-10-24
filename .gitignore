@@ -16,6 +16,8 @@
 # next.js
 /.next/
 /out/
+/.crush/
+CRUSH.md
 
 # production
 /build
