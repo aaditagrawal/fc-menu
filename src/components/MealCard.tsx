@@ -63,7 +63,7 @@ export function MealCard({
   if (!highlight) return card;
   return (
     <div
-      className="rounded-2xl p-[4px] relative"
+      className="rounded-2xl p-[6px] relative"
       style={{
         background: primaryUpcoming
           ? "linear-gradient(135deg, hsl(50 95% 70% / 0.85), hsl(330 95% 70% / 0.85))"

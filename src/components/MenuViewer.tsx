@@ -224,9 +224,12 @@ export function MenuViewer({
     <div className="space-y-4">
       <header className="mb-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <h1 className="text-2xl sm:text-3xl font-semibold">
-            {foodCourt.replace(/Food Court (\d+)/, 'Food Court $1')}: Menu
-          </h1>
+          <div className="space-y-1">
+            <h1 className="text-2xl sm:text-3xl font-semibold">
+              {foodCourt.replace(/Food Court (\d+)/, 'Food Court $1')}: Menu
+            </h1>
+            <p className="text-muted-foreground">{week.week}</p>
+          </div>
           <InlineSelect
             label="Day"
             value={dateKey}
@@ -235,7 +238,6 @@ export function MenuViewer({
             className="text-sm"
           />
         </div>
-        <p className="text-muted-foreground">{week.week}</p>
       </header>
 
       <MealCarousel meals={meals} highlightKey={highlightKey} isPrimaryUpcoming={isPrimaryUpcoming} />
