@@ -51,7 +51,7 @@ export function MealCard({
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {filterMenuItems(meal.items).map((item, idx) => (
-            <div key={idx} className="rounded-md bg-muted px-3 py-2 text-sm">
+            <div key={idx} className="rounded-md bg-muted border border-border/30 px-3 py-2 text-sm">
               {item}
             </div>
           ))}
