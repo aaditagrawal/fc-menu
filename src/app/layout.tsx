@@ -65,6 +65,15 @@ export default function RootLayout({
                 </a>
                 {" • "}
                 <a
+                  href="https://tikm.coolstuff.work/docs/reference"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-foreground transition-colors"
+                >
+                  API Docs
+                </a>
+                {" • "}
+                <a
                   href="https://github.com/aaditagrawal/fc-menu"
                   target="_blank"
                   rel="noopener noreferrer"

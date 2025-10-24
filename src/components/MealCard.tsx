@@ -34,13 +34,13 @@ export function MealCard({
 
   const card = (
     <Card className={cn(
-      "transition-transform backdrop-blur-md bg-card/80 border",
+      "transition-transform bg-card border",
       highlight ? "border-transparent" : "border-border/50"
     )}> 
       <div className="relative p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 backdrop-blur-sm">
+            <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/15">
               <Icon className="h-5 w-5 text-primary dark:text-foreground" />
             </div>
             <div>
@@ -51,7 +51,7 @@ export function MealCard({
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {filterMenuItems(meal.items).map((item, idx) => (
-            <div key={idx} className="rounded-md bg-muted/60 backdrop-blur-sm px-3 py-2 text-sm">
+            <div key={idx} className="rounded-md bg-muted px-3 py-2 text-sm">
               {item}
             </div>
           ))}
@@ -71,7 +71,7 @@ export function MealCard({
         ...glow,
       }}
     >
-      <div className="rounded-[14px] bg-card backdrop-blur-md h-full w-full">
+      <div className="rounded-[14px] bg-card h-full w-full">
         <Card className="bg-transparent border-0 shadow-none">
           <div className="relative p-6">
             <div className="flex items-start justify-between mb-4">

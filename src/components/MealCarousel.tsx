@@ -73,7 +73,7 @@ export function MealCarousel({
       </div>
 
       {/* Track */}
-      <div className="flex gap-4 overflow-x-auto py-2 px-3 sm:px-0 snap-x snap-mandatory overflow-visible scrollbar-hide">
+      <div className="flex gap-4 overflow-x-auto py-2 px-3 sm:px-0 snap-x snap-mandatory overflow-visible scrollbar-hide scroll-smooth" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         {meals.map(({ key, meal, timeRange, title }, idx) => {
           const isActive = key === highlightKey;
           return (
