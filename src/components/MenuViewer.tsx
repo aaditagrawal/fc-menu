@@ -240,7 +240,7 @@ export function MenuViewer({
 
       <MealCarousel meals={meals} highlightKey={highlightKey} isPrimaryUpcoming={isPrimaryUpcoming} />
 
-      <div className="flex flex-col items-center gap-2 mt-6">
+      <div className="flex flex-col sm:flex-row items-center gap-2 mt-6">
         <Button asChild variant="outline">
           <Link href={`/week/${weekId}/full`} title="View full week menu">
             <Grid3X3 className="h-4 w-4 mr-2" />

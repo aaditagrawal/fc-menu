@@ -152,3 +152,12 @@
     background-color: oklch(var(--primary));
     border: 2px solid oklch(var(--background));
 }
+
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}

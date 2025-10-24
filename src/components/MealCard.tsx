@@ -33,11 +33,14 @@ export function MealCard({
     : undefined;
 
   const card = (
-    <Card className={cn("transition-transform", highlight ? "border-primary ring-1 ring-primary/30" : "")}> 
+    <Card className={cn(
+      "transition-transform backdrop-blur-md bg-card/80 border",
+      highlight ? "border-transparent" : "border-border/50"
+    )}> 
       <div className="relative p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/15">
+            <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 backdrop-blur-sm">
               <Icon className="h-5 w-5 text-primary dark:text-foreground" />
             </div>
             <div>
@@ -48,7 +51,7 @@ export function MealCard({
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {filterMenuItems(meal.items).map((item, idx) => (
-            <div key={idx} className="rounded-md bg-muted px-3 py-2 text-sm">
+            <div key={idx} className="rounded-md bg-muted/60 backdrop-blur-sm px-3 py-2 text-sm">
               {item}
             </div>
           ))}
@@ -60,7 +63,7 @@ export function MealCard({
   if (!highlight) return card;
   return (
     <div
-      className="rounded-2xl p-[6px]"
+      className="rounded-2xl p-[4px] relative"
       style={{
         background: primaryUpcoming
           ? "linear-gradient(135deg, hsl(50 95% 70% / 0.85), hsl(330 95% 70% / 0.85))"
@@ -68,7 +71,30 @@ export function MealCard({
         ...glow,
       }}
     >
-      {card}
+      <div className="rounded-[14px] bg-card backdrop-blur-md h-full w-full">
+        <Card className="bg-transparent border-0 shadow-none">
+          <div className="relative p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 backdrop-blur-sm">
+                  <Icon className="h-5 w-5 text-primary dark:text-foreground" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">{title}</h3>
+                  <p className="text-sm text-muted-foreground">{timeRange}</p>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {filterMenuItems(meal.items).map((item, idx) => (
+                <div key={idx} className="rounded-md bg-muted/60 backdrop-blur-sm px-3 py-2 text-sm">
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }
