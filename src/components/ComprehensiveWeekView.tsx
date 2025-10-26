@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import type { WeekMenu, MealKey, DayMenu, Meal } from "@/lib/types";
 import { MealCard } from "@/components/MealCard";
