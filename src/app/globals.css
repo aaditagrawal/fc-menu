@@ -297,9 +297,34 @@ body {
   50% { opacity: 0.6; }
 }
 
+/* Frosted glass button effect */
+.frosted-button {
+  background: oklch(1 0 0 / 80%);
+  backdrop-filter: blur(12px);
+  border: 1px solid oklch(1 0 0 / 20%);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.frosted-button:hover {
+  background: oklch(1 0 0 / 90%);
+  border-color: oklch(1 0 0 / 30%);
+  box-shadow: 0 4px 16px oklch(0 0 0 / 10%);
+}
+
+.dark .frosted-button {
+  background: oklch(0.15 0 0 / 80%);
+  border-color: oklch(1 0 0 / 15%);
+}
+
+.dark .frosted-button:hover {
+  background: oklch(0.15 0 0 / 90%);
+  border-color: oklch(1 0 0 / 25%);
+  box-shadow: 0 4px 16px oklch(0 0 0 / 30%);
+}
+
 /* Ultra-smooth transitions with cubic-bezier for natural feel */
 .smooth-transition {
-  transition: all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: all 0.1s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: transform, opacity, scroll-position;
   -webkit-transform: translateZ(0);
   transform: translateZ(0);

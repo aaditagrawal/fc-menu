@@ -66,7 +66,7 @@ export function MealCarousel({
           type="button"
           aria-label="Previous"
           onClick={goPrev}
-          className="pointer-events-auto inline-flex h-9 w-9 items-center justify-center rounded-full border bg-background/90 backdrop-blur hover:bg-muted"
+          className="pointer-events-auto inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-background/80 backdrop-blur-md hover:bg-background/90 hover:border-white/30 transition-all duration-200"
           disabled={centerIndex === 0}
         >
           <ChevronLeft className="h-5 w-5" />
@@ -75,7 +75,7 @@ export function MealCarousel({
           type="button"
           aria-label="Next"
           onClick={goNext}
-          className="pointer-events-auto inline-flex h-9 w-9 items-center justify-center rounded-full border bg-background/90 backdrop-blur hover:bg-muted"
+          className="pointer-events-auto inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-background/80 backdrop-blur-md hover:bg-background/90 hover:border-white/30 transition-all duration-200"
           disabled={centerIndex === meals.length - 1}
         >
           <ChevronRight className="h-5 w-5" />
@@ -114,7 +114,7 @@ export function MealCarousel({
                 transform: 'translateZ(0)',
                 contain: 'layout style paint',
                 backfaceVisibility: 'hidden',
-                transition: 'all 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                transition: 'all 0.08s cubic-bezier(0.16, 1, 0.3, 1)'
               }}
             >
               <MealCard
