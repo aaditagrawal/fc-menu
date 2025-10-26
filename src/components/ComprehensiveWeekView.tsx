@@ -1,11 +1,10 @@
-"use client";
-
 import * as React from "react";
 import type { WeekMenu, MealKey, DayMenu, Meal } from "@/lib/types";
 import { MealCard } from "@/components/MealCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Coffee, UtensilsCrossed, Cookie, Moon } from "lucide-react";
 import { filterMenuItems } from "@/lib/exceptions";
+import { useMomentumScroll } from "@/lib/scroll";
 
 interface ComprehensiveWeekViewProps {
   week: WeekMenu;
@@ -31,33 +30,8 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
   // Sort days chronologically
   const sortedDays = React.useMemo(() => Object.keys(week.menu).sort(), [week.menu]);
   const dayCount = sortedDays.length;
-  const [isScrolling, setIsScrolling] = React.useState(false);
-
-  const handleScroll = React.useCallback(() => {
-    setIsScrolling(true);
-    const scrollTimer = setTimeout(() => setIsScrolling(false), 150);
-    return () => clearTimeout(scrollTimer);
-  }, []);
-
-  React.useEffect(() => {
-    // Only run on client side after hydration
-    if (typeof window === 'undefined') return;
-
-    const scrollContainer = document.querySelector('.scroll-container');
-    if (scrollContainer) {
-      let cleanup: (() => void) | undefined;
-      const scrollHandler = () => {
-        cleanup?.();
-        cleanup = handleScroll();
-      };
-      scrollContainer.addEventListener('scroll', scrollHandler, { passive: true });
-
-      return () => {
-        cleanup?.();
-        scrollContainer.removeEventListener('scroll', scrollHandler);
-      };
-    }
-  }, [handleScroll]);
+  // Note: useMomentumScroll handles scroll optimizations internally
+  const { containerRef: scrollContainerRef } = useMomentumScroll();
 
   return (
     <div className="space-y-8">
@@ -73,28 +47,35 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
 
       {/* Desktop View - Transposed grid: Meals as rows, Days as columns */}
       <div className="hidden lg:block">
-        <div className="overflow-x-auto scroll-smooth snap-x snap-mandatory scroll-container"
-             style={{
-               scrollBehavior: 'smooth',
-               WebkitOverflowScrolling: 'touch',
-               willChange: 'scroll-position',
-               contain: 'layout style'
-             }}>
+        <div 
+          ref={scrollContainerRef}
+          className="overflow-x-auto scroll-smooth snap-x snap-mandatory scroll-container scroll-momentum snap-enhanced scroll-indicator"
+          style={{
+            scrollBehavior: 'smooth',
+            WebkitOverflowScrolling: 'touch',
+            willChange: 'scroll-position',
+            contain: 'layout style paint',
+            transform: 'translateZ(0)',
+            overscrollBehavior: 'contain',
+            touchAction: 'panX'
+          }}>
           <div
-            className={`grid gap-3 min-w-max pb-4 items-start ${isScrolling ? 'pointer-events-none' : ''}`}
+            className={`grid gap-3 min-w-max pb-4 items-start scroll-grid`}
             style={{
               gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`,
               scrollSnapType: 'x mandatory',
               scrollPadding: '1rem',
               contain: 'layout style',
-              willChange: 'transform'
+              willChange: 'transform',
+              transform: 'translateZ(0)'
             }}
           >
             {/* Sticky Header row with days */}
             <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/50 col-span-full"
                  style={{
                    transform: 'translateZ(0)',
-                   willChange: 'transform'
+                   willChange: 'transform',
+                   contain: 'layout style'
                  }}>
               <div className="grid gap-3 items-start px-4 py-3"
                    style={{
@@ -171,7 +152,6 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
                             meal={meal}
                             mealKey={mealKey}
                             timeRange={`${meal.startTime} – ${meal.endTime} IST`}
-                            isScrolling={isScrolling}
                           />
                         ) : (
                           <div className="p-4 rounded-lg border-2 border-dashed border-muted-foreground/20 flex items-center justify-center min-h-32">
@@ -226,22 +206,21 @@ const MealGridCard = React.memo(function MealGridCard({
   meal,
   mealKey,
   timeRange,
-  isScrolling = false
 }: {
   meal: Meal;
   mealKey: MealKey;
   timeRange: string;
-  isScrolling?: boolean;
 }) {
   const Icon = mealIcons[mealKey];
   const filteredItems = React.useMemo(() => filterMenuItems(meal.items), [meal.items]);
 
   return (
-    <Card className={`${isScrolling ? '' : 'hover:shadow-md'} transition-shadow transform-gpu`}
+    <Card className={`hover:shadow-md transition-shadow transform-gpu smooth-transition hardware-accelerated`}
           style={{
             willChange: 'transform',
             contain: 'layout style',
-            pointerEvents: isScrolling ? 'none' : 'auto'
+            transform: 'translateZ(0)',
+            backfaceVisibility: 'hidden'
           }}>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center justify-between gap-2 text-sm">

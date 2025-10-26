@@ -4,6 +4,51 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Global scroll optimizations */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  overflow-x: hidden;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-padding-top: 2rem;
+}
+
+/* Hardware acceleration for scrollable containers */
+.scroll-smooth {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  transform: translateZ(0);
+  will-change: scroll-position;
+  contain: layout style paint;
+}
+
+/* Enhanced smooth scrolling with momentum */
+@media (prefers-reduced-motion: no-preference) {
+  .scroll-momentum {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+  }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
@@ -160,4 +205,166 @@
 
 .scrollbar-hide::-webkit-scrollbar {
     display: none;
+}
+
+/* Ultra-high performance scroll optimizations */
+.scroll-optimized {
+  transform: translateZ(0);
+  will-change: scroll-position;
+  contain: layout style paint;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  backface-visibility: hidden;
+  perspective: 1000px;
+  scroll-padding: 1rem;
+}
+
+/* Ultra-smooth momentum scrolling for mobile - 240Hz equivalent */
+@supports (-webkit-overflow-scrolling: touch) {
+  .scroll-momentum {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    scroll-snap-type: x mandatory;
+    scroll-snap-stop: always;
+    scroll-padding-inline: 1rem;
+    overscroll-behavior-x: contain;
+  }
+}
+
+/* Prevent rubber banding on iOS Safari */
+@supports (-webkit-touch-callout: none) {
+  html {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  body {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Ultra-optimized scroll containers with maximum sensitivity */
+.scroll-container {
+  transform: translateZ(0);
+  will-change: scroll-position;
+  contain: layout style paint;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000px;
+  perspective: 1000px;
+  scroll-snap-type: x mandatory;
+  scroll-snap-stop: always;
+  scroll-padding: 1rem;
+  overscroll-behavior: contain;
+}
+
+/* Maximum performance scroll grids */
+.scroll-grid {
+  contain: layout style paint;
+  transform: translateZ(0);
+  will-change: transform, scroll-position;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: subpixel-antialiased;
+}
+
+/* Ultra-responsive scroll snap with instant feedback */
+.snap-enhanced {
+  scroll-snap-type: x mandatory;
+  scroll-snap-stop: always;
+  scroll-behavior: smooth;
+  -webkit-scroll-snap-type: x mandatory;
+  scroll-snap-points-x: repeat(100%);
+  scroll-padding-inline: 1rem;
+}
+
+/* Enhanced scroll indicators for better UX */
+.scroll-indicator::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, oklch(var(--primary)), transparent);
+  opacity: 0.4;
+  pointer-events: none;
+  animation: scrollPulse 2s ease-in-out infinite;
+}
+
+@keyframes scrollPulse {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.6; }
+}
+
+/* Ultra-smooth transitions with cubic-bezier for natural feel */
+.smooth-transition {
+  transition: all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform, opacity, scroll-position;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* Maximum hardware acceleration for ultra-smooth animations */
+.hardware-accelerated {
+  transform: translateZ(0);
+  will-change: transform, opacity, scroll-position;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: subpixel-antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  contain: layout style paint;
+}
+
+/* Optimize for high DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .scroll-optimized {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Ultra-optimized touch targets for mobile with instant response */
+@media (pointer: coarse) {
+  .scroll-container {
+    scroll-padding: 0.5rem;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: pan-x pan-y;
+  }
+  
+  .smooth-transition {
+    transition-duration: 0.1s;
+  }
+}
+
+/* Ultra-smooth scroll for desktop with wheel optimization */
+@media (pointer: fine) {
+  .scroll-container {
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+  }
+  
+  .scroll-container:hover {
+    will-change: scroll-position;
+  }
+}
+
+/* Enhanced scroll performance for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .scroll-momentum,
+  .scroll-container,
+  .snap-enhanced {
+    scroll-behavior: auto;
+    -webkit-scroll-behavior: auto;
+  }
 }

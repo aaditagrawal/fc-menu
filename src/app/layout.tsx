@@ -39,7 +39,7 @@ export default function RootLayout({
         <script defer src="https://stat.sys256.com/script.js"></script>
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col scroll-optimized`}
       >
         <ThemeProvider
           attribute="class"

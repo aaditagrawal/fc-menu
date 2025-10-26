@@ -34,9 +34,13 @@ export function MealCard({
 
   const card = (
     <Card className={cn(
-      "transition-transform bg-card border",
+      "smooth-transition hardware-accelerated bg-card border",
       highlight ? "border-transparent" : "border-border/50"
-    )}> 
+    )} 
+    style={{
+      willChange: 'transform, opacity',
+      backfaceVisibility: 'hidden'
+    }}>
       <div className="relative p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -63,16 +67,19 @@ export function MealCard({
   if (!highlight) return card;
   return (
     <div
-      className="rounded-2xl p-[6px] relative"
+      className="rounded-2xl p-[6px] relative smooth-transition hardware-accelerated"
       style={{
         background: primaryUpcoming
           ? "linear-gradient(135deg, hsl(50 95% 70% / 0.85), hsl(330 95% 70% / 0.85))"
           : `linear-gradient(135deg, hsl(${hue} 80% 70% / 0.7), hsl(${(hue + 120) % 360} 80% 70% / 0.7))`,
         ...glow,
+        willChange: 'transform, opacity',
+        backfaceVisibility: 'hidden',
+        transform: 'translateZ(0)'
       }}
     >
       <div className="rounded-[14px] bg-card h-full w-full">
-        <Card className="bg-transparent border-0 shadow-none">
+        <Card className="bg-transparent border-0 shadow-none hardware-accelerated">
           <div className="relative p-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">

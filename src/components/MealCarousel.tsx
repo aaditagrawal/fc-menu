@@ -5,6 +5,7 @@ import type { Meal, MealKey } from "@/lib/types";
 import { MealCard } from "@/components/MealCard";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useSmoothScroll, useTouchScroll } from "@/lib/scroll";
 
 export function MealCarousel({
   meals,
@@ -20,6 +21,8 @@ export function MealCarousel({
   const [centerIndex, setCenterIndex] = React.useState<number>(() =>
     Math.max(0, meals.findIndex((m) => m.key === highlightKey))
   );
+  const { containerRef, scrollToElement, scrollVelocity } = useSmoothScroll();
+  const { velocity: touchVelocity } = useTouchScroll();
 
   // Keep centered item in sync with highlighted meal
   React.useEffect(() => {
@@ -27,13 +30,20 @@ export function MealCarousel({
     if (idx >= 0) setCenterIndex(idx);
   }, [highlightKey, meals]);
 
-  // Scroll the focused item into view
+  // Ultra-responsive scroll with velocity tracking
   React.useEffect(() => {
-    const el = itemRefs.current[centerIndex];
-    if (el && el.scrollIntoView) {
-      el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    const currentVelocity = Math.max(scrollVelocity.current || 0, Math.abs(touchVelocity.current?.x || 0));
+    
+    if (currentVelocity > 0.1) {
+      const el = itemRefs.current[centerIndex];
+      if (el) {
+        requestAnimationFrame(() => {
+          scrollToElement(el);
+        });
+      }
     }
-  }, [centerIndex]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [centerIndex, scrollToElement]);
 
   React.useEffect(() => {
     function handler(e: DeviceOrientationEvent) {
@@ -73,7 +83,20 @@ export function MealCarousel({
       </div>
 
       {/* Track */}
-      <div className="flex gap-4 overflow-x-auto py-2 px-3 sm:px-0 snap-x snap-mandatory overflow-visible scrollbar-hide scroll-smooth" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      <div 
+        ref={containerRef}
+        className="flex gap-4 overflow-x-auto py-2 px-3 sm:px-0 snap-x snap-mandatory overflow-visible scrollbar-hide scroll-smooth scroll-momentum scroll-optimized" 
+        style={{ 
+          scrollbarWidth: 'none', 
+          msOverflowStyle: 'none',
+          scrollBehavior: 'smooth',
+          WebkitOverflowScrolling: 'touch',
+          willChange: 'scroll-position',
+          contain: 'layout style paint',
+          transform: 'translateZ(0)',
+          overscrollBehavior: 'contain',
+          touchAction: 'panX'
+        }}>
         {meals.map(({ key, meal, timeRange, title }, idx) => {
           const isActive = key === highlightKey;
           return (
@@ -83,9 +106,16 @@ export function MealCarousel({
                 itemRefs.current[idx] = el;
               }}
               className={cn(
-                "min-w-[92%] sm:min-w-[55%] md:min-w-[48%] lg:min-w-[36%] snap-center transition overflow-visible px-1",
+                "min-w-[92%] sm:min-w-[55%] md:min-w-[48%] lg:min-w-[36%] snap-center smooth-transition hardware-accelerated overflow-visible px-1",
                 isActive ? "opacity-100 scale-100" : "opacity-60 scale-[0.98]"
               )}
+              style={{
+                willChange: 'transform, opacity',
+                transform: 'translateZ(0)',
+                contain: 'layout style paint',
+                backfaceVisibility: 'hidden',
+                transition: 'all 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+              }}
             >
               <MealCard
                 title={title}
