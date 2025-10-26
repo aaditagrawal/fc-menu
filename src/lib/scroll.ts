@@ -91,12 +91,19 @@ export function useSmoothScroll() {
   const scrollToElement = useCallback((element: HTMLElement, options?: ScrollIntoViewOptions) => {
     if (!containerRef.current || !element) return;
 
-    // Immediate response with smooth animation
-    element.scrollIntoView({
-      behavior: 'smooth',
-      inline: 'center',
-      block: 'nearest',
-      ...options
+    const container = containerRef.current;
+    const elementRect = element.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    
+    // Calculate the scroll position to center the element
+    const elementCenterX = element.offsetLeft + element.offsetWidth / 2;
+    const containerCenterX = container.clientWidth / 2;
+    const scrollX = elementCenterX - containerCenterX;
+    
+    // Scroll to the calculated position
+    container.scrollTo({
+      left: scrollX,
+      behavior: 'smooth'
     });
   }, []);
 

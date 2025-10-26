@@ -30,6 +30,16 @@ export function MealCarousel({
     if (idx >= 0) setCenterIndex(idx);
   }, [highlightKey, meals]);
 
+  // Scroll to element when centerIndex changes (from buttons or highlighting)
+  React.useEffect(() => {
+    const el = itemRefs.current[centerIndex];
+    if (el && containerRef.current) {
+      requestAnimationFrame(() => {
+        scrollToElement(el);
+      });
+    }
+  }, [centerIndex, scrollToElement]);
+
   // Ultra-responsive scroll with velocity tracking
   React.useEffect(() => {
     const currentVelocity = Math.max(scrollVelocity.current || 0, Math.abs(touchVelocity.current?.x || 0));
@@ -85,7 +95,7 @@ export function MealCarousel({
       {/* Track */}
       <div 
         ref={containerRef}
-        className="flex gap-4 overflow-x-auto py-2 px-3 sm:px-0 snap-x snap-mandatory overflow-visible scrollbar-hide scroll-smooth scroll-momentum scroll-optimized" 
+        className="flex gap-4 overflow-x-auto py-2 px-3 sm:px-0 snap-x snap-mandatory scrollbar-hide scroll-smooth scroll-momentum scroll-optimized" 
         style={{ 
           scrollbarWidth: 'none', 
           msOverflowStyle: 'none',
@@ -106,7 +116,7 @@ export function MealCarousel({
                 itemRefs.current[idx] = el;
               }}
               className={cn(
-                "min-w-[92%] sm:min-w-[55%] md:min-w-[48%] lg:min-w-[36%] snap-center smooth-transition hardware-accelerated overflow-visible px-1",
+                "min-w-[92%] sm:min-w-[55%] md:min-w-[48%] lg:min-w-[36%] snap-center smooth-transition hardware-accelerated px-1",
                 isActive ? "opacity-100 scale-100" : "opacity-60 scale-[0.98]"
               )}
               style={{
