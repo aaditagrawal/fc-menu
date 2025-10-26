@@ -14,7 +14,7 @@ html {
 
 body {
   overflow-x: hidden;
-  overscroll-behavior: none;
+  overscroll-behavior: auto;
   -webkit-overflow-scrolling: touch;
   scroll-padding-top: 2rem;
 }
@@ -24,8 +24,6 @@ body {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   transform: translateZ(0);
-  will-change: scroll-position;
-  contain: layout style paint;
 }
 
 /* Enhanced smooth scrolling with momentum */
@@ -210,13 +208,10 @@ body {
 /* Ultra-high performance scroll optimizations */
 .scroll-optimized {
   transform: translateZ(0);
-  will-change: scroll-position;
-  contain: layout style paint;
+  will-change: auto;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
   backface-visibility: hidden;
-  perspective: 1000px;
-  scroll-padding: 1rem;
 }
 
 /* Ultra-smooth momentum scrolling for mobile - 240Hz equivalent */
@@ -229,7 +224,6 @@ body {
     scroll-snap-type: x mandatory;
     scroll-snap-stop: always;
     scroll-padding-inline: 1rem;
-    overscroll-behavior-x: contain;
   }
 }
 
@@ -239,31 +233,25 @@ body {
   .scroll-momentum,
   .scroll-optimized {
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
   }
 }
 
 /* Ultra-optimized scroll containers with maximum sensitivity */
 .scroll-container {
   transform: translateZ(0);
-  will-change: scroll-position;
-  contain: layout style paint;
+  will-change: auto;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
   backface-visibility: hidden;
-  -webkit-perspective: 1000px;
-  perspective: 1000px;
   scroll-snap-type: x mandatory;
   scroll-snap-stop: always;
   scroll-padding: 1rem;
-  overscroll-behavior: contain;
 }
 
 /* Maximum performance scroll grids */
 .scroll-grid {
-  contain: layout style paint;
   transform: translateZ(0);
-  will-change: transform, scroll-position;
+  will-change: transform;
   backface-visibility: hidden;
   -webkit-font-smoothing: subpixel-antialiased;
 }

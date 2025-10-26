@@ -55,10 +55,8 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
           style={{
             scrollBehavior: 'smooth',
             WebkitOverflowScrolling: 'touch',
-            willChange: 'scroll-position',
-            contain: 'layout style paint',
+            willChange: 'auto',
             transform: 'translateZ(0)',
-            overscrollBehavior: 'contain',
             touchAction: 'panX'
           }}>
           <div
@@ -67,7 +65,6 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
               gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`,
               scrollSnapType: 'x mandatory',
               scrollPadding: '1rem',
-              contain: 'layout style',
               willChange: 'transform',
               transform: 'translateZ(0)'
             }}
@@ -76,8 +73,7 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
             <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/50 col-span-full"
                  style={{
                    transform: 'translateZ(0)',
-                   willChange: 'transform',
-                   contain: 'layout style'
+                   willChange: 'transform'
                  }}>
               <div className="grid gap-3 items-start px-4 py-3"
                    style={{
@@ -121,8 +117,7 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
                 {/* Meal type header and content row */}
                 <div className="grid gap-3 items-start border-t border-border/50 col-span-full"
                      style={{
-                       gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`,
-                       contain: 'layout style'
+                       gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`
                      }}>
                   {/* Meal type header */}
                   <div className="p-3">
@@ -146,8 +141,7 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
                     return (
                       <div key={`${mealKey}-${dateKey}`} className="p-3 snap-start"
                            style={{
-                             scrollSnapAlign: 'start',
-                             contain: 'layout style'
+                             scrollSnapAlign: 'start'
                            }}>
                         {meal ? (
                           <MealGridCard
@@ -220,7 +214,6 @@ const MealGridCard = React.memo(function MealGridCard({
     <Card className={`hover:shadow-md transition-shadow transform-gpu smooth-transition hardware-accelerated`}
           style={{
             willChange: 'transform',
-            contain: 'layout style',
             transform: 'translateZ(0)',
             backfaceVisibility: 'hidden'
           }}>

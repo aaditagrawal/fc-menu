@@ -101,10 +101,8 @@ export function MealCarousel({
           msOverflowStyle: 'none',
           scrollBehavior: 'smooth',
           WebkitOverflowScrolling: 'touch',
-          willChange: 'scroll-position',
-          contain: 'layout style paint',
+          willChange: 'auto',
           transform: 'translateZ(0)',
-          overscrollBehavior: 'contain',
           touchAction: 'panX'
         }}>
         {meals.map(({ key, meal, timeRange, title }, idx) => {
@@ -122,7 +120,6 @@ export function MealCarousel({
               style={{
                 willChange: 'transform, opacity',
                 transform: 'translateZ(0)',
-                contain: 'layout style paint',
                 backfaceVisibility: 'hidden',
                 transition: 'all 0.08s cubic-bezier(0.16, 1, 0.3, 1)'
               }}
