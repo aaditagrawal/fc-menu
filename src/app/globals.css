@@ -233,21 +233,13 @@ body {
   }
 }
 
-/* Prevent rubber banding on iOS Safari */
+/* Prevent rubber banding on iOS Safari for specific scroll containers only */
 @supports (-webkit-touch-callout: none) {
-  html {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-  }
-  
-  body {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
+  .scroll-container,
+  .scroll-momentum,
+  .scroll-optimized {
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 }
 
