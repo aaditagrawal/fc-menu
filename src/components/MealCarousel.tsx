@@ -52,8 +52,7 @@ export function MealCarousel({
         });
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [centerIndex, scrollToElement]);
+  }, [centerIndex, scrollToElement, scrollVelocity, touchVelocity]);
 
   React.useEffect(() => {
     function handler(e: DeviceOrientationEvent) {
