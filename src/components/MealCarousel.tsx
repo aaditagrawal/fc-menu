@@ -5,7 +5,7 @@ import type { Meal, MealKey } from "@/lib/types";
 import { MealCard } from "@/components/MealCard";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useSmoothScroll, useTouchScroll } from "@/lib/scroll";
+import { useSmoothScroll } from "@/lib/scroll";
 
 export function MealCarousel({
   meals,
@@ -18,41 +18,47 @@ export function MealCarousel({
 }) {
   const itemRefs = React.useRef<Array<HTMLDivElement | null>>([]);
   const [tilt, setTilt] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [centerIndex, setCenterIndex] = React.useState<number>(() =>
+  const [activeIndex, setActiveIndex] = React.useState<number>(() =>
     Math.max(0, meals.findIndex((m) => m.key === highlightKey))
   );
-  const { containerRef, scrollToElement, scrollVelocity } = useSmoothScroll();
-  const { velocity: touchVelocity } = useTouchScroll();
+  const isProgrammaticScroll = React.useRef(false);
+  const scrollResetTimeout = React.useRef<number | null>(null);
+  const scrollRaf = React.useRef<number | null>(null);
+  const { containerRef, scrollToElement } = useSmoothScroll();
 
-  // Keep centered item in sync with highlighted meal
+  // Keep centered item in sync with highlighted meal and center it in view
   React.useEffect(() => {
     const idx = meals.findIndex((m) => m.key === highlightKey);
-    if (idx >= 0) setCenterIndex(idx);
-  }, [highlightKey, meals]);
-
-  // Scroll to element when centerIndex changes (from buttons or highlighting)
-  React.useEffect(() => {
-    const el = itemRefs.current[centerIndex];
-    if (el && containerRef.current) {
+    if (idx >= 0 && idx !== activeIndex) {
+      isProgrammaticScroll.current = true;
+      setActiveIndex(idx);
       requestAnimationFrame(() => {
-        scrollToElement(el);
+        const el = itemRefs.current[idx];
+        if (el) scrollToElement(el);
+        if (scrollResetTimeout.current) window.clearTimeout(scrollResetTimeout.current);
+        scrollResetTimeout.current = window.setTimeout(() => {
+          isProgrammaticScroll.current = false;
+        }, 320);
       });
     }
-  }, [centerIndex, scrollToElement]);
+  }, [activeIndex, highlightKey, meals, scrollToElement]);
 
-  // Ultra-responsive scroll with velocity tracking
+  // Center to the initial highlighted item on mount
   React.useEffect(() => {
-    const currentVelocity = Math.max(scrollVelocity.current || 0, Math.abs(touchVelocity.current?.x || 0));
-    
-    if (currentVelocity > 0.1) {
-      const el = itemRefs.current[centerIndex];
-      if (el) {
-        requestAnimationFrame(() => {
-          scrollToElement(el);
-        });
-      }
+    const el = itemRefs.current[activeIndex];
+    if (el) {
+      isProgrammaticScroll.current = true;
+      scrollToElement(el);
+      scrollResetTimeout.current = window.setTimeout(() => {
+        isProgrammaticScroll.current = false;
+      }, 320);
     }
-  }, [centerIndex, scrollToElement, scrollVelocity, touchVelocity]);
+    return () => {
+      if (scrollResetTimeout.current) window.clearTimeout(scrollResetTimeout.current);
+      if (scrollRaf.current) cancelAnimationFrame(scrollRaf.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   React.useEffect(() => {
     function handler(e: DeviceOrientationEvent) {
@@ -64,8 +70,63 @@ export function MealCarousel({
     return () => window.removeEventListener("deviceorientation", handler);
   }, []);
 
-  const goPrev = () => setCenterIndex((i) => Math.max(0, i - 1));
-  const goNext = () => setCenterIndex((i) => Math.min(meals.length - 1, i + 1));
+  const goPrev = () => {
+    const next = Math.max(0, activeIndex - 1);
+    if (next === activeIndex) return;
+    isProgrammaticScroll.current = true;
+    setActiveIndex(next);
+    requestAnimationFrame(() => {
+      const el = itemRefs.current[next];
+      if (el) scrollToElement(el);
+      if (scrollResetTimeout.current) window.clearTimeout(scrollResetTimeout.current);
+      scrollResetTimeout.current = window.setTimeout(() => {
+        isProgrammaticScroll.current = false;
+      }, 320);
+    });
+  };
+
+  const goNext = () => {
+    const next = Math.min(meals.length - 1, activeIndex + 1);
+    if (next === activeIndex) return;
+    isProgrammaticScroll.current = true;
+    setActiveIndex(next);
+    requestAnimationFrame(() => {
+      const el = itemRefs.current[next];
+      if (el) scrollToElement(el);
+      if (scrollResetTimeout.current) window.clearTimeout(scrollResetTimeout.current);
+      scrollResetTimeout.current = window.setTimeout(() => {
+        isProgrammaticScroll.current = false;
+      }, 320);
+    });
+  };
+
+  const handleScroll = React.useCallback(() => {
+    if (isProgrammaticScroll.current) return;
+    const container = containerRef.current;
+    if (!container) return;
+    const viewportCenter = container.scrollLeft + container.clientWidth / 2;
+    let closestIndex = activeIndex;
+    let closestDistance = Number.POSITIVE_INFINITY;
+
+    itemRefs.current.forEach((el, idx) => {
+      if (!el) return;
+      const elCenter = el.offsetLeft + el.offsetWidth / 2;
+      const distance = Math.abs(elCenter - viewportCenter);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestIndex = idx;
+      }
+    });
+
+    if (closestIndex !== activeIndex) {
+      setActiveIndex(closestIndex);
+    }
+  }, [activeIndex, containerRef]);
+
+  const handleScrollEvent = () => {
+    if (scrollRaf.current) cancelAnimationFrame(scrollRaf.current);
+    scrollRaf.current = requestAnimationFrame(handleScroll);
+  };
 
   return (
     <div className="relative overflow-visible">
@@ -76,7 +137,7 @@ export function MealCarousel({
           aria-label="Previous"
           onClick={goPrev}
           className="pointer-events-auto inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-background/80 backdrop-blur-md hover:bg-background/90 hover:border-white/30 transition-all duration-200"
-          disabled={centerIndex === 0}
+          disabled={activeIndex === 0}
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
@@ -85,7 +146,7 @@ export function MealCarousel({
           aria-label="Next"
           onClick={goNext}
           className="pointer-events-auto inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-background/80 backdrop-blur-md hover:bg-background/90 hover:border-white/30 transition-all duration-200"
-          disabled={centerIndex === meals.length - 1}
+          disabled={activeIndex === meals.length - 1}
         >
           <ChevronRight className="h-5 w-5" />
         </button>
@@ -94,6 +155,7 @@ export function MealCarousel({
       {/* Track */}
       <div 
         ref={containerRef}
+        onScroll={handleScrollEvent}
         className="flex gap-4 overflow-x-auto py-2 px-3 sm:px-0 snap-x snap-mandatory scrollbar-hide scroll-smooth scroll-momentum scroll-optimized" 
         style={{ 
           scrollbarWidth: 'none', 
@@ -105,7 +167,7 @@ export function MealCarousel({
           touchAction: 'panX'
         }}>
         {meals.map(({ key, meal, timeRange, title }, idx) => {
-          const isActive = key === highlightKey;
+          const isActive = idx === activeIndex;
           return (
             <div
               key={key}
@@ -129,7 +191,7 @@ export function MealCarousel({
                 meal={meal}
                 mealKey={key}
                 highlight={isActive}
-                primaryUpcoming={isActive && isPrimaryUpcoming}
+                primaryUpcoming={isActive && isPrimaryUpcoming && key === highlightKey}
                 tilt={tilt}
               />
             </div>

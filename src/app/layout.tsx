@@ -85,6 +85,15 @@ export default function RootLayout({
                 <a href="/changelog" className="hover:text-foreground transition-colors">
                   Changelog
                 </a>
+                {" • "}
+                <a
+                  href="https://blog.aadit.cc/posts/building-a-food-court-menu/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-foreground transition-colors"
+                >
+                  How it was made
+                </a>
               </p>
             </div>
           </footer>
