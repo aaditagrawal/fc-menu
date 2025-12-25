@@ -5,49 +5,109 @@ import type { MealKey, WeekMenu } from "@/lib/types";
 import { findCurrentOrUpcomingMeal, pickHighlightMealForDay } from "@/lib/date";
 import { InlineSelect } from "@/components/InlineSelect";
 import { MealCarousel } from "@/components/MealCarousel";
-import { getWeekMenuClient, type WeekId, fetchWeeksInfo, getWeekMenuClientFresh, fetchWeeksInfoFresh } from "@/data/weeks/client";
-import type { WeekMeta } from "@/lib/types";
-import { useRouter } from "next/navigation";
+import { useWeeksInfo, useWeekMenu } from "@/hooks/useMenuData";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Grid3X3 } from "lucide-react";
+import { Grid3X3, Loader2 } from "lucide-react";
+
+export type WeekId = string;
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+interface MenuViewerSkeletonProps {}
+
+function MenuViewerSkeleton({}: MenuViewerSkeletonProps) {
+  return (
+    <div className="space-y-4">
+      <header className="mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="space-y-1">
+            <div className="h-8 w-48 bg-muted animate-pulse rounded" />
+            <div className="h-4 w-32 bg-muted animate-pulse rounded" />
+          </div>
+        </div>
+      </header>
+      <div className="space-y-4">
+        <div className="flex gap-4 overflow-x-auto py-2 px-3">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="min-w-[92%] sm:min-w-[55%] md:min-w-[48%] lg:min-w-[36%] h-48 bg-muted animate-pulse rounded-lg"
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LoadingState() {
+  return (
+    <div className="flex items-center justify-center py-12">
+      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
+
+function ErrorState({ message }: { message: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-12 space-y-4">
+      <div className="text-red-500 text-sm">{message}</div>
+      <Button
+        variant="outline"
+        onClick={() => window.location.reload()}
+      >
+        Try Again
+      </Button>
+    </div>
+  );
+}
 
 export function MenuViewer({
   initialWeekId,
   initialWeek,
-  routingMode = "home",
 }: {
-  initialWeekId: WeekId;
-  initialWeek: WeekMenu;
-  routingMode?: "home" | "week";
+  initialWeekId?: WeekId | null;
+  initialWeek?: WeekMenu | null;
 }) {
-  const router = useRouter();
-  const [, setAllWeekIds] = React.useState<WeekId[]>([initialWeekId]);
-  const [weeksMeta, setWeeksMeta] = React.useState<WeekMeta[]>([]);
-  const [weekId, setWeekId] = React.useState<WeekId>(initialWeekId);
-  const [week, setWeek] = React.useState<WeekMenu>(initialWeek);
-  const initialYear = React.useMemo(() => initialWeekId.slice(0, 4), [initialWeekId]);
-  const [year, setYear] = React.useState<string>(initialYear);
-  const [foodCourt, setFoodCourt] = React.useState<string>(initialWeek.foodCourt);
-  const [isRefreshing, setIsRefreshing] = React.useState(false);
+  // router removed - no longer needed for client-side only routing
+  const { data: weeksInfo, isLoading: isWeeksLoading, error: weeksError } = useWeeksInfo();
+  const [selectedWeekId, setSelectedWeekId] = React.useState<WeekId | null>(initialWeekId ?? null);
+  const [year, setYear] = React.useState<string>(
+    initialWeekId ? initialWeekId.slice(0, 4) : new Date().getFullYear().toString()
+  );
+  const [foodCourt, setFoodCourt] = React.useState<string>(initialWeek?.foodCourt ?? "");
   const [isHydrated, setIsHydrated] = React.useState(false);
+  const [dateKey, setDateKey] = React.useState<string | null>(null);
 
-  // Mark component as hydrated after first render
+  const weekMenuQuery = useWeekMenu(selectedWeekId);
+  const week = weekMenuQuery.data ?? initialWeek ?? null;
+
   React.useEffect(() => {
     setIsHydrated(true);
   }, []);
 
-  // Sync state when server-provided props change (e.g., navigating between week routes)
   React.useEffect(() => {
-    setWeekId(initialWeekId);
-    setWeek(initialWeek);
-    setYear(initialWeekId.slice(0, 4));
-    setFoodCourt(initialWeek.foodCourt);
-    const ptr = findCurrentOrUpcomingMeal(initialWeek);
-    setDateKey(ptr?.dateKey ?? Object.keys(initialWeek.menu)[0]);
-  }, [initialWeekId, initialWeek]);
+    if (!isHydrated) return;
+    if (initialWeekId && !selectedWeekId) {
+      setSelectedWeekId(initialWeekId);
+    }
+  }, [isHydrated, initialWeekId, selectedWeekId]);
 
-  // Read preferred foodCourt from cookie on client-side only
+  React.useEffect(() => {
+    if (!isHydrated || !week) return;
+    if (initialWeek?.foodCourt) {
+      setFoodCourt(initialWeek.foodCourt);
+    }
+  }, [isHydrated, week, initialWeek]);
+
+  React.useEffect(() => {
+    if (!isHydrated) return;
+    if (week) {
+      const ptr = findCurrentOrUpcomingMeal(week);
+      setDateKey(ptr?.dateKey ?? Object.keys(week.menu)[0]);
+    }
+  }, [isHydrated, week]);
+
   React.useEffect(() => {
     if (!isHydrated) return;
     try {
@@ -60,118 +120,100 @@ export function MenuViewer({
       // noop
     }
   }, [foodCourt, isHydrated]);
-  // Fetch available week ids on mount
+
+  const availableFoodCourts = React.useMemo(() => {
+    if (!weeksInfo?.weeks) return [];
+    const courts = new Set(weeksInfo.weeks.map((w) => w.foodCourt));
+    return Array.from(courts).sort();
+  }, [weeksInfo?.weeks]);
+
   React.useEffect(() => {
     if (!isHydrated) return;
-    fetchWeeksInfo().then(({ weekIds, meta }) => {
-      setAllWeekIds(weekIds);
-      setWeeksMeta(meta);
-    }).catch(() => {});
-  }, [isHydrated]);
-
-  // Initialize dateKey to current/upcoming meal to match server and client
-  const initialDateKey = React.useMemo(() => {
-    const ptr = findCurrentOrUpcomingMeal(initialWeek);
-    return ptr?.dateKey ?? Object.keys(initialWeek.menu)[0];
-  }, [initialWeek]);
-
-  const [dateKey, setDateKey] = React.useState<string>(initialDateKey);
-
-  // Update dateKey when week changes
-  React.useEffect(() => {
-    const ptr = findCurrentOrUpcomingMeal(week);
-    const currentDateKey = ptr?.dateKey ?? Object.keys(week.menu)[0];
-    if (currentDateKey !== dateKey) {
-      setDateKey(currentDateKey);
+    if (!foodCourt && availableFoodCourts.length > 0 && !initialWeek?.foodCourt) {
+      setFoodCourt(availableFoodCourts[0]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [week]);
+  }, [isHydrated, foodCourt, availableFoodCourts, initialWeek]);
 
-  // When year changes, adjust week list for the selected mess and pick the latest
+  const filteredWeeks = React.useMemo(() => {
+    if (!weeksInfo?.weeks) return [];
+    return weeksInfo.weeks.filter((w) => w.foodCourt === foodCourt);
+  }, [weeksInfo?.weeks, foodCourt]);
+
+  const availableYears = React.useMemo(() => {
+    if (!filteredWeeks.length) return [];
+    const years = new Set(filteredWeeks.map((w) => w.weekMonday.slice(0, 4)));
+    return Array.from(years).sort().reverse();
+  }, [filteredWeeks]);
+
   React.useEffect(() => {
-    const yearWeeksForMess = weeksMeta
-      .filter((m) => m.foodCourt === foodCourt && m.id.startsWith(`${year}-`))
-      .map((m) => m.id)
-      .sort();
-    if (yearWeeksForMess.length === 0) return;
-    if (!yearWeeksForMess.includes(weekId)) {
-      const latestForYear = yearWeeksForMess[yearWeeksForMess.length - 1] as WeekId;
-      if (latestForYear) setWeekId(latestForYear);
+    if (!isHydrated) return;
+    if (!availableYears.includes(year)) {
+      setYear(availableYears[0] ?? new Date().getFullYear().toString());
     }
-  }, [year, weeksMeta, foodCourt, weekId]);
+  }, [isHydrated, availableYears, year]);
 
-  // When weekId changes, either route (week mode) or load locally (home mode)
+  const weeksForYear = React.useMemo(() => {
+    if (!filteredWeeks.length) return [];
+    return filteredWeeks
+      .filter((w) => w.weekMonday.startsWith(`${year}-`))
+      .sort((a, b) => b.weekMonday.localeCompare(a.weekMonday));
+  }, [filteredWeeks, year]);
+
   React.useEffect(() => {
-    if (weekId === initialWeekId) return;
-    if (routingMode === "week") {
-      router.push(`/week/${weekId}`);
-      return;
+    if (!isHydrated) return;
+    if (weeksForYear.length > 0 && !weeksForYear.find((w) => w.weekMonday === selectedWeekId)) {
+      const latest = weeksForYear[0];
+      if (latest) setSelectedWeekId(latest.weekMonday);
     }
-    getWeekMenuClient(weekId).then((w) => {
-      setWeek(w);
-      const ptr = findCurrentOrUpcomingMeal(w);
-      setDateKey(ptr?.dateKey ?? Object.keys(w.menu)[0]);
-      setFoodCourt(w.foodCourt);
-    });
-  }, [weekId, initialWeekId, router, routingMode]);
+  }, [isHydrated, weeksForYear, selectedWeekId]);
 
-  // Handle data refresh - force fetch fresh data and check for new weeks
-  const handleRefresh = React.useCallback(async () => {
-    setIsRefreshing(true);
+  React.useEffect(() => {
+    if (!foodCourt) return;
     try {
-      console.log('🔄 Starting data refresh...');
-      
-      // First, fetch the latest weeks info to see if there's a new week
-      const { weekIds, meta } = await fetchWeeksInfoFresh();
-      setAllWeekIds(weekIds);
-      setWeeksMeta(meta);
-      
-      // Determine which week to load:
-      // If we're on the old "latest" week and there's a newer one, switch to it
-      let targetWeekId = weekId;
-      if (weekIds.length > 0) {
-        const latestWeekId = weekIds[0];
-        // If current week is not in the list or not the latest, switch to latest
-        if (!weekIds.includes(weekId) || weekId !== latestWeekId) {
-          targetWeekId = latestWeekId;
-          console.log(`📦 Switching to latest week: ${latestWeekId}`);
-        }
-      }
-      
-      // Fetch fresh data for the target week
-      const freshWeek = await getWeekMenuClientFresh(targetWeekId);
-      
-      // Update state with the fresh week data
-      if (targetWeekId !== weekId) {
-        setWeekId(targetWeekId);
-      }
-      setWeek(freshWeek);
-      
-      // Update the date key to show current/upcoming meal
-      const ptr = findCurrentOrUpcomingMeal(freshWeek);
-      setDateKey(ptr?.dateKey ?? Object.keys(freshWeek.menu)[0]);
-      
-      // Navigate if we switched to a different week and we're in week mode
-      if (targetWeekId !== weekId && routingMode === "week") {
-        router.push(`/week/${targetWeekId}`);
-      }
-      
-      console.log('✅ Data refreshed successfully');
-    } catch (error) {
-      console.error('❌ Failed to refresh data:', error);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [weekId, routingMode, router]);
+      document.cookie = `preferredFoodCourt=${encodeURIComponent(foodCourt)}; path=/; max-age=${60 * 60 * 24 * 365}`;
+    } catch {}
+  }, [foodCourt]);
 
-  // Ensure dateKey is valid for current week
   React.useEffect(() => {
-    if (!week.menu[dateKey]) {
-      const keys = Object.keys(week.menu).sort();
-      setDateKey(keys[0]);
+    if (!isHydrated || !foodCourt) return;
+    const base = "The Indian Kitchen";
+    document.title = `${foodCourt} Menu — ${base}`;
+  }, [foodCourt, isHydrated]);
+
+  const handleRefresh = React.useCallback(async () => {
+    await weekMenuQuery.refetch();
+  }, [weekMenuQuery]);
+
+  const yearOptions = availableYears.map((y) => ({ label: y, value: y }));
+  const foodCourtOptions = availableFoodCourts.map((fc) => ({ label: fc, value: fc }));
+  const weekOptions = weeksForYear.map((weekSummary) => {
+    return { label: weekSummary.week, value: weekSummary.weekMonday };
+  });
+
+  const dayOptions = week
+    ? Object.keys(week.menu)
+        .sort()
+        .map((k) => ({ label: `${week.menu[k].day} • ${k}`, value: k }))
+    : [];
+
+  if (isWeeksLoading) {
+    return <MenuViewerSkeleton />;
+  }
+
+  if (weeksError) {
+    return <ErrorState message="Failed to load weeks info" />;
+  }
+
+  if (!weeksInfo) {
+    if (weeksInfo === undefined) {
+      return <MenuViewerSkeleton />;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [week]);
+    return <ErrorState message="No weeks available" />;
+  }
+
+  if (!week) {
+    return <LoadingState />;
+  }
 
   const pointer = findCurrentOrUpcomingMeal(week);
   const effectiveDateKey = dateKey ?? pointer?.dateKey ?? Object.keys(week.menu)[0];
@@ -191,52 +233,48 @@ export function MenuViewer({
   const highlightKey = (picked?.mealKey ?? (meals[0]?.key ?? "breakfast")) as MealKey;
   const isPrimaryUpcoming = Boolean(picked?.isPrimaryUpcoming);
 
-
-
-  const dayOptions = Object.keys(week.menu)
-    .sort()
-    .map((k) => ({ label: `${week.menu[k].day} • ${k}`, value: k }));
-
-
-  // Handle mess changes: pick the latest week for the chosen mess, same year if possible
-  React.useEffect(() => {
-    if (!foodCourt) return;
-    // persist in cookie
-    try {
-      document.cookie = `preferredFoodCourt=${encodeURIComponent(foodCourt)}; path=/; max-age=${60 * 60 * 24 * 365}`;
-    } catch {}
-    const candidates = weeksMeta.filter((m) => m.foodCourt === foodCourt);
-    if (candidates.length === 0) return;
-    const candidateIds = candidates.map((m) => m.id);
-    const sameYearIds = candidateIds.filter((id) => id.startsWith(`${year}-`)).sort();
-    const pick = (sameYearIds[sameYearIds.length - 1] ?? candidateIds.sort()[candidateIds.length - 1]) as WeekId;
-    if (pick && pick !== weekId) setWeekId(pick);
-  }, [foodCourt, weeksMeta, year, weekId]);
-
-  // Update page title client-side when mess changes
-  React.useEffect(() => {
-    if (!isHydrated || !foodCourt) return;
-    const base = "The Indian Kitchen";
-    document.title = `${foodCourt} Menu — ${base}`;
-  }, [foodCourt, isHydrated]);
-
   return (
     <div className="space-y-4">
       <header className="mb-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="space-y-1">
             <h1 className="text-2xl sm:text-3xl font-semibold">
-              {foodCourt.replace(/Food Court (\d+)/, 'Food Court $1')}: Menu
+              {foodCourt.replace(/Food Court (\d+)/, "Food Court $1")}: Menu
             </h1>
             <p className="text-muted-foreground">{week.week}</p>
           </div>
-          <InlineSelect
-            label="Day"
-            value={dateKey}
-            options={dayOptions}
-            onChange={(v) => setDateKey(String(v))}
-            className="text-sm"
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            {foodCourtOptions.length > 1 && (
+              <InlineSelect
+                label="Mess"
+                value={foodCourt}
+                options={foodCourtOptions}
+                onChange={(v) => setFoodCourt(String(v))}
+                className="text-sm"
+              />
+            )}
+            <InlineSelect
+              label="Year"
+              value={year}
+              options={yearOptions}
+              onChange={(v) => setYear(String(v))}
+              className="text-sm"
+            />
+            <InlineSelect
+              label="Week"
+              value={selectedWeekId ?? ""}
+              options={weekOptions}
+              onChange={(v) => setSelectedWeekId(String(v))}
+              className="text-sm"
+            />
+            <InlineSelect
+              label="Day"
+              value={effectiveDateKey}
+              options={dayOptions}
+              onChange={(v) => setDateKey(String(v))}
+              className="text-sm"
+            />
+          </div>
         </div>
       </header>
 
@@ -244,7 +282,7 @@ export function MenuViewer({
 
       <div className="flex flex-col sm:flex-row items-center gap-2 mt-6">
         <Button asChild variant="outline">
-          <Link href={`/week/${weekId}/full`} title="View full week menu">
+          <Link href={`/week/${selectedWeekId}/full`} title="View full week menu">
             <Grid3X3 className="h-4 w-4 mr-2" />
             View Full Week Menu
           </Link>
@@ -252,17 +290,22 @@ export function MenuViewer({
 
         <Button
           onClick={handleRefresh}
-          disabled={isRefreshing}
+          disabled={weekMenuQuery.isFetching}
           variant="ghost"
           size="sm"
           className="text-xs"
-          title="Refresh data if no upcoming meal is available"
+          title="Refresh data"
         >
-          {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+          {weekMenuQuery.isFetching ? (
+            <>
+              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              Refreshing...
+            </>
+          ) : (
+            "Refresh Data"
+          )}
         </Button>
       </div>
     </div>
   );
 }
-
-

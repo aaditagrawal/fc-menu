@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
+import { QueryProvider } from "@/providers/QueryProvider";
+import { OfflineBanner } from "@/components/OfflineBanner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -41,64 +43,67 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col scroll-optimized`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <div className="fixed top-4 right-4 z-50">
-            <ThemeSwitcher />
-          </div>
-          <main className="flex-1">{children}</main>
-          <footer className="border-t bg-secondary/20">
-            <div className="mx-auto max-w-4xl px-4 py-6">
-              <p className="text-xs text-muted-foreground text-center">
-                Made by{" "}
-                <a
-                  href="https://aadit.cc"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-foreground transition-colors"
-                >
-                  Aadit
-                </a>
-                {" • "}
-                <a
-                  href="https://tikm.coolstuff.work/docs/reference"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-foreground transition-colors"
-                >
-                  API Docs
-                </a>
-                {" • "}
-                <a
-                  href="https://github.com/aaditagrawal/fc-menu"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-foreground transition-colors"
-                >
-                  Open Source
-                </a>
-                {" • "}
-                <a href="/changelog" className="hover:text-foreground transition-colors">
-                  Changelog
-                </a>
-                {" • "}
-                <a
-                  href="https://blog.aadit.cc/posts/building-a-food-court-menu/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-foreground transition-colors"
-                >
-                  How it was made
-                </a>
-              </p>
+        <QueryProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <div className="fixed top-4 right-4 z-50">
+              <ThemeSwitcher />
             </div>
-          </footer>
-          <Toaster />
-        </ThemeProvider>
+            <main className="flex-1">{children}</main>
+            <footer className="border-t bg-secondary/20">
+              <div className="mx-auto max-w-4xl px-4 py-6">
+                <p className="text-xs text-muted-foreground text-center">
+                  Made by{" "}
+                  <a
+                    href="https://aadit.cc"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Aadit
+                  </a>
+                  {" • "}
+                  <a
+                    href="https://tikm.coolstuff.work/docs/reference"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    API Docs
+                  </a>
+                  {" • "}
+                  <a
+                    href="https://github.com/aaditagrawal/fc-menu"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Open Source
+                  </a>
+                  {" • "}
+                  <a href="/changelog" className="hover:text-foreground transition-colors">
+                    Changelog
+                  </a>
+                  {" • "}
+                  <a
+                    href="https://blog.aadit.cc/posts/building-a-food-court-menu/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    How it was made
+                  </a>
+                </p>
+              </div>
+            </footer>
+            <Toaster />
+            <OfflineBanner />
+          </ThemeProvider>
+        </QueryProvider>
       </body>
     </html>
   );

@@ -1,18 +1,20 @@
-import { getLatestWeekId, getWeekMenu } from "@/data/weeks";
 import { MenuViewer } from "@/components/MenuViewer";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 
-// Regenerate page every 7 days in the background (ISR)
-export const revalidate = 600; // 10 minutes - allows faster updates when new data is published
+export const metadata = {
+  title: {
+    default: "Food Court Menus — The Indian Kitchen",
+    template: "%s — The Indian Kitchen",
+  },
+  description:
+    "A fast, friendly viewer for weekly menus with time-aware highlighting (IST).",
+};
 
-export default async function Home() {
-  const weekId = await getLatestWeekId();
-  const week = await getWeekMenu(weekId);
+export default function Home() {
   return (
     <div className="px-4 py-8 sm:px-6 md:px-8 scroll-optimized">
       <div className="mx-auto max-w-4xl space-y-6">
-        {/* Wrapped Banner */}
         <div
           className="group rounded-xl p-[2px] transition-all hover:shadow-lg hover:shadow-amber-500/10"
           style={{
@@ -40,7 +42,7 @@ export default async function Home() {
           </Link>
         </div>
 
-        <MenuViewer initialWeekId={weekId} initialWeek={week} routingMode="home" />
+        <MenuViewer initialWeekId={null} />
       </div>
     </div>
   );
