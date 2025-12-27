@@ -12,38 +12,22 @@ import { Grid3X3, Loader2 } from "lucide-react";
 
 export type WeekId = string;
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-interface MenuViewerSkeletonProps {}
-
-function MenuViewerSkeleton({}: MenuViewerSkeletonProps) {
+function MenuViewerSkeleton() {
   return (
-    <div className="space-y-4">
-      <header className="mb-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div className="space-y-1">
-            <div className="h-8 w-48 bg-muted animate-pulse rounded" />
-            <div className="h-4 w-32 bg-muted animate-pulse rounded" />
-          </div>
-        </div>
-      </header>
-      <div className="space-y-4">
-        <div className="flex gap-4 overflow-x-auto py-2 px-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="min-w-[92%] sm:min-w-[55%] md:min-w-[48%] lg:min-w-[36%] h-48 bg-muted animate-pulse rounded-lg"
-            />
-          ))}
+    <div className="flex flex-col items-center justify-center min-h-[320px] py-16 animate-in fade-in duration-300">
+      <div className="relative">
+        {/* Soft pulsing glow */}
+        <div className="absolute inset-0 rounded-full bg-primary/10 blur-xl animate-pulse" />
+        
+        {/* Elegant spinner ring */}
+        <div className="relative w-12 h-12 rounded-full border-2 border-muted">
+          <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary/60 animate-spin" />
         </div>
       </div>
-    </div>
-  );
-}
-
-function LoadingState() {
-  return (
-    <div className="flex items-center justify-center py-12">
-      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      
+      <p className="mt-6 text-sm text-muted-foreground/70 tracking-wide">
+        Loading menu...
+      </p>
     </div>
   );
 }
@@ -212,7 +196,7 @@ export function MenuViewer({
   }
 
   if (!week) {
-    return <LoadingState />;
+    return <MenuViewerSkeleton />;
   }
 
   const pointer = findCurrentOrUpcomingMeal(week);
