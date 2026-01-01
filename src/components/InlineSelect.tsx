@@ -45,7 +45,8 @@ export function InlineSelect<T extends string | number>({
         type="button"
         className={cn(
           "underline decoration-dotted underline-offset-4 text-foreground/90 hover:text-foreground",
-          "px-1 py-0.5 rounded focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
+          "px-1 py-0.5 rounded focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer",
+          "max-w-full truncate"
         )}
         onClick={(e) => {
           e.preventDefault();

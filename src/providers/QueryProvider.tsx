@@ -12,10 +12,11 @@ const persister = createSyncStoragePersister({
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 10 * 60 * 1000,
-      gcTime: 30 * 60 * 1000,
-      refetchOnWindowFocus: true,
-      retry: 2,
+      staleTime: 30 * 60 * 1000, // 30 minutes
+      gcTime: 60 * 60 * 1000, // 1 hour garbage collection
+      refetchOnWindowFocus: false, // Reduce unnecessary fetches
+      retry: 1, // Only retry once for faster failure feedback
+      networkMode: 'offlineFirst', // Use cached data when offline
     },
   },
 });

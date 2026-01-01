@@ -23,17 +23,14 @@ export default function Home() {
         >
           <Link
             href="/wrapped"
-            className="block rounded-[10px] bg-background px-6 py-6"
+            className="block rounded-[10px] bg-background px-4 py-[7px]"
           >
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10">
-                  <Sparkles className="h-5 w-5 text-amber-500" />
+              <div className="flex items-center gap-2">
+                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-amber-500/10">
+                  <Sparkles className="h-3 w-3 text-amber-500" />
                 </div>
-                <div>
-                  <h2 className="text-base font-semibold text-foreground">FC2 Menu Wrapped</h2>
-                  <p className="text-sm text-muted-foreground">Aug - Dec 2025</p>
-                </div>
+                <h2 className="text-sm font-semibold text-foreground">FC2 Menu Wrapped</h2>
               </div>
               <span className="text-sm font-medium text-amber-500 group-hover:text-orange-500 transition-colors">
                 View →
