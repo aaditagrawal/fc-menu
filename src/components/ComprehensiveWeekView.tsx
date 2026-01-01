@@ -49,7 +49,7 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
 
       {/* Desktop View - Transposed grid: Meals as rows, Days as columns */}
       <div className="hidden lg:block">
-        <div 
+        <div
           ref={scrollContainerRef}
           className="overflow-x-auto scroll-smooth snap-x snap-mandatory scroll-container scroll-momentum snap-enhanced scroll-indicator"
           style={{
@@ -57,7 +57,7 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
             WebkitOverflowScrolling: 'touch',
             willChange: 'auto',
             transform: 'translateZ(0)',
-            touchAction: 'panX'
+            touchAction: 'pan-y'
           }}>
           <div
             className={`grid gap-3 min-w-max pb-4 items-start scroll-grid`}
@@ -71,15 +71,15 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
           >
             {/* Sticky Header row with days */}
             <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/50 col-span-full"
-                 style={{
-                   transform: 'translateZ(0)',
-                   willChange: 'transform'
-                 }}>
+              style={{
+                transform: 'translateZ(0)',
+                willChange: 'transform'
+              }}>
               <div className="grid gap-3 items-start px-4 py-3"
-                   style={{
-                     gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`,
-                     transform: 'translateZ(0)'
-                   }}>
+                style={{
+                  gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`,
+                  transform: 'translateZ(0)'
+                }}>
                 <div>
                   <h3 className="font-semibold text-lg">Meals</h3>
                 </div>
@@ -95,19 +95,19 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
               </div>
             </div>
 
-            
+
 
             {/* Content rows */}
             <div className="grid gap-3 items-start col-span-full"
-                 style={{
-                   gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`,
-                   paddingTop: '1rem'
-                 }}>
+              style={{
+                gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`,
+                paddingTop: '1rem'
+              }}>
               {/* Empty cell for meal type headers */}
               <div></div>
               {sortedDays.map((dateKey) => (
                 <div key={`spacer-${dateKey}`} className="snap-start"
-                     style={{ scrollSnapAlign: 'start' }}></div>
+                  style={{ scrollSnapAlign: 'start' }}></div>
               ))}
             </div>
 
@@ -116,9 +116,9 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
               <React.Fragment key={mealKey}>
                 {/* Meal type header and content row */}
                 <div className="grid gap-3 items-start border-t border-border/50 col-span-full"
-                     style={{
-                       gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`
-                     }}>
+                  style={{
+                    gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`
+                  }}>
                   {/* Meal type header */}
                   <div className="p-3">
                     <div className="flex items-center gap-2">
@@ -140,9 +140,9 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
 
                     return (
                       <div key={`${mealKey}-${dateKey}`} className="p-3 snap-start"
-                           style={{
-                             scrollSnapAlign: 'start'
-                           }}>
+                        style={{
+                          scrollSnapAlign: 'start'
+                        }}>
                         {meal ? (
                           <MealGridCard
                             meal={meal}
@@ -212,11 +212,11 @@ const MealGridCard = React.memo(function MealGridCard({
 
   return (
     <Card className={`hover:shadow-md transition-shadow transform-gpu smooth-transition hardware-accelerated`}
-          style={{
-            willChange: 'transform',
-            transform: 'translateZ(0)',
-            backfaceVisibility: 'hidden'
-          }}>
+      style={{
+        willChange: 'transform',
+        transform: 'translateZ(0)',
+        backfaceVisibility: 'hidden'
+      }}>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center justify-between gap-2 text-sm">
           <span className="flex items-center gap-1">
