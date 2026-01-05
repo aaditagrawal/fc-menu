@@ -355,7 +355,7 @@ body {
   .scroll-container {
     scroll-padding: 0.5rem;
     -webkit-tap-highlight-color: transparent;
-    touch-action: pan-y;
+    touch-action: pan-x pan-y;
   }
 
   .smooth-transition {

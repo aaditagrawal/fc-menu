@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { isTodayMonday } from "@/lib/date";
 
 const API_BASE = process.env.NEXT_PUBLIC_MENU_API_URL ?? "https://tikm.coolstuff.work";
 
@@ -55,6 +56,7 @@ export function useWeeksInfo() {
 }
 
 export function useWeekMenu(weekId: string | null) {
+  const isMonday = isTodayMonday();
   return useQuery({
     queryKey: ["weekMenu", weekId],
     queryFn: async (): Promise<WeekMenu> => {
@@ -63,12 +65,11 @@ export function useWeekMenu(weekId: string | null) {
       if (!res.ok) throw new Error(`Failed to fetch week menu: ${weekId}`);
       return res.json();
     },
-    staleTime: 30 * 60 * 1000, // 30 minutes
-    gcTime: 60 * 60 * 1000, // Keep in cache for 1 hour
+    staleTime: isMonday ? 0 : 30 * 60 * 1000,
+    gcTime: isMonday ? 0 : 60 * 60 * 1000,
     enabled: !!weekId,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    placeholderData: (previousData) => previousData, // Show previous data while loading new
+    refetchOnMount: isMonday,
+    refetchOnWindowFocus: isMonday,
   });
 }
 

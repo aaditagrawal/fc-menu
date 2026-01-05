@@ -137,4 +137,8 @@ export function pickHighlightMealForDay(
   return null;
 }
 
+export function isTodayMonday(nowIST: Date = getISTNow()): boolean {
+  return nowIST.getDay() === 1;
+}
+
 

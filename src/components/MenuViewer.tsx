@@ -6,6 +6,7 @@ import { findCurrentOrUpcomingMeal, pickHighlightMealForDay } from "@/lib/date";
 import { InlineSelect } from "@/components/InlineSelect";
 import { MealCarousel, type MealCarouselHandle } from "@/components/MealCarousel";
 import { useWeeksInfo, useWeekMenu, usePrefetchWeekMenu } from "@/hooks/useMenuData";
+import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Grid3X3, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
@@ -100,6 +101,7 @@ export function MenuViewer({
   const weekMenuQuery = useWeekMenu(selectedWeekId);
   const week = weekMenuQuery.data ?? initialWeek ?? null;
   const prefetchWeekMenu = usePrefetchWeekMenu();
+  const queryClient = useQueryClient();
 
   React.useEffect(() => {
     setIsHydrated(true);
@@ -225,8 +227,8 @@ export function MenuViewer({
   }, [isHydrated, selectedWeekId, weeksForYear, prefetchWeekMenu]);
 
   const handleRefresh = React.useCallback(async () => {
-    await weekMenuQuery.refetch();
-  }, [weekMenuQuery]);
+    await queryClient.invalidateQueries({ queryKey: ["weekMenu", selectedWeekId] });
+  }, [queryClient, selectedWeekId]);
 
   const yearOptions = availableYears.map((y) => ({ label: y, value: y }));
   const foodCourtOptions = availableFoodCourts.map((fc) => ({ label: fc, value: fc }));
@@ -333,11 +335,11 @@ export function MenuViewer({
 
           <Button
             onClick={handleRefresh}
-            disabled={weekMenuQuery.isFetching}
+            disabled={weekMenuQuery.isPending}
             variant="outline"
             title="Refresh data"
           >
-            {weekMenuQuery.isFetching ? (
+            {weekMenuQuery.isPending ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 Refreshing...

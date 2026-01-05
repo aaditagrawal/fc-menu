@@ -113,7 +113,7 @@ export const MealCarousel = React.forwardRef<
           scrollbarWidth: "none",
           msOverflowStyle: "none",
           WebkitOverflowScrolling: "touch",
-          touchAction: "pan-x pan-y",
+          touchAction: "pan-x",
           overscrollBehaviorX: "contain",
         }}
       >
