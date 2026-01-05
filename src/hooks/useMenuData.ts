@@ -41,6 +41,7 @@ export interface HistoryResponse {
 }
 
 export function useWeeksInfo() {
+  const isMonday = isTodayMonday();
   return useQuery({
     queryKey: ["weeksInfo"],
     queryFn: async (): Promise<HistoryResponse> => {
@@ -48,10 +49,10 @@ export function useWeeksInfo() {
       if (!res.ok) throw new Error("Failed to fetch weeks info");
       return res.json();
     },
-    staleTime: 30 * 60 * 1000, // 30 minutes - menu data rarely changes
-    gcTime: 60 * 60 * 1000, // Keep in cache for 1 hour
-    refetchOnMount: false, // Don't refetch if we have cached data
-    refetchOnWindowFocus: false, // Avoid unnecessary refetches
+    staleTime: isMonday ? 0 : 30 * 60 * 1000,
+    gcTime: isMonday ? 0 : 60 * 60 * 1000,
+    refetchOnMount: isMonday,
+    refetchOnWindowFocus: isMonday,
   });
 }
 
@@ -61,7 +62,7 @@ export function useWeekMenu(weekId: string | null) {
     queryKey: ["weekMenu", weekId],
     queryFn: async (): Promise<WeekMenu> => {
       const startDate = weekId?.split("_")[0] ?? "";
-      const res = await fetch(`${API_BASE}/api/menu?weekStart=${startDate}`);
+      const res = await fetch(`${API_BASE}/api/menu?weekStart=${startDate}&_=${Date.now()}`);
       if (!res.ok) throw new Error(`Failed to fetch week menu: ${weekId}`);
       return res.json();
     },
@@ -102,7 +103,7 @@ export function usePrefetchWeekMenu() {
       queryKey: ["weekMenu", weekId],
       queryFn: async (): Promise<WeekMenu> => {
         const startDate = weekId.split("_")[0];
-        const res = await fetch(`${API_BASE}/api/menu?weekStart=${startDate}`);
+        const res = await fetch(`${API_BASE}/api/menu?weekStart=${startDate}&_=${Date.now()}`);
         if (!res.ok) throw new Error(`Failed to prefetch week menu: ${weekId}`);
         return res.json();
       },

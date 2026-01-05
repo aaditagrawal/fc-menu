@@ -228,6 +228,9 @@ export function MenuViewer({
 
   const handleRefresh = React.useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ["weekMenu", selectedWeekId] });
+    await queryClient.invalidateQueries({ queryKey: ["weeksInfo"] });
+    await queryClient.refetchQueries({ queryKey: ["weekMenu", selectedWeekId], type: "active" });
+    await queryClient.refetchQueries({ queryKey: ["weeksInfo"], type: "active" });
   }, [queryClient, selectedWeekId]);
 
   const yearOptions = availableYears.map((y) => ({ label: y, value: y }));
