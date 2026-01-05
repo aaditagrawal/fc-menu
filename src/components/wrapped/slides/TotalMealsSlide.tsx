@@ -11,11 +11,7 @@ const STATIC_MEAL_COUNTS = {
 const STATIC_TOTAL_MEALS = 416;
 const STATIC_TOTAL_DAYS = 104;
 
-interface TotalMealsSlideProps {
-    totalDays: number;
-}
-
-export function TotalMealsSlide({ totalDays }: TotalMealsSlideProps) {
+export function TotalMealsSlide() {
     return (
         <Slide pattern="dots">
             <div className="text-center space-y-8">

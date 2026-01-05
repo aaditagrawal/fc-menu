@@ -1,14 +1,8 @@
 import Link from "next/link";
 import { MoveLeft, Code2 } from "lucide-react";
 import { Slide } from "../Slide";
-import type { WrappedStats } from "@/lib/wrapped/types";
 
-interface SummarySlideProps {
-    stats: WrappedStats;
-}
-
-export function SummarySlide({ stats }: SummarySlideProps) {
-    const year = "2025";
+export function SummarySlide() {
 
     return (
         <Slide pattern="dots">

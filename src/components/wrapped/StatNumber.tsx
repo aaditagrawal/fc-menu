@@ -40,7 +40,8 @@ export function StatNumber({
         }
 
         return () => observer.disconnect();
-    }, [hasAnimated, value]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [hasAnimated]);
 
     const animateValue = () => {
         const startTime = performance.now();

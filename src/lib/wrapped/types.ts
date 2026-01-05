@@ -1,4 +1,4 @@
-import type { WeekMenu, MealKey } from "@/lib/types";
+import type {} from "@/lib/types";
 
 export interface DishVariation {
     name: string;

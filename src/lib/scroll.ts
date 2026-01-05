@@ -88,12 +88,10 @@ export function useSmoothScroll() {
   const isScrollingRef = useRef(false);
   const scrollVelocityRef = useRef(0);
 
-  const scrollToElement = useCallback((element: HTMLElement, options?: ScrollIntoViewOptions) => {
+  const scrollToElement = useCallback((element: HTMLElement) => {
     if (!containerRef.current || !element) return;
 
     const container = containerRef.current;
-    const elementRect = element.getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
     
     // Calculate the scroll position to center the element
     const elementCenterX = element.offsetLeft + element.offsetWidth / 2;
@@ -156,7 +154,9 @@ export function useMomentumScroll() {
     if (!container) return;
 
     let ticking = false;
-    
+    let currentRafId: number | undefined;
+    let currentMomentumId: number | undefined;
+
     const handleScroll = () => {
       const now = performance.now();
       const deltaX = container.scrollLeft - lastScrollLeftRef.current;
@@ -173,6 +173,7 @@ export function useMomentumScroll() {
       
       if (!ticking) {
         requestAnimationFrame(() => {
+          currentRafId = rafIdRef.current;
           // Ultra-sensitive scroll state management
           if (!isScrollingRef.current) {
             isScrollingRef.current = true;
@@ -182,7 +183,6 @@ export function useMomentumScroll() {
           }
           ticking = false;
         });
-        ticking = true;
       }
       
       // Clear any existing end timer
@@ -191,7 +191,7 @@ export function useMomentumScroll() {
       }
       
       // Set very short timer for scroll end detection (50ms for instant feel)
-      momentumIdRef.current = window.setTimeout(() => {
+      currentMomentumId = window.setTimeout(() => {
         isScrollingRef.current = false;
         container.style.pointerEvents = '';
         container.style.willChange = 'auto';
@@ -218,10 +218,8 @@ export function useMomentumScroll() {
     container.addEventListener('wheel', handleWheel, { passive: true, capture: true });
 
     return () => {
-      container.removeEventListener('scroll', handleScroll);
-      container.removeEventListener('wheel', handleWheel);
-      const currentRafId = rafIdRef.current;
-      const currentMomentumId = momentumIdRef.current;
+      container.removeEventListener("scroll", handleScroll);
+      container.removeEventListener("wheel", handleWheel);
       if (currentRafId) {
         cancelAnimationFrame(currentRafId);
       }
