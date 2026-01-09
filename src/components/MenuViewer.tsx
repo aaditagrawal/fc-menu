@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import type { MealKey, WeekMenu } from "@/lib/types";
-import { findCurrentOrUpcomingMeal, pickHighlightMealForDay } from "@/lib/date";
+import { findCurrentOrUpcomingMeal, pickHighlightMealForDay, getISTNow } from "@/lib/date";
 import { InlineSelect } from "@/components/InlineSelect";
 import { MealCarousel, type MealCarouselHandle } from "@/components/MealCarousel";
 import { useWeeksInfo, useWeekMenu, usePrefetchWeekMenu } from "@/hooks/useMenuData";
@@ -96,6 +96,9 @@ export function MenuViewer({
   const [foodCourt, setFoodCourt] = React.useState<string>(initialWeek?.foodCourt ?? "");
   const [isHydrated, setIsHydrated] = React.useState(false);
   const [dateKey, setDateKey] = React.useState<string | null>(null);
+  const [isUserSelectedDay, setIsUserSelectedDay] = React.useState(false);
+  const [now, setNow] = React.useState(() => getISTNow());
+
   const carouselRef = React.useRef<MealCarouselHandle>(null);
 
   const weekMenuQuery = useWeekMenu(selectedWeekId);
@@ -105,6 +108,11 @@ export function MenuViewer({
 
   React.useEffect(() => {
     setIsHydrated(true);
+    // Update 'now' every minute to keep UI fresh
+    const interval = setInterval(() => {
+      setNow(getISTNow());
+    }, 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   React.useEffect(() => {
@@ -113,6 +121,11 @@ export function MenuViewer({
       setSelectedWeekId(initialWeekId);
     }
   }, [isHydrated, initialWeekId, selectedWeekId]);
+
+  // Reset manual selection when week changes
+  React.useEffect(() => {
+    setIsUserSelectedDay(false);
+  }, [selectedWeekId]);
 
   React.useEffect(() => {
     if (!isHydrated || !week) return;
@@ -123,11 +136,12 @@ export function MenuViewer({
 
   React.useEffect(() => {
     if (!isHydrated) return;
-    if (week) {
-      const ptr = findCurrentOrUpcomingMeal(week);
+    if (week && !isUserSelectedDay) {
+      // Auto-update day/meal based on 'now'
+      const ptr = findCurrentOrUpcomingMeal(week, now);
       setDateKey(ptr?.dateKey ?? Object.keys(week.menu)[0]);
     }
-  }, [isHydrated, week]);
+  }, [isHydrated, week, now, isUserSelectedDay]);
 
   React.useEffect(() => {
     if (!isHydrated) return;
@@ -278,7 +292,7 @@ export function MenuViewer({
       title: k[0].toUpperCase() + k.slice(1),
     }));
 
-  const picked = pickHighlightMealForDay(week, effectiveDateKey);
+  const picked = pickHighlightMealForDay(week, effectiveDateKey, now);
   const highlightKey = (picked?.mealKey ?? (meals[0]?.key ?? "breakfast")) as MealKey;
   const isPrimaryUpcoming = Boolean(picked?.isPrimaryUpcoming);
 
@@ -319,7 +333,10 @@ export function MenuViewer({
             label="Day"
             value={effectiveDateKey}
             options={dayOptions}
-            onChange={(v) => setDateKey(String(v))}
+            onChange={(v) => {
+              setIsUserSelectedDay(true);
+              setDateKey(String(v));
+            }}
             className="text-sm"
           />
         </div>
