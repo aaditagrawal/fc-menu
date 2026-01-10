@@ -30,7 +30,7 @@ export function WrappedClient({ stats }: WrappedClientProps) {
             <IntroSlide dateRange={stats.dateRange} />
 
             {/* Slide 2: Total Meals - uses static values internally */}
-            <TotalMealsSlide totalDays={stats.totalDays} />
+            <TotalMealsSlide />
 
             {/* Slide 3: The Real MVP - Most repeated staple */}
             <StapleAlertSlide mostRepeated={stats.mostRepeated} />
@@ -96,7 +96,7 @@ export function WrappedClient({ stats }: WrappedClientProps) {
             <DayPatternsSlide patterns={stats.dayPatterns} />
 
             {/* Slide 12: Summary */}
-            <SummarySlide stats={stats} />
+            <SummarySlide />
         </WrappedContainer>
     );
 }
