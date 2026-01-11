@@ -113,7 +113,7 @@ export const MealCarousel = React.forwardRef<
           scrollbarWidth: "none",
           msOverflowStyle: "none",
           WebkitOverflowScrolling: "touch",
-          touchAction: "pan-x",
+          touchAction: "pan-x pan-y",
           overscrollBehaviorX: "contain",
         }}
       >
@@ -126,7 +126,7 @@ export const MealCarousel = React.forwardRef<
                 itemRefs.current[idx] = el;
               }}
               className={cn(
-                "min-w-[90%] sm:min-w-[60%] md:min-w-[50%] lg:min-w-[38%] flex-shrink-0 px-1",
+                "w-[85%] sm:w-[60%] md:w-[50%] lg:w-[38%] flex-shrink-0 px-1",
                 isHighlighted ? "opacity-100" : "opacity-75"
               )}
             >

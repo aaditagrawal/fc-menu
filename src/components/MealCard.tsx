@@ -28,19 +28,19 @@ export function MealCard({
   const hue = 220 + (tilt?.y ?? 0) * 40;
   const glow = highlight
     ? {
-        transform: tilt ? `translateY(${tilt.x * -2}px) rotateX(${tilt.x * 1.8}deg) rotateY(${tilt.y * 1.8}deg)` : undefined,
-      }
+      transform: tilt ? `translateY(${tilt.x * -2}px) rotateX(${tilt.x * 1.8}deg) rotateY(${tilt.y * 1.8}deg)` : undefined,
+    }
     : undefined;
 
   const card = (
     <Card className={cn(
       "smooth-transition hardware-accelerated bg-card border",
       highlight ? "border-transparent" : "border-border/50"
-    )} 
-    style={{
-      willChange: 'transform, opacity',
-      backfaceVisibility: 'hidden'
-    }}>
+    )}
+      style={{
+        willChange: 'transform, opacity',
+        backfaceVisibility: 'hidden'
+      }}>
       <div className="relative p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -55,7 +55,7 @@ export function MealCard({
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {filterMenuItems(meal.items).map((item, idx) => (
-            <div key={idx} className="rounded-md bg-muted border border-border/30 px-3 py-2 text-sm">
+            <div key={idx} className="rounded-md bg-muted border border-border/30 px-3 py-2 text-sm break-words hyphens-auto">
               {item}
             </div>
           ))}
@@ -94,7 +94,7 @@ export function MealCard({
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {filterMenuItems(meal.items).map((item, idx) => (
-                <div key={idx} className="rounded-md bg-muted/60 backdrop-blur-sm px-3 py-2 text-sm">
+                <div key={idx} className="rounded-md bg-muted/60 backdrop-blur-sm px-3 py-2 text-sm break-words hyphens-auto">
                   {item}
                 </div>
               ))}
