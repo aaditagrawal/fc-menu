@@ -279,8 +279,26 @@ export function MenuViewer({
   }
 
   const pointer = findCurrentOrUpcomingMeal(week);
-  const effectiveDateKey = dateKey ?? pointer?.dateKey ?? Object.keys(week.menu)[0];
-  const day = week.menu[effectiveDateKey];
+  const sortedDateKeys = Object.keys(week.menu).sort();
+  const fallbackDateKey = sortedDateKeys[0];
+  const resolvedDateKey =
+    (dateKey && week.menu[dateKey] ? dateKey : null) ??
+    (pointer?.dateKey && week.menu[pointer.dateKey] ? pointer.dateKey : null) ??
+    fallbackDateKey;
+
+  if (!resolvedDateKey) {
+    return <ErrorState message="No menu days available" />;
+  }
+
+  const day = week.menu[resolvedDateKey];
+
+  if (!day) {
+    return <ErrorState message="No menu data for selected day" />;
+  }
+
+  if (!day.meals) {
+    return <ErrorState message="No meals data for selected day" />;
+  }
 
   const order: MealKey[] = ["breakfast", "lunch", "snacks", "dinner"];
   const meals = order
@@ -292,7 +310,7 @@ export function MenuViewer({
       title: k[0].toUpperCase() + k.slice(1),
     }));
 
-  const picked = pickHighlightMealForDay(week, effectiveDateKey, now);
+  const picked = pickHighlightMealForDay(week, resolvedDateKey, now);
   const highlightKey = (picked?.mealKey ?? (meals[0]?.key ?? "breakfast")) as MealKey;
   const isPrimaryUpcoming = Boolean(picked?.isPrimaryUpcoming);
 
@@ -331,7 +349,7 @@ export function MenuViewer({
           />
           <InlineSelect
             label="Day"
-            value={effectiveDateKey}
+            value={resolvedDateKey}
             options={dayOptions}
             onChange={(v) => {
               setIsUserSelectedDay(true);
