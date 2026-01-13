@@ -25,11 +25,11 @@ export const metadata: Metadata = {
   description:
     "A fast, friendly viewer for weekly menus with time-aware highlighting (IST).",
   icons: {
-    icon: '/favicon.svg',
+    icon: "/favicon.svg",
   },
   other: {
     // Encourage browser caching for static content - 7 days
-    'cache-control': 'public, max-age=604800',
+    "cache-control": "public, max-age=604800",
   },
 };
 
@@ -57,8 +57,8 @@ export default function RootLayout({
               <ThemeSwitcher />
             </div>
             <main className="flex-1">{children}</main>
-            <footer className="border-t bg-secondary/20">
-              <div className="mx-auto max-w-4xl px-4 py-6">
+            <footer className="py-6 px-4 flex justify-center">
+              <div className="inline-flex px-6 py-3 rounded-full bg-secondary/40 border max-w-full">
                 <p className="text-xs text-muted-foreground text-center">
                   Made by{" "}
                   <a
@@ -86,10 +86,6 @@ export default function RootLayout({
                     className="hover:text-foreground transition-colors"
                   >
                     Open Source
-                  </a>
-                  {" • "}
-                  <a href="/changelog" className="hover:text-foreground transition-colors">
-                    Changelog
                   </a>
                   {" • "}
                   <a
