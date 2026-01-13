@@ -313,6 +313,7 @@ export function MenuViewer({
   const picked = pickHighlightMealForDay(week, resolvedDateKey, now);
   const highlightKey = (picked?.mealKey ?? (meals[0]?.key ?? "breakfast")) as MealKey;
   const isPrimaryUpcoming = Boolean(picked?.isPrimaryUpcoming);
+  const isLive = Boolean(picked?.isLive);
 
   return (
     <div className="space-y-4 content-loaded">
@@ -360,7 +361,7 @@ export function MenuViewer({
         </div>
       </header>
 
-      <MealCarousel ref={carouselRef} meals={meals} highlightKey={highlightKey} isPrimaryUpcoming={isPrimaryUpcoming} />
+      <MealCarousel ref={carouselRef} meals={meals} highlightKey={highlightKey} isPrimaryUpcoming={isPrimaryUpcoming} isLive={isLive} />
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-6">
         <div className="flex flex-wrap items-center gap-2">

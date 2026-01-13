@@ -91,7 +91,7 @@ export function pickHighlightMealForDay(
   week: WeekMenu,
   dateKey: string,
   nowIST: Date = getISTNow()
-): { mealKey: MealKey; isPrimaryUpcoming: boolean } | null {
+): { mealKey: MealKey; isPrimaryUpcoming: boolean; isLive: boolean } | null {
   const orderedMeals: MealKey[] = ["breakfast", "lunch", "snacks", "dinner"];
   const todayKey = formatDateKey(nowIST);
   const day = week.menu[dateKey];
@@ -105,18 +105,18 @@ export function pickHighlightMealForDay(
       if (!m) continue;
       const s = parseTimeToMinutes(m.startTime);
       const e = parseTimeToMinutes(m.endTime);
-      if (minutes >= s && minutes <= e) return { mealKey: mk, isPrimaryUpcoming: true };
+      if (minutes >= s && minutes <= e) return { mealKey: mk, isPrimaryUpcoming: true, isLive: true };
     }
     for (const mk of orderedMeals) {
       const m = day.meals[mk];
       if (!m) continue;
       const s = parseTimeToMinutes(m.startTime);
-      if (minutes < s) return { mealKey: mk, isPrimaryUpcoming: true };
+      if (minutes < s) return { mealKey: mk, isPrimaryUpcoming: true, isLive: false };
     }
     // All done today → last available
     for (let i = orderedMeals.length - 1; i >= 0; i--) {
       const mk = orderedMeals[i];
-      if (day.meals[mk]) return { mealKey: mk, isPrimaryUpcoming: false };
+      if (day.meals[mk]) return { mealKey: mk, isPrimaryUpcoming: false, isLive: false };
     }
     return null;
   }
@@ -125,14 +125,14 @@ export function pickHighlightMealForDay(
   if (dateKey < todayKey) {
     for (let i = orderedMeals.length - 1; i >= 0; i--) {
       const mk = orderedMeals[i];
-      if (day.meals[mk]) return { mealKey: mk, isPrimaryUpcoming: false };
+      if (day.meals[mk]) return { mealKey: mk, isPrimaryUpcoming: false, isLive: false };
     }
     return null;
   }
 
   // Future day: first meal
   for (const mk of orderedMeals) {
-    if (day.meals[mk]) return { mealKey: mk, isPrimaryUpcoming: false };
+    if (day.meals[mk]) return { mealKey: mk, isPrimaryUpcoming: false, isLive: false };
   }
   return null;
 }

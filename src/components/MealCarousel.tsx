@@ -16,8 +16,9 @@ export const MealCarousel = React.forwardRef<
     meals: Array<{ key: MealKey; meal: Meal; timeRange: string; title: string }>;
     highlightKey: MealKey;
     isPrimaryUpcoming: boolean;
+    isLive: boolean;
   }
->(function MealCarousel({ meals, highlightKey, isPrimaryUpcoming }, ref) {
+>(function MealCarousel({ meals, highlightKey, isPrimaryUpcoming, isLive }, ref) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const itemRefs = React.useRef<Array<HTMLDivElement | null>>([]);
   const [tilt, setTilt] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -137,6 +138,7 @@ export const MealCarousel = React.forwardRef<
                 mealKey={key}
                 highlight={isHighlighted}
                 primaryUpcoming={isPrimaryUpcoming && isHighlighted}
+                isLive={isLive && isHighlighted}
                 tilt={tilt}
               />
             </div>

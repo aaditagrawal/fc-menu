@@ -14,6 +14,7 @@ export function MealCard({
   mealKey,
   highlight,
   primaryUpcoming,
+  isLive,
   tilt,
 }: {
   title: string;
@@ -22,10 +23,10 @@ export function MealCard({
   mealKey: MealKey;
   highlight?: boolean;
   primaryUpcoming?: boolean;
+  isLive?: boolean;
   tilt?: { x: number; y: number };
 }) {
   const Icon = mealKey === "breakfast" ? Coffee : mealKey === "lunch" ? UtensilsCrossed : mealKey === "snacks" ? Cookie : Moon;
-  const hue = 220 + (tilt?.y ?? 0) * 40;
   const glow = highlight
     ? {
       transform: tilt ? `translateY(${tilt.x * -2}px) rotateX(${tilt.x * 1.8}deg) rotateY(${tilt.y * 1.8}deg)` : undefined,
@@ -65,13 +66,23 @@ export function MealCard({
   );
 
   if (!highlight) return card;
+  
+  const gradient = (() => {
+    if (primaryUpcoming && isLive) {
+      return "linear-gradient(135deg, hsl(50 95% 70% / 0.85), hsl(330 95% 70% / 0.85))";
+    }
+    if (primaryUpcoming && !isLive) {
+      return "linear-gradient(135deg, black, rgba(255, 255, 255, 0.85))";
+    }
+    return undefined;
+  })();
+  
+  if (!gradient) return card;
   return (
     <div
       className="rounded-2xl p-[6px] relative smooth-transition hardware-accelerated"
       style={{
-        background: primaryUpcoming
-          ? "linear-gradient(135deg, hsl(50 95% 70% / 0.85), hsl(330 95% 70% / 0.85))"
-          : `linear-gradient(135deg, hsl(${hue} 80% 70% / 0.7), hsl(${(hue + 120) % 360} 80% 70% / 0.7))`,
+        background: gradient,
         ...glow,
         willChange: 'transform, opacity',
         backfaceVisibility: 'hidden',
