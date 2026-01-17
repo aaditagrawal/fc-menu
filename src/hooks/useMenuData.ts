@@ -49,10 +49,11 @@ export function useWeeksInfo() {
       if (!res.ok) throw new Error("Failed to fetch weeks info");
       return res.json();
     },
-    staleTime: isMonday ? 0 : 30 * 60 * 1000,
-    gcTime: isMonday ? 0 : 60 * 60 * 1000,
-    refetchOnMount: isMonday,
-    refetchOnWindowFocus: isMonday,
+    // Even on Monday, use 5 minute cache to prevent excessive refetching
+    staleTime: isMonday ? 5 * 60 * 1000 : 30 * 60 * 1000,
+    gcTime: isMonday ? 15 * 60 * 1000 : 60 * 60 * 1000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -62,15 +63,16 @@ export function useWeekMenu(weekId: string | null) {
     queryKey: ["weekMenu", weekId],
     queryFn: async (): Promise<WeekMenu> => {
       const startDate = weekId?.split("_")[0] ?? "";
-      const res = await fetch(`${API_BASE}/api/menu?weekStart=${startDate}&_=${Date.now()}`);
+      const res = await fetch(`${API_BASE}/api/menu?weekStart=${startDate}`);
       if (!res.ok) throw new Error(`Failed to fetch week menu: ${weekId}`);
       return res.json();
     },
-    staleTime: isMonday ? 0 : 30 * 60 * 1000,
-    gcTime: isMonday ? 0 : 60 * 60 * 1000,
+    // Even on Monday, use 5 minute cache to prevent excessive refetching
+    staleTime: isMonday ? 5 * 60 * 1000 : 30 * 60 * 1000,
+    gcTime: isMonday ? 15 * 60 * 1000 : 60 * 60 * 1000,
     enabled: !!weekId,
-    refetchOnMount: isMonday,
-    refetchOnWindowFocus: isMonday,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -103,7 +105,7 @@ export function usePrefetchWeekMenu() {
       queryKey: ["weekMenu", weekId],
       queryFn: async (): Promise<WeekMenu> => {
         const startDate = weekId.split("_")[0];
-        const res = await fetch(`${API_BASE}/api/menu?weekStart=${startDate}&_=${Date.now()}`);
+        const res = await fetch(`${API_BASE}/api/menu?weekStart=${startDate}`);
         if (!res.ok) throw new Error(`Failed to prefetch week menu: ${weekId}`);
         return res.json();
       },

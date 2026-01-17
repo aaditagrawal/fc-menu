@@ -15,6 +15,8 @@ const queryClient = new QueryClient({
       staleTime: 30 * 60 * 1000, // 30 minutes
       gcTime: 60 * 60 * 1000, // 1 hour garbage collection
       refetchOnWindowFocus: false, // Reduce unnecessary fetches
+      refetchOnReconnect: false, // Don't refetch on reconnect
+      refetchOnMount: false, // Don't refetch on component mount
       retry: 1, // Only retry once for faster failure feedback
       networkMode: 'offlineFirst', // Use cached data when offline
     },

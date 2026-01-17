@@ -3,6 +3,9 @@ import { getAllWeeks } from "@/data/weeks";
 import { Button } from "@/components/ui/button";
 import { Grid3X3, Calendar } from "lucide-react";
 
+// Enable ISR with 10 minute revalidation to reduce edge requests
+export const revalidate = 600; // 10 minutes
+
 export default async function WeeksPage() {
   const weeks = await getAllWeeks();
   return (
