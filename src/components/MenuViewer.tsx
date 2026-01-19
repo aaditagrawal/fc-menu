@@ -99,6 +99,9 @@ export function MenuViewer({
   const [isUserSelectedDay, setIsUserSelectedDay] = React.useState(false);
   const [now, setNow] = React.useState(() => getISTNow());
 
+  // Track if initial week selection has been done (to force latest on home page load)
+  const initialWeekSelectionDone = React.useRef(false);
+
   const carouselRef = React.useRef<MealCarouselHandle>(null);
 
   const weekMenuQuery = useWeekMenu(selectedWeekId);
@@ -196,11 +199,27 @@ export function MenuViewer({
 
   React.useEffect(() => {
     if (!isHydrated) return;
-    if (weeksForYear.length > 0 && !weeksForYear.find((w) => w.weekMonday === selectedWeekId)) {
+    if (weeksForYear.length > 0) {
       const latest = weeksForYear[0];
-      if (latest) setSelectedWeekId(latest.weekMonday);
+
+      // On initial load without initialWeekId (home page), always jump to the latest week
+      if (!initialWeekSelectionDone.current && !initialWeekId) {
+        initialWeekSelectionDone.current = true;
+        if (latest) setSelectedWeekId(latest.weekMonday);
+        return;
+      }
+
+      // For /week/[id] pages, mark as initialized once we have data
+      if (!initialWeekSelectionDone.current && initialWeekId) {
+        initialWeekSelectionDone.current = true;
+      }
+
+      // Fallback: if current selection is invalid, go to latest
+      if (!weeksForYear.find((w) => w.weekMonday === selectedWeekId)) {
+        if (latest) setSelectedWeekId(latest.weekMonday);
+      }
     }
-  }, [isHydrated, weeksForYear, selectedWeekId]);
+  }, [isHydrated, weeksForYear, selectedWeekId, initialWeekId]);
 
   React.useEffect(() => {
     if (!foodCourt) return;
