@@ -49,10 +49,10 @@ export function useWeeksInfo() {
       if (!res.ok) throw new Error("Failed to fetch weeks info");
       return res.json();
     },
-    // Even on Monday, use 5 minute cache to prevent excessive refetching
+    // On Monday, use shorter cache and always refetch on mount to get fresh data
     staleTime: isMonday ? 5 * 60 * 1000 : 30 * 60 * 1000,
     gcTime: isMonday ? 15 * 60 * 1000 : 60 * 60 * 1000,
-    refetchOnMount: false,
+    refetchOnMount: isMonday ? "always" : false,
     refetchOnWindowFocus: false,
   });
 }
@@ -67,11 +67,11 @@ export function useWeekMenu(weekId: string | null) {
       if (!res.ok) throw new Error(`Failed to fetch week menu: ${weekId}`);
       return res.json();
     },
-    // Even on Monday, use 5 minute cache to prevent excessive refetching
+    // On Monday, use shorter cache and always refetch on mount to get fresh data
     staleTime: isMonday ? 5 * 60 * 1000 : 30 * 60 * 1000,
     gcTime: isMonday ? 15 * 60 * 1000 : 60 * 60 * 1000,
     enabled: !!weekId,
-    refetchOnMount: false,
+    refetchOnMount: isMonday ? "always" : false,
     refetchOnWindowFocus: false,
   });
 }
