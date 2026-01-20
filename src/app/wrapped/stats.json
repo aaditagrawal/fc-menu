@@ -1,0 +1,853 @@
+{
+  "totalWeeks": 15,
+  "totalDays": 105,
+  "totalMeals": 400,
+  "mealCounts": {
+    "breakfast": 101,
+    "lunch": 104,
+    "snacks": 94,
+    "dinner": 101
+  },
+  "allItems": [],
+  "categories": {
+    "paneer": {
+      "name": "Paneer",
+      "keywords": [
+        "paneer",
+        "panir",
+        "panner",
+        "cottage cheese",
+        "paneera"
+      ],
+      "emoji": "🧀",
+      "variations": [
+        {
+          "name": "paneer hyderabadi",
+          "count": 3
+        },
+        {
+          "name": "paneer rara masala",
+          "count": 3
+        },
+        {
+          "name": "paneer butter masala",
+          "count": 3
+        },
+        {
+          "name": "paneer methi chaman",
+          "count": 2
+        },
+        {
+          "name": "paneer handi",
+          "count": 2
+        },
+        {
+          "name": "paneer kolhapuri",
+          "count": 2
+        },
+        {
+          "name": "kadai paneer",
+          "count": 2
+        },
+        {
+          "name": "mughlai shahi paneer",
+          "count": 2
+        },
+        {
+          "name": "paneer pasanda",
+          "count": 2
+        },
+        {
+          "name": "kashmiri lal paneer",
+          "count": 2
+        },
+        {
+          "name": "paneer tikka masala",
+          "count": 2
+        },
+        {
+          "name": "paneer chettinad",
+          "count": 1
+        },
+        {
+          "name": "matar paneer curry",
+          "count": 1
+        },
+        {
+          "name": "honey chilli paneer",
+          "count": 1
+        },
+        {
+          "name": "paneer toofani",
+          "count": 1
+        },
+        {
+          "name": "paneer biriyani",
+          "count": 1
+        },
+        {
+          "name": "paneer kadai",
+          "count": 1
+        },
+        {
+          "name": "palak paneer",
+          "count": 1
+        },
+        {
+          "name": "paneer jaipuri",
+          "count": 1
+        },
+        {
+          "name": "grated paneer paratha",
+          "count": 1
+        }
+      ],
+      "totalCount": 53
+    },
+    "chicken": {
+      "name": "Chicken",
+      "keywords": [
+        "chicken",
+        "chiken",
+        "chikken",
+        "murgh",
+        "murg",
+        "chickn",
+        "chkn"
+      ],
+      "emoji": "🍗",
+      "variations": [
+        {
+          "name": "chicken kolhapuri",
+          "count": 3
+        },
+        {
+          "name": "chicken maharaja",
+          "count": 3
+        },
+        {
+          "name": "chicken rara masala",
+          "count": 3
+        },
+        {
+          "name": "chicken butter masala",
+          "count": 2
+        },
+        {
+          "name": "kasturi chicken",
+          "count": 2
+        },
+        {
+          "name": "malvani chicken curry",
+          "count": 2
+        },
+        {
+          "name": "chicken nawabi",
+          "count": 2
+        },
+        {
+          "name": "chicken vindaloo",
+          "count": 2
+        },
+        {
+          "name": "chicken lajawab",
+          "count": 1
+        },
+        {
+          "name": "kerala chicken fry",
+          "count": 1
+        },
+        {
+          "name": "murgh karachi",
+          "count": 1
+        },
+        {
+          "name": "chicken biriyani",
+          "count": 1
+        },
+        {
+          "name": "chicken kala masala",
+          "count": 1
+        },
+        {
+          "name": "fried chicken",
+          "count": 1
+        },
+        {
+          "name": "amritsari murgh masala",
+          "count": 1
+        },
+        {
+          "name": "chicken pulimunchi",
+          "count": 1
+        },
+        {
+          "name": "chicken kabab / mackerel fish fry",
+          "count": 1
+        },
+        {
+          "name": "oven roasted hariyali chickens",
+          "count": 1
+        },
+        {
+          "name": "chicken chettinad",
+          "count": 1
+        },
+        {
+          "name": "chicken koliwada",
+          "count": 1
+        }
+      ],
+      "totalCount": 59
+    },
+    "fish": {
+      "name": "Fish",
+      "keywords": [
+        "fish",
+        "machhi",
+        "macchi",
+        "machli",
+        "prawns",
+        "shrimp",
+        "basa",
+        "pomfret"
+      ],
+      "emoji": "🐟",
+      "variations": [
+        {
+          "name": "chicken kabab / mackerel fish fry",
+          "count": 1
+        },
+        {
+          "name": "mackerel fish fry / chicken kabab",
+          "count": 1
+        },
+        {
+          "name": "mackerel fish fry / kerala chicken fry",
+          "count": 1
+        }
+      ],
+      "totalCount": 3
+    },
+    "dal": {
+      "name": "Dal",
+      "keywords": [
+        "dal",
+        "daal",
+        "dhal",
+        "sambar",
+        "sambhar",
+        "rasam",
+        "lentil",
+        "rajma",
+        "chana",
+        "chole",
+        "lobia"
+      ],
+      "emoji": "🫘",
+      "variations": [
+        {
+          "name": "sambhar",
+          "count": 58
+        },
+        {
+          "name": "rasam",
+          "count": 19
+        },
+        {
+          "name": "tomato rasam",
+          "count": 14
+        },
+        {
+          "name": "pepper rasam",
+          "count": 10
+        },
+        {
+          "name": "dal palak",
+          "count": 10
+        },
+        {
+          "name": "sambhar, chutney",
+          "count": 9
+        },
+        {
+          "name": "dal sultani",
+          "count": 9
+        },
+        {
+          "name": "sambhar, chutney, poha",
+          "count": 9
+        },
+        {
+          "name": "dal fry",
+          "count": 9
+        },
+        {
+          "name": "gulla sambhar",
+          "count": 8
+        },
+        {
+          "name": "harive sambhar",
+          "count": 8
+        },
+        {
+          "name": "pumpkin sambhar",
+          "count": 8
+        },
+        {
+          "name": "lemon rasam",
+          "count": 8
+        },
+        {
+          "name": "dal khichdi",
+          "count": 8
+        },
+        {
+          "name": "rajma masala",
+          "count": 7
+        },
+        {
+          "name": "tomato dal",
+          "count": 7
+        },
+        {
+          "name": "garlic rasam",
+          "count": 7
+        },
+        {
+          "name": "southe sambhar",
+          "count": 7
+        },
+        {
+          "name": "dal tomato",
+          "count": 7
+        },
+        {
+          "name": "dal kolhapuri",
+          "count": 7
+        }
+      ],
+      "totalCount": 531
+    },
+    "rice": {
+      "name": "Rice",
+      "keywords": [
+        "rice",
+        "pulao",
+        "pulav",
+        "biryani",
+        "biriyani",
+        "khichdi",
+        "jeera",
+        "brinji",
+        "sadham",
+        "chitranna"
+      ],
+      "emoji": "🍚",
+      "variations": [
+        {
+          "name": "plain rice",
+          "count": 125
+        },
+        {
+          "name": "brown rice",
+          "count": 25
+        },
+        {
+          "name": "plain rice, boiled rice",
+          "count": 13
+        },
+        {
+          "name": "boiled rice",
+          "count": 11
+        },
+        {
+          "name": "steam rice",
+          "count": 11
+        },
+        {
+          "name": "jeera roti",
+          "count": 11
+        },
+        {
+          "name": "aloo jeera dry",
+          "count": 10
+        },
+        {
+          "name": "white rice",
+          "count": 8
+        },
+        {
+          "name": "dal khichdi",
+          "count": 8
+        },
+        {
+          "name": "spring onion rice",
+          "count": 6
+        },
+        {
+          "name": "curd rice",
+          "count": 5
+        },
+        {
+          "name": "dal palak khichdi",
+          "count": 5
+        },
+        {
+          "name": "plain rice, brown rice",
+          "count": 5
+        },
+        {
+          "name": "white rice, brown rice congee",
+          "count": 5
+        },
+        {
+          "name": "plain rice, boiled rice congee",
+          "count": 5
+        },
+        {
+          "name": "boiled rice congee",
+          "count": 5
+        },
+        {
+          "name": "tomato rice",
+          "count": 4
+        },
+        {
+          "name": "rajma rice",
+          "count": 4
+        },
+        {
+          "name": "dal jeera fry",
+          "count": 4
+        },
+        {
+          "name": "jeera rice",
+          "count": 4
+        }
+      ],
+      "totalCount": 423
+    },
+    "bread": {
+      "name": "Bread",
+      "keywords": [
+        "roti",
+        "chapati",
+        "chapathi",
+        "naan",
+        "paratha",
+        "parantha",
+        "puri",
+        "poori",
+        "kulcha",
+        "bhatura",
+        "phulka"
+      ],
+      "emoji": "🫓",
+      "variations": [
+        {
+          "name": "chapathi",
+          "count": 32
+        },
+        {
+          "name": "plain roti",
+          "count": 25
+        },
+        {
+          "name": "plain paratha",
+          "count": 20
+        },
+        {
+          "name": "poori",
+          "count": 18
+        },
+        {
+          "name": "methi roti",
+          "count": 11
+        },
+        {
+          "name": "jeera roti",
+          "count": 11
+        },
+        {
+          "name": "coriander roti",
+          "count": 8
+        },
+        {
+          "name": "masala roti",
+          "count": 8
+        },
+        {
+          "name": "dal kolhapuri",
+          "count": 7
+        },
+        {
+          "name": "ajwain paratha",
+          "count": 6
+        },
+        {
+          "name": "mint paratha",
+          "count": 6
+        },
+        {
+          "name": "phulka",
+          "count": 6
+        },
+        {
+          "name": "mint chapathi",
+          "count": 6
+        },
+        {
+          "name": "poori / phulka",
+          "count": 5
+        },
+        {
+          "name": "roti",
+          "count": 5
+        },
+        {
+          "name": "ajwain roti",
+          "count": 4
+        },
+        {
+          "name": "pudina roti",
+          "count": 4
+        },
+        {
+          "name": "mix veg paratha",
+          "count": 4
+        },
+        {
+          "name": "chicken kolhapuri",
+          "count": 3
+        },
+        {
+          "name": "masala chapathi",
+          "count": 3
+        }
+      ],
+      "totalCount": 264
+    }
+  },
+  "topBreakfastItems": [
+    {
+      "name": "make your own sandwich",
+      "count": 42
+    },
+    {
+      "name": "white bread, brown bread",
+      "count": 14
+    },
+    {
+      "name": "poori",
+      "count": 12
+    },
+    {
+      "name": "sprouted red channa",
+      "count": 11
+    },
+    {
+      "name": "boiled chickpea",
+      "count": 11
+    }
+  ],
+  "topDinnerItems": [
+    {
+      "name": "plain paratha",
+      "count": 18
+    },
+    {
+      "name": "onion cubes",
+      "count": 11
+    },
+    {
+      "name": "chinese accompaniments",
+      "count": 9
+    },
+    {
+      "name": "papdiwal dry subzi",
+      "count": 8
+    },
+    {
+      "name": "dal tomato",
+      "count": 7
+    }
+  ],
+  "topOverallItems": [
+    {
+      "name": "make your own sandwich",
+      "count": 42
+    },
+    {
+      "name": "south subzi",
+      "count": 28
+    },
+    {
+      "name": "plain paratha",
+      "count": 20
+    },
+    {
+      "name": "poori",
+      "count": 18
+    },
+    {
+      "name": "white bread, brown bread",
+      "count": 14
+    },
+    {
+      "name": "tomato ketchup",
+      "count": 12
+    },
+    {
+      "name": "sprouted red channa",
+      "count": 11
+    },
+    {
+      "name": "boiled rice",
+      "count": 11
+    },
+    {
+      "name": "boiled chickpea",
+      "count": 11
+    },
+    {
+      "name": "steam rice",
+      "count": 11
+    }
+  ],
+  "dayPatterns": [
+    {
+      "dayName": "Monday",
+      "signature": [
+        "chicken rara masala",
+        "tondekai palya",
+        "aloo palak paratha",
+        "patta gobi dry",
+        "besan burfi"
+      ],
+      "frequency": {
+        "chicken rara masala": 3,
+        "tondekai palya": 2,
+        "aloo palak paratha": 2,
+        "patta gobi dry": 2,
+        "besan burfi": 2
+      }
+    },
+    {
+      "dayName": "Tuesday",
+      "signature": [
+        "corainder topped idli",
+        "bombay poha",
+        "egg manchurian",
+        "gobi chilly dry",
+        "chilly pepear rice"
+      ],
+      "frequency": {
+        "corainder topped idli": 2,
+        "bombay poha": 2,
+        "egg manchurian": 2,
+        "gobi chilly dry": 2,
+        "chilly pepear rice": 2
+      }
+    },
+    {
+      "dayName": "Wednesday",
+      "signature": [
+        "papad",
+        "aloo sukka bhaji",
+        "poori",
+        "bread masala veg",
+        "paneer kolhapuri"
+      ],
+      "frequency": {
+        "papad": 5,
+        "aloo sukka bhaji": 3,
+        "poori": 9,
+        "bread masala veg": 2,
+        "paneer kolhapuri": 2
+      }
+    },
+    {
+      "dayName": "Thursday",
+      "signature": [
+        "onion uttappam",
+        "arrabbiata sauce",
+        "egg mughlai",
+        "babycorn pepper masala",
+        "egg omelette / banana"
+      ],
+      "frequency": {
+        "onion uttappam": 3,
+        "arrabbiata sauce": 2,
+        "egg mughlai": 2,
+        "babycorn pepper masala": 2,
+        "egg omelette / banana": 2
+      }
+    },
+    {
+      "dayName": "Friday",
+      "signature": [
+        "stuffed gobi paratha",
+        "imli & mint chutney",
+        "mix veg paratha",
+        "chinese accompaniments",
+        "dal makhani"
+      ],
+      "frequency": {
+        "stuffed gobi paratha": 2,
+        "imli & mint chutney": 2,
+        "mix veg paratha": 3,
+        "chinese accompaniments": 5,
+        "dal makhani": 2
+      }
+    },
+    {
+      "dayName": "Saturday",
+      "signature": [
+        "medu vada",
+        "egg omelette / pineapple",
+        "whole masoor kurma",
+        "foxtail millet idli / plain idli",
+        "egg omelette / orange"
+      ],
+      "frequency": {
+        "medu vada": 10,
+        "egg omelette / pineapple": 3,
+        "whole masoor kurma": 3,
+        "foxtail millet idli / plain idli": 2,
+        "egg omelette / orange": 2
+      }
+    },
+    {
+      "dayName": "Sunday",
+      "signature": [
+        "assorted sprouts",
+        "masala dosa / plain dosa",
+        "masala dosa/ plain dosa",
+        "mixed sprouts",
+        "cilantro dum rice"
+      ],
+      "frequency": {
+        "assorted sprouts": 8,
+        "masala dosa / plain dosa": 6,
+        "masala dosa/ plain dosa": 5,
+        "mixed sprouts": 3,
+        "cilantro dum rice": 2
+      }
+    }
+  ],
+  "funFacts": [
+    {
+      "type": "creative",
+      "title": "Rare Gem",
+      "value": "Paneer Jaipuri",
+      "count": 1
+    },
+    {
+      "type": "longest",
+      "title": "Most Elaborate Name",
+      "value": "Moong Sprouts Curry (South Indian Style)",
+      "count": 40
+    },
+    {
+      "type": "repeated",
+      "title": "Fan Favorite",
+      "value": "make your own sandwich",
+      "count": 42
+    },
+    {
+      "type": "weird",
+      "title": "Paneer Creativity",
+      "value": "39 unique paneer dishes served",
+      "count": 39
+    }
+  ],
+  "mostRepeated": {
+    "name": "plain curd, pickle",
+    "count": 151
+  },
+  "sweetTreats": [
+    {
+      "name": "boiled egg / sweet lemon",
+      "count": 13
+    },
+    {
+      "name": "jalebi",
+      "count": 10
+    },
+    {
+      "name": "sweet potato",
+      "count": 10
+    },
+    {
+      "name": "ice cream",
+      "count": 7
+    },
+    {
+      "name": "wheat halwa",
+      "count": 5
+    },
+    {
+      "name": "sweet potatoes",
+      "count": 4
+    },
+    {
+      "name": "sweet n mint chutney",
+      "count": 4
+    },
+    {
+      "name": "sweet boondi",
+      "count": 3
+    },
+    {
+      "name": "banana slice cake",
+      "count": 3
+    }
+  ],
+  "snackHighlights": [
+    {
+      "name": "medu vada",
+      "count": 11
+    },
+    {
+      "name": "manchurian sauce",
+      "count": 6
+    },
+    {
+      "name": "pav bhaji",
+      "count": 4
+    },
+    {
+      "name": "cabbage pakoda",
+      "count": 3
+    },
+    {
+      "name": "aloo gobi dry",
+      "count": 3
+    },
+    {
+      "name": "aloo bonda",
+      "count": 3
+    },
+    {
+      "name": "amritsari gobi matar",
+      "count": 3
+    },
+    {
+      "name": "veg tikki",
+      "count": 3
+    },
+    {
+      "name": "patta gobi dry",
+      "count": 2
+    },
+    {
+      "name": "rajasthani kadi pakoda",
+      "count": 2
+    }
+  ],
+  "dateRange": {
+    "start": "2025-08-25",
+    "end": "2025-12-07"
+  }
+}

@@ -18,6 +18,7 @@
 /out/
 /.crush/
 CRUSH.md
+/.claude/
 
 # production
 /build
