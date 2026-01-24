@@ -32,15 +32,25 @@ export default function Home() {
                   Jan 28 &bull; 5 PM to 10 PM &bull; Amphitheatre, MIT FC2
                 </p>
               </div>
-              <a
-                href={calendarUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <CalendarPlus className="h-3 w-3" />
-                Add to Calendar
-              </a>
+              <div className="flex items-center gap-3">
+                <a
+                  href={calendarUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <CalendarPlus className="h-3 w-3" />
+                  Add to Calendar
+                </a>
+                <a
+                  href={calendarUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg bg-foreground text-background hover:bg-foreground/90 transition-colors"
+                >
+                  Check it out
+                </a>
+              </div>
             </div>
           </div>
         </div>
