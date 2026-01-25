@@ -234,7 +234,7 @@ const MealGridCard = React.memo(function MealGridCard({
                 key={idx}
                 className="text-xs rounded-md bg-muted/50 px-2 py-1 leading-tight border border-border/20"
               >
-                {item}
+                {typeof item === 'string' ? item : item.name}
               </div>
             ))
           ) : (

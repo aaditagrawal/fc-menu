@@ -1,11 +1,40 @@
 "use client";
 
 import * as React from "react";
-import type { Meal, MealKey } from "@/lib/types";
+import type { Meal, MealKey, MenuItem } from "@/lib/types";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Coffee, UtensilsCrossed, Cookie, Moon } from "lucide-react";
 import { filterMenuItems } from "@/lib/exceptions";
+import { isNonVeg, getSpecialType } from "@/lib/filters";
+
+/**
+ * Get the display name for a menu item (handles both V1 strings and V2 objects).
+ */
+function getItemName(item: MenuItem | string): string {
+  return typeof item === 'string' ? item : item.name;
+}
+
+/**
+ * Get CSS classes for a menu item based on its tags.
+ * Handles both V1 (string) and V2 (MenuItem) formats gracefully.
+ */
+function getItemClasses(item: MenuItem | string): string {
+  const special = getSpecialType(item);
+  const nonVeg = isNonVeg(item);
+
+  if (special === 'non-veg' || (nonVeg && !special)) {
+    return "bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-800/50 text-red-900 dark:text-red-100";
+  }
+  if (special === 'veg') {
+    return "bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800/50 text-green-900 dark:text-green-100";
+  }
+  if (special === 'other') {
+    return "bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800/50 text-blue-900 dark:text-blue-100";
+  }
+
+  return "bg-muted border-border/30";
+}
 
 export function MealCard({
   title,
@@ -55,11 +84,21 @@ export function MealCard({
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {filterMenuItems(meal.items).map((item, idx) => (
-            <div key={idx} className="rounded-md bg-muted border border-border/30 px-3 py-2 text-sm break-words hyphens-auto">
-              {item}
-            </div>
-          ))}
+          {filterMenuItems(meal.items).map((item, idx) => {
+            const special = getSpecialType(item);
+            return (
+              <div key={idx} className={cn("rounded-md border px-3 py-2 text-sm break-words hyphens-auto", getItemClasses(item))}>
+                {getItemName(item)}
+                {special && (
+                  <span className="ml-1.5 text-[10px] font-medium opacity-75">
+                    {special === 'veg' && '(Veg Spl)'}
+                    {special === 'non-veg' && '(NV Spl)'}
+                    {special === 'other' && '(Special)'}
+                  </span>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </Card>
@@ -104,11 +143,21 @@ export function MealCard({
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {filterMenuItems(meal.items).map((item, idx) => (
-                <div key={idx} className="rounded-md bg-muted/60 backdrop-blur-sm px-3 py-2 text-sm break-words hyphens-auto">
-                  {item}
-                </div>
-              ))}
+              {filterMenuItems(meal.items).map((item, idx) => {
+                const special = getSpecialType(item);
+                return (
+                  <div key={idx} className={cn("rounded-md border backdrop-blur-sm px-3 py-2 text-sm break-words hyphens-auto", getItemClasses(item))}>
+                    {getItemName(item)}
+                    {special && (
+                      <span className="ml-1.5 text-[10px] font-medium opacity-75">
+                        {special === 'veg' && '(Veg Spl)'}
+                        {special === 'non-veg' && '(NV Spl)'}
+                        {special === 'other' && '(Special)'}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </Card>

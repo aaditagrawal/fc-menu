@@ -3,28 +3,15 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { isTodayMonday } from "@/lib/date";
+import type { WeekMenu, Meal, MealKey, MenuItem } from "@/lib/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_MENU_API_URL ?? "https://tikm.coolstuff.work";
 
-export type MealKey = "breakfast" | "lunch" | "snacks" | "dinner";
+// Menu type: 'normal' or 'jain'
+export type MenuType = 'normal' | 'jain';
 
-export interface Meal {
-  name: string;
-  startTime: string;
-  endTime: string;
-  items: string[];
-}
-
-export interface DayMenu {
-  day: string;
-  meals: Record<MealKey, Meal>;
-}
-
-export interface WeekMenu {
-  foodCourt: string;
-  week: string;
-  menu: Record<string, DayMenu>;
-}
+// Re-export types for convenience
+export type { WeekMenu, Meal, MealKey, MenuItem };
 
 export interface WeekSummary {
   week: string;
@@ -57,13 +44,16 @@ export function useWeeksInfo() {
   });
 }
 
-export function useWeekMenu(weekId: string | null) {
+export function useWeekMenu(weekId: string | null, menuType: MenuType = 'normal') {
   const isMonday = isTodayMonday();
+  const endpoint = menuType === 'jain' ? 'jain-menu' : 'menu';
+
   return useQuery({
-    queryKey: ["weekMenu", weekId],
+    queryKey: ["weekMenu", weekId, menuType],
     queryFn: async (): Promise<WeekMenu> => {
       const startDate = weekId?.split("_")[0] ?? "";
-      const res = await fetch(`${API_BASE}/api/menu?weekStart=${startDate}`);
+      // Always use V2 format for tag support
+      const res = await fetch(`${API_BASE}/api/${endpoint}?weekStart=${startDate}&v=2`);
       if (!res.ok) throw new Error(`Failed to fetch week menu: ${weekId}`);
       return res.json();
     },
@@ -100,12 +90,14 @@ export function useOfflineStatus() {
 export function usePrefetchWeekMenu() {
   const queryClient = useQueryClient();
 
-  return (weekId: string) => {
+  return (weekId: string, menuType: MenuType = 'normal') => {
+    const endpoint = menuType === 'jain' ? 'jain-menu' : 'menu';
+
     queryClient.prefetchQuery({
-      queryKey: ["weekMenu", weekId],
+      queryKey: ["weekMenu", weekId, menuType],
       queryFn: async (): Promise<WeekMenu> => {
         const startDate = weekId.split("_")[0];
-        const res = await fetch(`${API_BASE}/api/menu?weekStart=${startDate}`);
+        const res = await fetch(`${API_BASE}/api/${endpoint}?weekStart=${startDate}&v=2`);
         if (!res.ok) throw new Error(`Failed to prefetch week menu: ${weekId}`);
         return res.json();
       },
