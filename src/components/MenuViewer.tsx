@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import type { MealKey, WeekMenu } from "@/lib/types";
-import { findCurrentOrUpcomingMeal, pickHighlightMealForDay, getISTNow } from "@/lib/date";
+import { findCurrentOrUpcomingMeal, pickHighlightMealForDay, getISTNow, sortDateKeysAsc } from "@/lib/date";
 import { InlineSelect } from "@/components/InlineSelect";
 import { MealCarousel, type MealCarouselHandle } from "@/components/MealCarousel";
 import { useWeeksInfo, useWeekMenu } from "@/hooks/useMenuData";
@@ -244,6 +244,10 @@ export function MenuViewer({
   const pointer = findCurrentOrUpcomingMeal(week);
   const sortedDateKeys = Object.keys(week.menu).sort();
   const fallbackDateKey = sortedDateKeys[0];
+
+  // Compute the full week ID (e.g. "2026-02-02_to_2026-02-08") matching generateStaticParams format
+  const ascDateKeys = sortDateKeysAsc(Object.keys(week.menu));
+  const fullWeekId = `${ascDateKeys[0]}_to_${ascDateKeys[ascDateKeys.length - 1]}`;
   const resolvedDateKey =
     (dateKey && week.menu[dateKey] ? dateKey : null) ??
     (pointer?.dateKey && week.menu[pointer.dateKey] ? pointer.dateKey : null) ??
@@ -317,7 +321,7 @@ export function MenuViewer({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-6">
         <div className="flex flex-wrap items-center gap-2">
           <Button asChild variant="outline">
-            <Link href={`/week/${selectedWeekId}/full`} title="View full week menu">
+            <Link href={`/week/${fullWeekId}/full`} title="View full week menu">
               <Grid3X3 className="h-4 w-4 mr-2" />
               View Full Week Menu
             </Link>

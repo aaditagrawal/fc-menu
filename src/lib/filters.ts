@@ -4,7 +4,7 @@ import type { MenuItem, Meal, DayMenu, WeekMenu } from './types';
  * Dietary filter options for the menu.
  * - 'all': Show all items
  * - 'veg-only': Hide non-veg items
- * - 'non-veg-only': Show only non-veg items
+ * - 'non-veg-only': Hide veg-special items, keep everything else
  * - 'jain': Switch to Jain menu (handled at API level)
  */
 export type DietaryFilter = 'all' | 'veg-only' | 'non-veg-only' | 'jain';
@@ -84,11 +84,11 @@ export function filterMenuItems(items: (MenuItem | string)[], filter: DietaryFil
   }
 
   if (filter === 'non-veg-only') {
-    // Show only items tagged as non-veg or non-veg-special
+    // Remove veg-special items, keep everything else
     return items.filter(item => {
-      if (typeof item === 'string') return false; // V1 format, can't determine
+      if (typeof item === 'string') return true; // V1 format, can't filter
       const tags = item.tags ?? [];
-      return tags.includes('non-veg') || tags.includes('non-veg-special');
+      return !tags.includes('veg-special');
     });
   }
 

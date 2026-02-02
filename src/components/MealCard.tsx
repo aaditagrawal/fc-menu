@@ -9,6 +9,27 @@ import { filterMenuItems } from "@/lib/exceptions";
 import { isNonVeg, getSpecialType } from "@/lib/filters";
 
 /**
+ * Renders menu item text that auto-scales to fit within its container.
+ * Long names (e.g. "Chinese Accompaniments") shrink to avoid wrapping.
+ */
+function ItemText({ name, suffix }: { name: string; suffix?: React.ReactNode }) {
+  const TEXT_THRESHOLD = 16;
+  const needsScaling = name.length > TEXT_THRESHOLD;
+
+  return (
+    <span
+      className={cn(
+        "inline-flex items-baseline gap-1 max-w-full",
+        needsScaling && "text-[0.8em] leading-snug"
+      )}
+    >
+      <span className="truncate min-w-0" title={name}>{name}</span>
+      {suffix}
+    </span>
+  );
+}
+
+/**
  * Get the display name for a menu item (handles both V1 strings and V2 objects).
  */
 function getItemName(item: MenuItem | string): string {
@@ -87,15 +108,17 @@ export function MealCard({
           {filterMenuItems(meal.items).map((item, idx) => {
             const special = getSpecialType(item);
             return (
-              <div key={idx} className={cn("rounded-md border px-3 py-2 text-sm break-words hyphens-auto", getItemClasses(item))}>
-                {getItemName(item)}
-                {special && (
-                  <span className="ml-1.5 text-[10px] font-medium opacity-75">
-                    {special === 'veg' && '(Veg Spl)'}
-                    {special === 'non-veg' && '(NV Spl)'}
-                    {special === 'other' && '(Special)'}
-                  </span>
-                )}
+              <div key={idx} className={cn("rounded-md border px-3 py-2 text-sm overflow-hidden", getItemClasses(item))}>
+                <ItemText
+                  name={getItemName(item)}
+                  suffix={special ? (
+                    <span className="shrink-0 text-[10px] font-medium opacity-75 whitespace-nowrap">
+                      {special === 'veg' && '(Veg Spl)'}
+                      {special === 'non-veg' && '(NV Spl)'}
+                      {special === 'other' && '(Special)'}
+                    </span>
+                  ) : undefined}
+                />
               </div>
             );
           })}
@@ -146,15 +169,17 @@ export function MealCard({
               {filterMenuItems(meal.items).map((item, idx) => {
                 const special = getSpecialType(item);
                 return (
-                  <div key={idx} className={cn("rounded-md border backdrop-blur-sm px-3 py-2 text-sm break-words hyphens-auto", getItemClasses(item))}>
-                    {getItemName(item)}
-                    {special && (
-                      <span className="ml-1.5 text-[10px] font-medium opacity-75">
-                        {special === 'veg' && '(Veg Spl)'}
-                        {special === 'non-veg' && '(NV Spl)'}
-                        {special === 'other' && '(Special)'}
-                      </span>
-                    )}
+                  <div key={idx} className={cn("rounded-md border backdrop-blur-sm px-3 py-2 text-sm overflow-hidden", getItemClasses(item))}>
+                    <ItemText
+                      name={getItemName(item)}
+                      suffix={special ? (
+                        <span className="shrink-0 text-[10px] font-medium opacity-75 whitespace-nowrap">
+                          {special === 'veg' && '(Veg Spl)'}
+                          {special === 'non-veg' && '(NV Spl)'}
+                          {special === 'other' && '(Special)'}
+                        </span>
+                      ) : undefined}
+                    />
                   </div>
                 );
               })}
