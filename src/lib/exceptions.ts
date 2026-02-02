@@ -1,3 +1,5 @@
+import type { MenuItem } from './types';
+
 /**
  * Exception strings that should not be rendered as menu items.
  * These are typically informational notes, warnings, or other non-food items.
@@ -24,7 +26,18 @@ export function shouldFilterMenuItem(item: string): boolean {
 
 /**
  * Filter menu items to exclude exception strings.
+ * Supports both V1 (string[]) and V2 (MenuItem[]) formats.
  */
-export function filterMenuItems(items: string[]): string[] {
-  return items.filter(item => !shouldFilterMenuItem(item));
+export function filterMenuItems(items: MenuItem[]): MenuItem[];
+export function filterMenuItems(items: string[]): string[];
+export function filterMenuItems(items: MenuItem[] | string[]): MenuItem[] | string[] {
+  if (items.length === 0) return items;
+
+  // Check if items are V2 format (objects with name property)
+  if (typeof items[0] === 'object' && 'name' in items[0]) {
+    return (items as MenuItem[]).filter(item => !shouldFilterMenuItem(item.name));
+  }
+
+  // V1 format (strings)
+  return (items as string[]).filter(item => !shouldFilterMenuItem(item));
 }
