@@ -7,6 +7,7 @@ const API_BASE = process.env.MENU_API_URL ?? "https://tikm.coolstuff.work";
 
 async function fetchMenuFromAPI(params?: { week?: string; weekStart?: string; date?: string }): Promise<WeekMenu> {
   const url = new URL(`${API_BASE}/api/menu`);
+  url.searchParams.set("v", "2");
   if (params?.week) url.searchParams.set("week", params.week);
   if (params?.weekStart) url.searchParams.set("weekStart", params.weekStart);
   if (params?.date) url.searchParams.set("date", params.date);

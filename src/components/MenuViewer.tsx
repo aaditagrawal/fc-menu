@@ -6,10 +6,13 @@ import { findCurrentOrUpcomingMeal, pickHighlightMealForDay, getISTNow } from "@
 import { InlineSelect } from "@/components/InlineSelect";
 import { MealCarousel, type MealCarouselHandle } from "@/components/MealCarousel";
 import { useWeeksInfo, useWeekMenu, usePrefetchWeekMenu } from "@/hooks/useMenuData";
+import type { MenuType } from "@/hooks/useMenuData";
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Grid3X3, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { DietaryFilter } from "@/components/DietaryFilter";
+import { type DietaryFilter as DietaryFilterType, getFilterState, setFilterState, filterMeal } from "@/lib/filters";
 
 export type WeekId = string;
 
@@ -94,6 +97,7 @@ export function MenuViewer({
     initialWeekId ? initialWeekId.slice(0, 4) : new Date().getFullYear().toString()
   );
   const [foodCourt, setFoodCourt] = React.useState<string>(initialWeek?.foodCourt ?? "");
+  const [dietaryFilter, setDietaryFilter] = React.useState<DietaryFilterType>('all');
   const [isHydrated, setIsHydrated] = React.useState(false);
   const [dateKey, setDateKey] = React.useState<string | null>(null);
   const [isUserSelectedDay, setIsUserSelectedDay] = React.useState(false);
@@ -104,13 +108,17 @@ export function MenuViewer({
 
   const carouselRef = React.useRef<MealCarouselHandle>(null);
 
-  const weekMenuQuery = useWeekMenu(selectedWeekId);
-  const week = weekMenuQuery.data ?? initialWeek ?? null;
+  const menuType: MenuType = dietaryFilter === 'jain' ? 'jain' : 'normal';
+  const weekMenuQuery = useWeekMenu(selectedWeekId, menuType);
+  const week = weekMenuQuery.data ?? (menuType === 'normal' ? initialWeek : null) ?? null;
   const prefetchWeekMenu = usePrefetchWeekMenu();
   const queryClient = useQueryClient();
 
   React.useEffect(() => {
     setIsHydrated(true);
+    // Restore dietary filter from localStorage
+    const saved = getFilterState();
+    setDietaryFilter(saved.dietary);
     // Update 'now' every minute to keep UI fresh
     const interval = setInterval(() => {
       setNow(getISTNow());
@@ -266,6 +274,11 @@ export function MenuViewer({
     await queryClient.refetchQueries({ queryKey: ["weeksInfo"], type: "active" });
   }, [queryClient, selectedWeekId]);
 
+  const handleDietaryFilterChange = React.useCallback((filter: DietaryFilterType) => {
+    setDietaryFilter(filter);
+    setFilterState({ dietary: filter });
+  }, []);
+
   const yearOptions = availableYears.map((y) => ({ label: y, value: y }));
   const foodCourtOptions = availableFoodCourts.map((fc) => ({ label: fc, value: fc }));
   const weekOptions = weeksForYear.map((weekSummary) => {
@@ -324,10 +337,11 @@ export function MenuViewer({
     .filter((k) => day.meals[k])
     .map((k) => ({
       key: k,
-      meal: day.meals[k]!,
+      meal: filterMeal(day.meals[k]!, dietaryFilter),
       timeRange: `${day.meals[k]!.startTime} – ${day.meals[k]!.endTime} IST`,
       title: k[0].toUpperCase() + k.slice(1),
-    }));
+    }))
+    .filter((m) => m.meal.items.length > 0);
 
   const picked = pickHighlightMealForDay(week, resolvedDateKey, now);
   const highlightKey = (picked?.mealKey ?? (meals[0]?.key ?? "breakfast")) as MealKey;
@@ -378,6 +392,7 @@ export function MenuViewer({
             className="text-sm"
           />
         </div>
+        <DietaryFilter value={dietaryFilter} onChange={handleDietaryFilterChange} />
       </header>
 
       <MealCarousel ref={carouselRef} meals={meals} highlightKey={highlightKey} isPrimaryUpcoming={isPrimaryUpcoming} isLive={isLive} />

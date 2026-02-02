@@ -75,11 +75,11 @@ export function filterMenuItems(items: (MenuItem | string)[], filter: DietaryFil
   }
 
   if (filter === 'veg-only') {
-    // Remove items tagged as non-veg
+    // Remove items tagged as non-veg or non-veg-special
     return items.filter(item => {
       if (typeof item === 'string') return true; // V1 format, can't filter
       const tags = item.tags ?? [];
-      return !tags.includes('non-veg');
+      return !tags.includes('non-veg') && !tags.includes('non-veg-special');
     });
   }
 
