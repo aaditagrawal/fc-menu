@@ -5,7 +5,7 @@ import type { MealKey, WeekMenu } from "@/lib/types";
 import { findCurrentOrUpcomingMeal, pickHighlightMealForDay, getISTNow } from "@/lib/date";
 import { InlineSelect } from "@/components/InlineSelect";
 import { MealCarousel, type MealCarouselHandle } from "@/components/MealCarousel";
-import { useWeeksInfo, useWeekMenu, usePrefetchWeekMenu } from "@/hooks/useMenuData";
+import { useWeeksInfo, useWeekMenu } from "@/hooks/useMenuData";
 import type { MenuType } from "@/hooks/useMenuData";
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
@@ -90,12 +90,8 @@ export function MenuViewer({
   initialWeekId?: WeekId | null;
   initialWeek?: WeekMenu | null;
 }) {
-  // router removed - no longer needed for client-side only routing
   const { data: weeksInfo, isLoading: isWeeksLoading, error: weeksError } = useWeeksInfo();
   const [selectedWeekId, setSelectedWeekId] = React.useState<WeekId | null>(initialWeekId ?? null);
-  const [year, setYear] = React.useState<string>(
-    initialWeekId ? initialWeekId.slice(0, 4) : new Date().getFullYear().toString()
-  );
   const [foodCourt, setFoodCourt] = React.useState<string>(initialWeek?.foodCourt ?? "");
   const [dietaryFilter, setDietaryFilter] = React.useState<DietaryFilterType>('all');
   const [isHydrated, setIsHydrated] = React.useState(false);
@@ -103,15 +99,11 @@ export function MenuViewer({
   const [isUserSelectedDay, setIsUserSelectedDay] = React.useState(false);
   const [now, setNow] = React.useState(() => getISTNow());
 
-  // Track if initial week selection has been done (to force latest on home page load)
-  const initialWeekSelectionDone = React.useRef(false);
-
   const carouselRef = React.useRef<MealCarouselHandle>(null);
 
   const menuType: MenuType = dietaryFilter === 'jain' ? 'jain' : 'normal';
   const weekMenuQuery = useWeekMenu(selectedWeekId, menuType);
   const week = weekMenuQuery.data ?? (menuType === 'normal' ? initialWeek : null) ?? null;
-  const prefetchWeekMenu = usePrefetchWeekMenu();
   const queryClient = useQueryClient();
 
   React.useEffect(() => {
@@ -180,54 +172,22 @@ export function MenuViewer({
     }
   }, [isHydrated, foodCourt, availableFoodCourts, initialWeek]);
 
-  const filteredWeeks = React.useMemo(() => {
-    if (!weeksInfo?.weeks) return [];
-    return weeksInfo.weeks.filter((w) => w.foodCourt === foodCourt);
+  // Filter weeks for the selected food court and always pick the latest
+  const latestWeekId = React.useMemo(() => {
+    if (!weeksInfo?.weeks) return null;
+    const forCourt = weeksInfo.weeks
+      .filter((w) => w.foodCourt === foodCourt)
+      .sort((a, b) => b.weekMonday.localeCompare(a.weekMonday));
+    return forCourt[0]?.weekMonday ?? null;
   }, [weeksInfo?.weeks, foodCourt]);
 
-  const availableYears = React.useMemo(() => {
-    if (!filteredWeeks.length) return [];
-    const years = new Set(filteredWeeks.map((w) => w.weekMonday.slice(0, 4)));
-    return Array.from(years).sort().reverse();
-  }, [filteredWeeks]);
-
+  // Auto-select latest week
   React.useEffect(() => {
     if (!isHydrated) return;
-    if (!availableYears.includes(year)) {
-      setYear(availableYears[0] ?? new Date().getFullYear().toString());
+    if (latestWeekId && latestWeekId !== selectedWeekId) {
+      setSelectedWeekId(latestWeekId);
     }
-  }, [isHydrated, availableYears, year]);
-
-  const weeksForYear = React.useMemo(() => {
-    if (!filteredWeeks.length) return [];
-    return filteredWeeks
-      .filter((w) => w.weekMonday.startsWith(`${year}-`))
-      .sort((a, b) => b.weekMonday.localeCompare(a.weekMonday));
-  }, [filteredWeeks, year]);
-
-  React.useEffect(() => {
-    if (!isHydrated) return;
-    if (weeksForYear.length > 0) {
-      const latest = weeksForYear[0];
-
-      // On initial load without initialWeekId (home page), always jump to the latest week
-      if (!initialWeekSelectionDone.current && !initialWeekId) {
-        initialWeekSelectionDone.current = true;
-        if (latest) setSelectedWeekId(latest.weekMonday);
-        return;
-      }
-
-      // For /week/[id] pages, mark as initialized once we have data
-      if (!initialWeekSelectionDone.current && initialWeekId) {
-        initialWeekSelectionDone.current = true;
-      }
-
-      // Fallback: if current selection is invalid, go to latest
-      if (!weeksForYear.find((w) => w.weekMonday === selectedWeekId)) {
-        if (latest) setSelectedWeekId(latest.weekMonday);
-      }
-    }
-  }, [isHydrated, weeksForYear, selectedWeekId, initialWeekId]);
+  }, [isHydrated, latestWeekId, selectedWeekId]);
 
   React.useEffect(() => {
     if (!foodCourt) return;
@@ -242,31 +202,6 @@ export function MenuViewer({
     document.title = `${foodCourt} Menu — ${base}`;
   }, [foodCourt, isHydrated]);
 
-  // Prefetch adjacent weeks for instant navigation
-  React.useEffect(() => {
-    if (!isHydrated || !selectedWeekId || weeksForYear.length === 0) return;
-
-    const currentIdx = weeksForYear.findIndex(w => w.weekMonday === selectedWeekId);
-    const adjacentWeeks: string[] = [];
-
-    // Get previous and next week
-    if (currentIdx > 0) adjacentWeeks.push(weeksForYear[currentIdx - 1].weekMonday);
-    if (currentIdx < weeksForYear.length - 1) adjacentWeeks.push(weeksForYear[currentIdx + 1].weekMonday);
-
-    // Prefetch on idle to not block main thread
-    const prefetchOnIdle = () => {
-      adjacentWeeks.forEach(weekId => prefetchWeekMenu(weekId));
-    };
-
-    if ('requestIdleCallback' in window) {
-      const id = requestIdleCallback(prefetchOnIdle, { timeout: 2000 });
-      return () => cancelIdleCallback(id);
-    } else {
-      const timeout = setTimeout(prefetchOnIdle, 100);
-      return () => clearTimeout(timeout);
-    }
-  }, [isHydrated, selectedWeekId, weeksForYear, prefetchWeekMenu]);
-
   const handleRefresh = React.useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ["weekMenu", selectedWeekId] });
     await queryClient.invalidateQueries({ queryKey: ["weeksInfo"] });
@@ -279,11 +214,7 @@ export function MenuViewer({
     setFilterState({ dietary: filter });
   }, []);
 
-  const yearOptions = availableYears.map((y) => ({ label: y, value: y }));
   const foodCourtOptions = availableFoodCourts.map((fc) => ({ label: fc, value: fc }));
-  const weekOptions = weeksForYear.map((weekSummary) => {
-    return { label: weekSummary.week, value: weekSummary.weekMonday };
-  });
 
   const dayOptions = week
     ? Object.keys(week.menu)
@@ -296,14 +227,14 @@ export function MenuViewer({
   }
 
   if (weeksError) {
-    return <ErrorState message="Failed to load weeks info" />;
+    return <ErrorState message="Failed to load menu data" />;
   }
 
   if (!weeksInfo) {
     if (weeksInfo === undefined) {
       return <MenuViewerSkeleton />;
     }
-    return <ErrorState message="No weeks available" />;
+    return <ErrorState message="No menu available" />;
   }
 
   if (!week) {
@@ -367,20 +298,6 @@ export function MenuViewer({
               className="text-sm"
             />
           )}
-          <InlineSelect
-            label="Year"
-            value={year}
-            options={yearOptions}
-            onChange={(v) => setYear(String(v))}
-            className="text-sm"
-          />
-          <InlineSelect
-            label="Week"
-            value={selectedWeekId ?? ""}
-            options={weekOptions}
-            onChange={(v) => setSelectedWeekId(String(v))}
-            className="text-sm max-w-[280px] sm:max-w-none"
-          />
           <InlineSelect
             label="Day"
             value={resolvedDateKey}

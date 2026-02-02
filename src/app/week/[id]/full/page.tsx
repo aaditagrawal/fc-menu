@@ -9,11 +9,10 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  return [];
+  const { getAllWeeks } = await import("@/data/weeks");
+  const weeks = await getAllWeeks();
+  return weeks.map((id) => ({ id }));
 }
-
-// Enable ISR with 10 minute revalidation to reduce edge requests
-export const revalidate = 600; // 10 minutes
 
 export default async function FullWeekPage({ params }: PageProps) {
   const { id } = await params;

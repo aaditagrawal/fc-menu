@@ -1,0 +1,8 @@
+{
+  "name": "fc2-menus",
+  "compatibility_date": "2026-02-02",
+  "assets": {
+    "directory": "./out",
+    "not_found_handling": "single-page-application"
+  }
+}

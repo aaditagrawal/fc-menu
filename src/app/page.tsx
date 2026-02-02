@@ -9,9 +9,6 @@ export const metadata = {
     "A fast, friendly viewer for weekly menus with time-aware highlighting (IST).",
 };
 
-// Enable ISR with 10 minute revalidation to reduce edge requests
-export const revalidate = 600; // 10 minutes
-
 export default function Home() {
   return (
     <div className="px-4 py-8 sm:px-6 md:px-8 scroll-optimized">
