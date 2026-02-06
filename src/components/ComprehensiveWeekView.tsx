@@ -4,9 +4,9 @@ import * as React from "react";
 import type { WeekMenu, MealKey, DayMenu, Meal } from "@/lib/types";
 import { MealCard } from "@/components/MealCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Coffee, UtensilsCrossed, Cookie, Moon } from "lucide-react";
 import { filterMenuItems } from "@/lib/exceptions";
-import { useMomentumScroll } from "@/lib/scroll";
 
 interface ComprehensiveWeekViewProps {
   week: WeekMenu;
@@ -28,57 +28,67 @@ const mealTitles = {
   dinner: "Dinner",
 };
 
+type MobileViewMode = "detailed" | "compact";
+
 export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
   // Sort days chronologically
   const sortedDays = React.useMemo(() => Object.keys(week.menu).sort(), [week.menu]);
   const dayCount = sortedDays.length;
-  // Note: useMomentumScroll handles scroll optimizations internally
-  const { containerRef: scrollContainerRef } = useMomentumScroll();
+  const [mobileViewMode, setMobileViewMode] = React.useState<MobileViewMode>("detailed");
 
   return (
     <div className="space-y-8">
       {/* Mobile/Tablet View - Days stacked vertically */}
       <div className="block lg:hidden space-y-6">
-        {sortedDays.map((dateKey) => {
-          const day = week.menu[dateKey];
-          return (
-            <DaySection key={dateKey} day={day} dateKey={dateKey} />
-          );
-        })}
+        <div className="inline-flex rounded-lg border border-border bg-muted/40 p-1">
+          <Button
+            type="button"
+            size="sm"
+            variant={mobileViewMode === "detailed" ? "default" : "ghost"}
+            onClick={() => setMobileViewMode("detailed")}
+            className="h-8 px-3 text-xs"
+          >
+            Detailed
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={mobileViewMode === "compact" ? "default" : "ghost"}
+            onClick={() => setMobileViewMode("compact")}
+            className="h-8 px-3 text-xs"
+          >
+            Compact Grid
+          </Button>
+        </div>
+
+        {mobileViewMode === "detailed" ? (
+          sortedDays.map((dateKey) => {
+            const day = week.menu[dateKey];
+            return (
+              <DaySection key={dateKey} day={day} dateKey={dateKey} />
+            );
+          })
+        ) : (
+          <MobileCompactWeekGrid week={week} sortedDays={sortedDays} />
+        )}
       </div>
 
       {/* Desktop View - Transposed grid: Meals as rows, Days as columns */}
       <div className="hidden lg:block">
-        <div 
-          ref={scrollContainerRef}
-          className="overflow-x-auto scroll-smooth snap-x snap-mandatory scroll-container scroll-momentum snap-enhanced scroll-indicator"
-          style={{
-            scrollBehavior: 'smooth',
-            WebkitOverflowScrolling: 'touch',
-            willChange: 'auto',
-            transform: 'translateZ(0)',
-            touchAction: 'panX'
-          }}>
+        <div className="overflow-x-auto scroll-smooth snap-x snap-mandatory scroll-container">
           <div
-            className={`grid gap-3 min-w-max pb-4 items-start scroll-grid`}
+            className="grid gap-3 min-w-max pb-4 items-start scroll-grid"
             style={{
               gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`,
               scrollSnapType: 'x mandatory',
               scrollPadding: '1rem',
-              willChange: 'transform',
-              transform: 'translateZ(0)'
             }}
           >
             {/* Sticky Header row with days */}
-            <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/50 col-span-full"
-                 style={{
-                   transform: 'translateZ(0)',
-                   willChange: 'transform'
-                 }}>
+            <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/50 col-span-full">
               <div className="grid gap-3 items-start px-4 py-3"
                    style={{
                      gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`,
-                     transform: 'translateZ(0)'
                    }}>
                 <div>
                   <h3 className="font-semibold text-lg">Meals</h3>
@@ -167,6 +177,101 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
   );
 }
 
+function MobileCompactWeekGrid({ week, sortedDays }: { week: WeekMenu; sortedDays: string[] }) {
+  const getMealTimeLabel = React.useCallback((mealKey: MealKey): string => {
+    const uniqueRanges = new Set<string>();
+
+    for (const dateKey of sortedDays) {
+      const meal = week.menu[dateKey]?.meals[mealKey];
+      if (meal) {
+        uniqueRanges.add(`${meal.startTime} - ${meal.endTime}`);
+      }
+    }
+
+    if (uniqueRanges.size === 0) return "No timing";
+    if (uniqueRanges.size === 1) return [...uniqueRanges][0];
+    return "Times vary";
+  }, [sortedDays, week.menu]);
+
+  return (
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base">Compact Week Grid</CardTitle>
+        <p className="text-xs text-muted-foreground">
+          Meals as rows, days as columns for quick scanning.
+        </p>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="overflow-x-auto scrollbar-hide">
+          <div
+            className="grid min-w-max gap-2"
+            style={{ gridTemplateColumns: `72px repeat(${sortedDays.length}, minmax(116px, 1fr))` }}
+          >
+            <div className="sticky left-0 z-10 rounded-md bg-background/95 backdrop-blur-sm p-2 text-xs font-semibold text-muted-foreground">
+              Meal
+            </div>
+            {sortedDays.map((dateKey) => {
+              const day = week.menu[dateKey];
+              return (
+                <div key={`compact-header-${dateKey}`} className="rounded-md border border-border/60 bg-muted/30 p-2 text-center">
+                  <p className="text-[11px] font-semibold leading-tight">{day.day.slice(0, 3)}</p>
+                  <p className="text-[10px] text-muted-foreground leading-tight">{dateKey.slice(5)}</p>
+                </div>
+              );
+            })}
+
+            {mealOrder.map((mealKey) => (
+              <React.Fragment key={`compact-row-${mealKey}`}>
+                <div className="sticky left-0 z-10 rounded-md bg-background/95 backdrop-blur-sm px-1.5 py-2">
+                  <div className="flex items-center gap-1">
+                  {React.createElement(mealIcons[mealKey], {
+                    className: "h-3 w-3 text-primary shrink-0"
+                  })}
+                    <p className="text-[10px] font-medium leading-tight truncate">{mealTitles[mealKey]}</p>
+                  </div>
+                  <div className="min-w-0 mt-0.5">
+                    <p className="text-[9px] text-muted-foreground leading-tight">{getMealTimeLabel(mealKey)}</p>
+                  </div>
+                </div>
+                {sortedDays.map((dateKey) => {
+                  const day = week.menu[dateKey];
+                  const meal = day.meals[mealKey];
+                  const filteredItems = meal ? filterMenuItems(meal.items) : [];
+
+                  return (
+                    <div key={`compact-cell-${mealKey}-${dateKey}`} className="rounded-md border border-border/60 bg-card p-2">
+                      {meal ? (
+                        <div className="space-y-1">
+                          {filteredItems.length > 0 ? (
+                            <div className="space-y-1">
+                              {filteredItems.map((item, idx) => (
+                                <p
+                                  key={`${mealKey}-${dateKey}-${idx}`}
+                                  className="text-[10px] leading-tight text-foreground/90"
+                                >
+                                  {typeof item === "string" ? item : item.name}
+                                </p>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-[10px] text-muted-foreground leading-tight">No items</p>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-[10px] text-muted-foreground">No meal</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function DaySection({ day, dateKey }: { day: DayMenu; dateKey: string }) {
   return (
     <Card>
@@ -211,12 +316,7 @@ const MealGridCard = React.memo(function MealGridCard({
   const filteredItems = React.useMemo(() => filterMenuItems(meal.items), [meal.items]);
 
   return (
-    <Card className={`hover:shadow-md transition-shadow transform-gpu smooth-transition hardware-accelerated`}
-          style={{
-            willChange: 'transform',
-            transform: 'translateZ(0)',
-            backfaceVisibility: 'hidden'
-          }}>
+    <Card className="hover:shadow-md transition-shadow smooth-transition">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center justify-between gap-2 text-sm">
           <span className="flex items-center gap-1">

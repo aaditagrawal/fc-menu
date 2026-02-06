@@ -22,12 +22,12 @@ export const MealCarousel = React.forwardRef<
   const containerRef = React.useRef<HTMLDivElement>(null);
   const itemRefs = React.useRef<Array<HTMLDivElement | null>>([]);
   const [tilt, setTilt] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const rafRef = React.useRef<number | null>(null);
   const highlightIndex = React.useMemo(
     () => Math.max(0, meals.findIndex((m) => m.key === highlightKey)),
     [meals, highlightKey]
   );
 
-  // Center on highlighted meal
   const scrollToHighlight = React.useCallback(() => {
     const container = containerRef.current;
     const el = itemRefs.current[highlightIndex];
@@ -41,37 +41,53 @@ export const MealCarousel = React.forwardRef<
     container.scrollLeft = scrollX;
   }, [highlightIndex]);
 
-  // Scroll to highlighted meal on mount
   React.useLayoutEffect(() => {
     scrollToHighlight();
   }, [scrollToHighlight]);
 
-  // Re-center on resize to maintain proper position
   React.useEffect(() => {
     let resizeTimeout: ReturnType<typeof setTimeout>;
     const handleResize = () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(scrollToHighlight, 100);
     };
-    window.addEventListener("resize", handleResize);
+    window.addEventListener("resize", handleResize, { passive: true });
     return () => {
       window.removeEventListener("resize", handleResize);
       clearTimeout(resizeTimeout);
     };
   }, [scrollToHighlight]);
 
-  // Device orientation tilt effect
   React.useEffect(() => {
+    const canUseOrientation = typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
+    if (!canUseOrientation) return;
+
     function handler(e: DeviceOrientationEvent) {
-      const x = (e.beta ?? 0) / 45;
-      const y = (e.gamma ?? 0) / 45;
-      setTilt({ x, y });
+      const nextX = Math.max(-1, Math.min(1, (e.beta ?? 0) / 45));
+      const nextY = Math.max(-1, Math.min(1, (e.gamma ?? 0) / 45));
+
+      if (rafRef.current) return;
+      rafRef.current = requestAnimationFrame(() => {
+        setTilt((prev) => {
+          if (Math.abs(prev.x - nextX) < 0.06 && Math.abs(prev.y - nextY) < 0.06) {
+            return prev;
+          }
+          return { x: nextX, y: nextY };
+        });
+        rafRef.current = null;
+      });
     }
+
     window.addEventListener("deviceorientation", handler, { passive: true });
-    return () => window.removeEventListener("deviceorientation", handler);
+    return () => {
+      window.removeEventListener("deviceorientation", handler);
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+      rafRef.current = null;
+    };
   }, []);
 
-  // Smooth scroll by a percentage of container width
   const goPrev = React.useCallback(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -86,11 +102,12 @@ export const MealCarousel = React.forwardRef<
     container.scrollBy({ left: scrollAmount, behavior: "smooth" });
   }, []);
 
-  // Expose navigation functions via ref
   React.useImperativeHandle(ref, () => ({ goPrev, goNext }), [goPrev, goNext]);
 
-  // Keyboard navigation
   React.useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "ArrowLeft") {
         e.preventDefault();
@@ -100,15 +117,16 @@ export const MealCarousel = React.forwardRef<
         goNext();
       }
     }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+
+    container.addEventListener("keydown", handleKeyDown);
+    return () => container.removeEventListener("keydown", handleKeyDown);
   }, [goPrev, goNext]);
 
   return (
     <div className="relative overflow-visible">
-      {/* Track - smooth continuous scrolling */}
       <div
         ref={containerRef}
+        tabIndex={0}
         className="flex gap-4 overflow-x-auto py-2 px-3 sm:px-0 scroll-smooth scrollbar-hide"
         style={{
           scrollbarWidth: "none",
@@ -139,7 +157,7 @@ export const MealCarousel = React.forwardRef<
                 highlight={isHighlighted}
                 primaryUpcoming={isPrimaryUpcoming && isHighlighted}
                 isLive={isLive && isHighlighted}
-                tilt={tilt}
+                tilt={isHighlighted ? tilt : undefined}
               />
             </div>
           );

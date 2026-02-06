@@ -26,7 +26,10 @@ export function FullWeekView({ weekId }: { weekId: WeekId }) {
 
   const menuType: MenuType = dietaryFilter === 'jain' ? 'jain' : 'normal';
   const { data: weekData, isLoading, error } = useWeekMenu(weekId, menuType);
-  const week = weekData ? filterWeekMenu(weekData, dietaryFilter) : null;
+  const week = React.useMemo(
+    () => (weekData ? filterWeekMenu(weekData, dietaryFilter) : null),
+    [weekData, dietaryFilter]
+  );
 
   if (isLoading) {
     return (

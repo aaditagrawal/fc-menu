@@ -6,10 +6,8 @@
 
 /* Global scroll optimizations */
 html {
-  scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
 }
 
 body {
@@ -23,7 +21,6 @@ body {
 .scroll-smooth {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
-  transform: translateZ(0);
 }
 
 /* Enhanced smooth scrolling with momentum */
@@ -207,13 +204,10 @@ body {
   display: none;
 }
 
-/* Ultra-high performance scroll optimizations */
+/* Scroll container defaults */
 .scroll-optimized {
-  transform: translateZ(0);
-  will-change: auto;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
-  backface-visibility: hidden;
 }
 
 /* Ultra-smooth momentum scrolling for mobile - 240Hz equivalent */
@@ -221,11 +215,7 @@ body {
   .scroll-momentum {
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
     scroll-snap-type: x mandatory;
-    scroll-snap-stop: always;
-    scroll-padding-inline: 1rem;
   }
 }
 
@@ -241,31 +231,21 @@ body {
 
 /* Ultra-optimized scroll containers with maximum sensitivity */
 .scroll-container {
-  transform: translateZ(0);
-  will-change: auto;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
-  backface-visibility: hidden;
   scroll-snap-type: x mandatory;
-  scroll-snap-stop: always;
   scroll-padding: 1rem;
 }
 
 /* Maximum performance scroll grids */
 .scroll-grid {
-  transform: translateZ(0);
-  will-change: transform;
-  backface-visibility: hidden;
-  -webkit-font-smoothing: subpixel-antialiased;
+  contain: layout paint;
 }
 
 /* Ultra-responsive scroll snap with instant feedback */
 .snap-enhanced {
   scroll-snap-type: x mandatory;
-  scroll-snap-stop: always;
   scroll-behavior: smooth;
-  -webkit-scroll-snap-type: x mandatory;
-  scroll-snap-points-x: repeat(100%);
   scroll-padding-inline: 1rem;
 }
 
@@ -322,20 +302,14 @@ body {
 
 /* Ultra-smooth transitions with cubic-bezier for natural feel */
 .smooth-transition {
-  transition: all 0.1s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform, opacity, scroll-position;
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
+  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.12s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Maximum hardware acceleration for ultra-smooth animations */
 .hardware-accelerated {
-  transform: translateZ(0);
-  will-change: transform, opacity, scroll-position;
-  backface-visibility: hidden;
-  -webkit-font-smoothing: subpixel-antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  contain: layout style paint;
+  contain: layout paint;
 }
 
 /* Optimize for high DPI displays */
@@ -344,7 +318,6 @@ body {
   .scroll-optimized {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
   }
@@ -368,10 +341,6 @@ body {
   .scroll-container {
     scroll-behavior: smooth;
     scroll-snap-type: x mandatory;
-  }
-
-  .scroll-container:hover {
-    will-change: scroll-position;
   }
 }
 

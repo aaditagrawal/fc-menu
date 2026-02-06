@@ -151,13 +151,14 @@ export function MenuViewer({
     try {
       const m = document.cookie.match(/(?:^|; )preferredFoodCourt=([^;]+)/);
       const fromCookie = m ? decodeURIComponent(m[1]) : null;
-      if (fromCookie && fromCookie !== foodCourt) {
-        setFoodCourt(fromCookie);
+      if (fromCookie) {
+        setFoodCourt((prev) => (prev === fromCookie ? prev : fromCookie));
       }
     } catch {
       // noop
     }
-  }, [foodCourt, isHydrated]);
+    // Read cookie once after hydration to avoid repeated parsing work.
+  }, [isHydrated]);
 
   const availableFoodCourts = React.useMemo(() => {
     if (!weeksInfo?.weeks) return [];
@@ -214,13 +215,20 @@ export function MenuViewer({
     setFilterState({ dietary: filter });
   }, []);
 
-  const foodCourtOptions = availableFoodCourts.map((fc) => ({ label: fc, value: fc }));
+  const foodCourtOptions = React.useMemo(
+    () => availableFoodCourts.map((fc) => ({ label: fc, value: fc })),
+    [availableFoodCourts]
+  );
 
-  const dayOptions = week
-    ? Object.keys(week.menu)
-      .sort()
-      .map((k) => ({ label: `${week.menu[k].day} • ${k}`, value: k }))
-    : [];
+  const sortedDateKeys = React.useMemo(() => (week ? Object.keys(week.menu).sort() : []), [week]);
+
+  const dayOptions = React.useMemo(
+    () =>
+      week
+        ? sortedDateKeys.map((k) => ({ label: `${week.menu[k].day} • ${k}`, value: k }))
+        : [],
+    [week, sortedDateKeys]
+  );
 
   if (isWeeksLoading) {
     return <MenuViewerSkeleton />;
@@ -241,8 +249,7 @@ export function MenuViewer({
     return <MenuViewerSkeleton />;
   }
 
-  const pointer = findCurrentOrUpcomingMeal(week);
-  const sortedDateKeys = Object.keys(week.menu).sort();
+  const pointer = findCurrentOrUpcomingMeal(week, now);
   const fallbackDateKey = sortedDateKeys[0];
 
   // Compute the full week ID (e.g. "2026-02-02_to_2026-02-08") matching generateStaticParams format

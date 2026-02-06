@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
@@ -36,7 +37,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script defer src="https://stat.sys256.com/script.js"></script>
+        <Script src="https://stat.sys256.com/script.js" strategy="lazyOnload" />
       </head>
       <body
         className="antialiased min-h-screen flex flex-col scroll-optimized"

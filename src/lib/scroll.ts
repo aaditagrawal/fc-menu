@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from "react";
 
 interface ScrollOptions {
   passive?: boolean;
@@ -8,56 +8,36 @@ interface ScrollOptions {
   debounceMs?: number;
 }
 
-/**
- * Ultra-high frequency scroll handler with micro-adjustments
- * for maximum sensitivity and smoothness (240Hz equivalent)
- */
 export function useOptimizedScroll(
   callback: (event: Event) => void,
   options: ScrollOptions = {}
 ) {
-  const { passive = true, capture = false, debounceMs = 4 } = options; // Much higher frequency (240Hz equivalent)
-  const tickingRef = useRef(false);
-  const debounceTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
-  const lastCallbackRef = useRef(callback);
-  const rafIdRef = useRef<number | undefined>(undefined);
-  const lastTimestampRef = useRef<number>(0);
+  const { passive = true, capture = false, debounceMs = 80 } = options;
+  const callbackRef = useRef(callback);
+  const rafRef = useRef<number | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Update callback ref when callback changes
   useEffect(() => {
-    lastCallbackRef.current = callback;
+    callbackRef.current = callback;
   }, [callback]);
 
   const handleScroll = useCallback(
     (event: Event) => {
-      const now = performance.now();
-      
-      // Ultra-high frequency updates - fire every 4ms minimum
-      if (!tickingRef.current || now - lastTimestampRef.current > 4) {
-        if (rafIdRef.current) {
-          cancelAnimationFrame(rafIdRef.current);
-        }
-        
-        rafIdRef.current = requestAnimationFrame(() => {
-          lastCallbackRef.current(event);
-          tickingRef.current = false;
-          lastTimestampRef.current = now;
-        });
-        
-        tickingRef.current = true;
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
       }
 
-      // Very short debounce for final updates
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
+      rafRef.current = requestAnimationFrame(() => {
+        callbackRef.current(event);
+        rafRef.current = null;
+      });
+
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
       }
 
-      debounceTimeoutRef.current = setTimeout(() => {
-        if (rafIdRef.current) {
-          cancelAnimationFrame(rafIdRef.current);
-        }
-        lastCallbackRef.current(event);
-        tickingRef.current = false;
+      debounceRef.current = setTimeout(() => {
+        callbackRef.current(event);
       }, debounceMs);
     },
     [debounceMs]
@@ -65,66 +45,50 @@ export function useOptimizedScroll(
 
   useEffect(() => {
     return () => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
-      if (rafIdRef.current) {
-        cancelAnimationFrame(rafIdRef.current);
-      }
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, []);
 
   return {
     handleScroll,
-    options: { passive, capture }
+    options: { passive, capture },
   };
 }
 
-/**
- * Ultra-sensitive smooth scroll behavior with instant response
- */
 export function useSmoothScroll() {
   const containerRef = useRef<HTMLDivElement>(null);
   const isScrollingRef = useRef(false);
   const scrollVelocityRef = useRef(0);
 
   const scrollToElement = useCallback((element: HTMLElement) => {
-    if (!containerRef.current || !element) return;
-
     const container = containerRef.current;
-    
-    // Calculate the scroll position to center the element
+    if (!container || !element) return;
+
     const elementCenterX = element.offsetLeft + element.offsetWidth / 2;
     const containerCenterX = container.clientWidth / 2;
     const scrollX = elementCenterX - containerCenterX;
-    
-    // Scroll to the calculated position
-    container.scrollTo({
-      left: scrollX,
-      behavior: 'smooth'
-    });
+
+    container.scrollTo({ left: scrollX, behavior: "smooth" });
   }, []);
 
-  const scrollToIndex = useCallback((index: number, selector: string) => {
-    if (!containerRef.current) return;
+  const scrollToIndex = useCallback(
+    (index: number, selector: string) => {
+      const container = containerRef.current;
+      if (!container) return;
 
-    const elements = containerRef.current.querySelectorAll(selector);
-    const element = elements[index] as HTMLElement;
-    
-    if (element) {
-      scrollToElement(element);
-    }
-  }, [scrollToElement]);
+      const elements = container.querySelectorAll(selector);
+      const element = elements[index] as HTMLElement | undefined;
+      if (element) scrollToElement(element);
+    },
+    [scrollToElement]
+  );
 
   const scrollToPosition = useCallback((x: number, y: number) => {
-    if (!containerRef.current) return;
-    
     const container = containerRef.current;
-    container.scrollTo({
-      left: x,
-      top: y,
-      behavior: 'smooth'
-    });
+    if (!container) return;
+
+    container.scrollTo({ left: x, top: y, behavior: "smooth" });
   }, []);
 
   return {
@@ -133,98 +97,50 @@ export function useSmoothScroll() {
     scrollToIndex,
     scrollToPosition,
     scrollVelocity: scrollVelocityRef,
-    isScrolling: isScrollingRef
+    isScrolling: isScrollingRef,
   };
 }
 
-/**
- * Ultra-responsive momentum scrolling with velocity tracking
- */
 export function useMomentumScroll() {
   const containerRef = useRef<HTMLDivElement>(null);
   const isScrollingRef = useRef(false);
   const scrollVelocityRef = useRef(0);
-  const lastScrollLeftRef = useRef(0);
-  const lastTimestampRef = useRef(performance.now());
-  const rafIdRef = useRef<number | undefined>(undefined);
-  const momentumIdRef = useRef<number | undefined>(undefined);
+  const lastLeftRef = useRef(0);
+  const lastTsRef = useRef(0);
+  const endTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    let ticking = false;
-    let currentRafId: number | undefined;
-    let currentMomentumId: number | undefined;
-
-    const handleScroll = () => {
+    const onScroll = () => {
       const now = performance.now();
-      const deltaX = container.scrollLeft - lastScrollLeftRef.current;
-      const deltaTime = now - lastTimestampRef.current;
-      
-      // Calculate velocity for momentum with high precision
-      if (deltaTime > 0) {
-        const velocity = Math.abs(deltaX) / deltaTime;
-        scrollVelocityRef.current = velocity;
+      const deltaX = container.scrollLeft - lastLeftRef.current;
+      const deltaT = now - lastTsRef.current;
+
+      if (deltaT > 0) {
+        scrollVelocityRef.current = Math.abs(deltaX) / deltaT;
       }
-      
-      lastScrollLeftRef.current = container.scrollLeft;
-      lastTimestampRef.current = now;
-      
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          currentRafId = rafIdRef.current;
-          // Ultra-sensitive scroll state management
-          if (!isScrollingRef.current) {
-            isScrollingRef.current = true;
-            container.style.pointerEvents = 'none';
-            container.style.willChange = 'scroll-position';
-            container.style.transform = 'translateZ(0)';
-          }
-          ticking = false;
-        });
+
+      lastLeftRef.current = container.scrollLeft;
+      lastTsRef.current = now;
+      isScrollingRef.current = true;
+
+      if (endTimeoutRef.current) {
+        clearTimeout(endTimeoutRef.current);
       }
-      
-      // Clear any existing end timer
-      if (momentumIdRef.current) {
-        clearTimeout(momentumIdRef.current);
-      }
-      
-      // Set very short timer for scroll end detection (50ms for instant feel)
-      currentMomentumId = window.setTimeout(() => {
+      endTimeoutRef.current = setTimeout(() => {
         isScrollingRef.current = false;
-        container.style.pointerEvents = '';
-        container.style.willChange = 'auto';
         scrollVelocityRef.current = 0;
-        
-        // Remove transform after scroll ends
-        requestAnimationFrame(() => {
-          container.style.transform = '';
-        });
-      }, 50);
+      }, 120);
     };
 
-    // Use passive listeners for maximum performance with capture for priority
-    container.addEventListener('scroll', handleScroll, { passive: true, capture: true });
-    
-    // Also listen to wheel events for better desktop responsiveness
-    const handleWheel = () => {
-      if (!isScrollingRef.current) {
-        container.style.willChange = 'scroll-position';
-        container.style.transform = 'translateZ(0)';
-      }
-    };
-    
-    container.addEventListener('wheel', handleWheel, { passive: true, capture: true });
+    container.addEventListener("scroll", onScroll, { passive: true });
 
     return () => {
-      container.removeEventListener("scroll", handleScroll);
-      container.removeEventListener("wheel", handleWheel);
-      if (currentRafId) {
-        cancelAnimationFrame(currentRafId);
-      }
-      if (currentMomentumId) {
-        clearTimeout(currentMomentumId);
+      container.removeEventListener("scroll", onScroll);
+      if (endTimeoutRef.current) {
+        clearTimeout(endTimeoutRef.current);
       }
     };
   }, []);
@@ -232,13 +148,10 @@ export function useMomentumScroll() {
   return {
     containerRef,
     isScrolling: isScrollingRef,
-    velocity: scrollVelocityRef
+    velocity: scrollVelocityRef,
   };
 }
 
-/**
- * Custom hook for ultra-responsive touch scroll tracking
- */
 export function useTouchScroll() {
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartRef = useRef<{ x: number; y: number; time: number }>({ x: 0, y: 0, time: 0 });
@@ -254,53 +167,45 @@ export function useTouchScroll() {
       touchStartRef.current = {
         x: touch.clientX,
         y: touch.clientY,
-        time: performance.now()
+        time: performance.now(),
       };
       isDraggingRef.current = true;
-      container.style.willChange = 'scroll-position';
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       if (!isDraggingRef.current) return;
-      
+
       const touch = e.touches[0];
       const now = performance.now();
-      const deltaX = touch.clientX - touchStartRef.current.x;
-      const deltaY = touch.clientY - touchStartRef.current.y;
-      const deltaTime = now - touchStartRef.current.time;
-      
-      if (deltaTime > 0) {
-        velocityRef.current = {
-          x: deltaX / deltaTime,
-          y: deltaY / deltaTime
-        };
-      }
+      const dt = now - touchStartRef.current.time;
+      if (dt <= 0) return;
+
+      velocityRef.current = {
+        x: (touch.clientX - touchStartRef.current.x) / dt,
+        y: (touch.clientY - touchStartRef.current.y) / dt,
+      };
     };
 
     const handleTouchEnd = () => {
       isDraggingRef.current = false;
-      container.style.willChange = 'auto';
-      
-      // Reset velocity after momentum
-      setTimeout(() => {
-        velocityRef.current = { x: 0, y: 0 };
-      }, 100);
+      velocityRef.current = { x: 0, y: 0 };
     };
 
-    container.addEventListener('touchstart', handleTouchStart, { passive: true });
-    container.addEventListener('touchmove', handleTouchMove, { passive: true });
-    container.addEventListener('touchend', handleTouchEnd, { passive: true });
+    container.addEventListener("touchstart", handleTouchStart, { passive: true });
+    container.addEventListener("touchmove", handleTouchMove, { passive: true });
+    container.addEventListener("touchend", handleTouchEnd, { passive: true });
 
     return () => {
-      container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchmove', handleTouchMove);
-      container.removeEventListener('touchend', handleTouchEnd);
+      container.removeEventListener("touchstart", handleTouchStart);
+      container.removeEventListener("touchmove", handleTouchMove);
+      container.removeEventListener("touchend", handleTouchEnd);
     };
   }, []);
 
   return {
     containerRef,
+    touchStart: touchStartRef,
+    isDragging: isDraggingRef,
     velocity: velocityRef,
-    isDragging: isDraggingRef
   };
 }
