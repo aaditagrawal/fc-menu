@@ -44,6 +44,7 @@ Tech stack: Next.js (App Router), TypeScript, Tailwind v4, lucide-react.
    - `bun run lint` passes
    - `bun run build` succeeds
 3) Open a PR with a concise description and screenshots if UI changes.
+4) If you used AI to vibecode your contribution, please include the prompt(s) in the PR description.
 
 Thank you for contributing!
 
