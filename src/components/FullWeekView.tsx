@@ -60,7 +60,7 @@ export function FullWeekView({ weekId }: { weekId: WeekId }) {
         <div className="flex items-center gap-3 self-start sm:self-auto">
           <DietaryFilter value={dietaryFilter} onChange={handleFilterChange} />
           <Button asChild variant="outline">
-            <Link href={`/week/${weekId}`} title="Back to daily view">
+            <Link href="/" title="Back to daily view">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Daily View
             </Link>

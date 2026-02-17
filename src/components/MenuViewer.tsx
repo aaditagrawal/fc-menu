@@ -328,7 +328,7 @@ export function MenuViewer({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-6">
         <div className="flex flex-wrap items-center gap-2">
           <Button asChild variant="outline">
-            <Link href={`/week/${fullWeekId}/full`} title="View full week menu">
+            <Link href={`/week/full?id=${fullWeekId}`} title="View full week menu">
               <Grid3X3 className="h-4 w-4 mr-2" />
               View Full Week Menu
             </Link>

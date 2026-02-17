@@ -23,7 +23,7 @@ export default async function WeeksPage() {
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="sm">
-                  <Link href={`/week/${id}/full`} title="View full week menu">
+                  <Link href={`/week/full?id=${id}`} title="View full week menu">
                     <Grid3X3 className="h-3 w-3 mr-1" />
                     Full
                   </Link>
