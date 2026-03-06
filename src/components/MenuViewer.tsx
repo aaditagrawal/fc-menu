@@ -83,6 +83,19 @@ function ErrorState({ message }: { message: string }) {
   );
 }
 
+function getPreferredFoodCourtFromCookie() {
+  if (typeof document === "undefined") {
+    return null;
+  }
+
+  try {
+    const match = document.cookie.match(/(?:^|; )preferredFoodCourt=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+  } catch {
+    return null;
+  }
+}
+
 export function MenuViewer({
   initialWeekId,
   initialWeek,
@@ -93,8 +106,7 @@ export function MenuViewer({
   const { data: weeksInfo, isLoading: isWeeksLoading, error: weeksError } = useWeeksInfo();
   const [selectedWeekId, setSelectedWeekId] = React.useState<WeekId | null>(initialWeekId ?? null);
   const [foodCourt, setFoodCourt] = React.useState<string>(initialWeek?.foodCourt ?? "");
-  const [dietaryFilter, setDietaryFilter] = React.useState<DietaryFilterType>('all');
-  const [isHydrated, setIsHydrated] = React.useState(false);
+  const [dietaryFilter, setDietaryFilter] = React.useState<DietaryFilterType>("all");
   const [dateKey, setDateKey] = React.useState<string | null>(null);
   const [isUserSelectedDay, setIsUserSelectedDay] = React.useState(false);
   const [now, setNow] = React.useState(() => getISTNow());
@@ -107,58 +119,24 @@ export function MenuViewer({
   const queryClient = useQueryClient();
 
   React.useEffect(() => {
-    setIsHydrated(true);
-    // Restore dietary filter from localStorage
     const saved = getFilterState();
+    const preferredFoodCourt = getPreferredFoodCourtFromCookie();
+
     setDietaryFilter(saved.dietary);
-    // Update 'now' every minute to keep UI fresh
+    if (preferredFoodCourt && !initialWeek?.foodCourt) {
+      setFoodCourt((current) => current || preferredFoodCourt);
+    }
+
     const interval = setInterval(() => {
       setNow(getISTNow());
     }, 60 * 1000);
+
     return () => clearInterval(interval);
-  }, []);
+  }, [initialWeek?.foodCourt]);
 
-  React.useEffect(() => {
-    if (!isHydrated) return;
-    if (initialWeekId && !selectedWeekId) {
-      setSelectedWeekId(initialWeekId);
-    }
-  }, [isHydrated, initialWeekId, selectedWeekId]);
-
-  // Reset manual selection when week changes
   React.useEffect(() => {
     setIsUserSelectedDay(false);
   }, [selectedWeekId]);
-
-  React.useEffect(() => {
-    if (!isHydrated || !week) return;
-    if (initialWeek?.foodCourt) {
-      setFoodCourt(initialWeek.foodCourt);
-    }
-  }, [isHydrated, week, initialWeek]);
-
-  React.useEffect(() => {
-    if (!isHydrated) return;
-    if (week && !isUserSelectedDay) {
-      // Auto-update day/meal based on 'now'
-      const ptr = findCurrentOrUpcomingMeal(week, now);
-      setDateKey(ptr?.dateKey ?? Object.keys(week.menu)[0]);
-    }
-  }, [isHydrated, week, now, isUserSelectedDay]);
-
-  React.useEffect(() => {
-    if (!isHydrated) return;
-    try {
-      const m = document.cookie.match(/(?:^|; )preferredFoodCourt=([^;]+)/);
-      const fromCookie = m ? decodeURIComponent(m[1]) : null;
-      if (fromCookie) {
-        setFoodCourt((prev) => (prev === fromCookie ? prev : fromCookie));
-      }
-    } catch {
-      // noop
-    }
-    // Read cookie once after hydration to avoid repeated parsing work.
-  }, [isHydrated]);
 
   const availableFoodCourts = React.useMemo(() => {
     if (!weeksInfo?.weeks) return [];
@@ -166,42 +144,36 @@ export function MenuViewer({
     return Array.from(courts).sort();
   }, [weeksInfo?.weeks]);
 
-  React.useEffect(() => {
-    if (!isHydrated) return;
-    if (!foodCourt && availableFoodCourts.length > 0 && !initialWeek?.foodCourt) {
-      setFoodCourt(availableFoodCourts[0]);
-    }
-  }, [isHydrated, foodCourt, availableFoodCourts, initialWeek]);
+  const resolvedFoodCourt = foodCourt || initialWeek?.foodCourt || availableFoodCourts[0] || "";
 
-  // Filter weeks for the selected food court and always pick the latest
+  React.useEffect(() => {
+    if (week && !isUserSelectedDay) {
+      const ptr = findCurrentOrUpcomingMeal(week, now);
+      setDateKey(ptr?.dateKey ?? Object.keys(week.menu)[0]);
+    }
+  }, [week, now, isUserSelectedDay]);
+
   const latestWeekId = React.useMemo(() => {
-    if (!weeksInfo?.weeks) return null;
+    if (!weeksInfo?.weeks || !resolvedFoodCourt) return null;
     const forCourt = weeksInfo.weeks
-      .filter((w) => w.foodCourt === foodCourt)
+      .filter((w) => w.foodCourt === resolvedFoodCourt)
       .sort((a, b) => b.weekMonday.localeCompare(a.weekMonday));
     return forCourt[0]?.weekMonday ?? null;
-  }, [weeksInfo?.weeks, foodCourt]);
+  }, [weeksInfo?.weeks, resolvedFoodCourt]);
 
-  // Auto-select latest week
   React.useEffect(() => {
-    if (!isHydrated) return;
-    if (latestWeekId && latestWeekId !== selectedWeekId) {
-      setSelectedWeekId(latestWeekId);
+    const nextWeekId = initialWeekId ?? latestWeekId;
+    if (nextWeekId && nextWeekId !== selectedWeekId) {
+      setSelectedWeekId(nextWeekId);
     }
-  }, [isHydrated, latestWeekId, selectedWeekId]);
+  }, [initialWeekId, latestWeekId, selectedWeekId]);
 
   React.useEffect(() => {
-    if (!foodCourt) return;
+    if (!resolvedFoodCourt || initialWeek?.foodCourt) return;
     try {
-      document.cookie = `preferredFoodCourt=${encodeURIComponent(foodCourt)}; path=/; max-age=${60 * 60 * 24 * 365}`;
-    } catch { }
-  }, [foodCourt]);
-
-  React.useEffect(() => {
-    if (!isHydrated || !foodCourt) return;
-    const base = "The Indian Kitchen";
-    document.title = `${foodCourt} Menu — ${base}`;
-  }, [foodCourt, isHydrated]);
+      document.cookie = `preferredFoodCourt=${encodeURIComponent(resolvedFoodCourt)}; path=/; max-age=${60 * 60 * 24 * 365}`;
+    } catch {}
+  }, [resolvedFoodCourt, initialWeek?.foodCourt]);
 
   const handleRefresh = React.useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ["weekMenu", selectedWeekId] });
@@ -295,7 +267,7 @@ export function MenuViewer({
       <header className="mb-4 space-y-3">
         <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-semibold">
-            {foodCourt.replace(/Food Court (\d+)/, "Food Court $1")}: Menu
+            {resolvedFoodCourt.replace(/Food Court (\d+)/, "Food Court $1")}: Menu
           </h1>
           <p className="text-muted-foreground">{week.week}</p>
         </div>
@@ -303,7 +275,7 @@ export function MenuViewer({
           {foodCourtOptions.length > 1 && (
             <InlineSelect
               label="Mess"
-              value={foodCourt}
+              value={resolvedFoodCourt}
               options={foodCourtOptions}
               onChange={(v) => setFoodCourt(String(v))}
               className="text-sm"

@@ -50,10 +50,9 @@ function MealItems({
             )}
           >
             {getItemName(item)}
-            {special && (
+            {special && special !== "non-veg" && (
               <span className="ml-1 text-[10px] font-medium opacity-75">
                 {special === "veg" && "(Veg Spl)"}
-                {special === "non-veg" && "(NV Spl)"}
                 {special === "other" && "(Special)"}
               </span>
             )}

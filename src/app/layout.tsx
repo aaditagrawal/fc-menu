@@ -1,17 +1,20 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
-import { Toaster } from "@/components/ui/sonner";
-import { ThemeSwitcher } from "@/components/ThemeSwitcher";
+import { AppChrome } from "@/components/AppChrome";
 import { QueryProvider } from "@/providers/QueryProvider";
-import { OfflineBanner } from "@/components/OfflineBanner";
-import "@fontsource/geist-sans/400.css";
-import "@fontsource/geist-sans/500.css";
-import "@fontsource/geist-sans/600.css";
-import "@fontsource/geist-sans/700.css";
-import "@fontsource/geist-mono/400.css";
-import "@fontsource/geist-mono/700.css";
 import "./globals.css";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: {
@@ -22,10 +25,6 @@ export const metadata: Metadata = {
     "A fast, friendly viewer for weekly menus with time-aware highlighting (IST).",
   icons: {
     icon: "/favicon.svg",
-  },
-  other: {
-    // Encourage browser caching for static content - 7 days
-    "cache-control": "public, max-age=604800",
   },
 };
 
@@ -40,7 +39,7 @@ export default function RootLayout({
         <Script src="https://stat.sys256.com/script.js" strategy="lazyOnload" />
       </head>
       <body
-        className="antialiased min-h-screen flex flex-col scroll-optimized"
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col scroll-optimized`}
       >
         <QueryProvider>
           <ThemeProvider
@@ -49,9 +48,6 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <div className="fixed top-4 right-4 z-50">
-              <ThemeSwitcher />
-            </div>
             <main className="flex-1">{children}</main>
             <footer className="py-6 px-4 flex justify-center">
               <div className="inline-flex px-6 py-3 rounded-full bg-secondary/40 border max-w-full">
@@ -95,8 +91,7 @@ export default function RootLayout({
                 </p>
               </div>
             </footer>
-            <Toaster />
-            <OfflineBanner />
+            <AppChrome />
           </ThemeProvider>
         </QueryProvider>
       </body>
