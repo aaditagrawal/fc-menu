@@ -138,11 +138,12 @@ export function MenuViewer({
     setIsUserSelectedDay(false);
   }, [selectedWeekId]);
 
+  const weeks = weeksInfo?.weeks;
   const availableFoodCourts = React.useMemo(() => {
-    if (!weeksInfo?.weeks) return [];
-    const courts = new Set(weeksInfo.weeks.map((w) => w.foodCourt));
+    if (!weeks) return [];
+    const courts = new Set(weeks.map((w) => w.foodCourt));
     return Array.from(courts).sort();
-  }, [weeksInfo?.weeks]);
+  }, [weeks]);
 
   const resolvedFoodCourt = foodCourt || initialWeek?.foodCourt || availableFoodCourts[0] || "";
 
@@ -154,12 +155,12 @@ export function MenuViewer({
   }, [week, now, isUserSelectedDay]);
 
   const latestWeekId = React.useMemo(() => {
-    if (!weeksInfo?.weeks || !resolvedFoodCourt) return null;
-    const forCourt = weeksInfo.weeks
+    if (!weeks || !resolvedFoodCourt) return null;
+    const forCourt = weeks
       .filter((w) => w.foodCourt === resolvedFoodCourt)
       .sort((a, b) => b.weekMonday.localeCompare(a.weekMonday));
     return forCourt[0]?.weekMonday ?? null;
-  }, [weeksInfo?.weeks, resolvedFoodCourt]);
+  }, [weeks, resolvedFoodCourt]);
 
   React.useEffect(() => {
     const nextWeekId = initialWeekId ?? latestWeekId;

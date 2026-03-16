@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { AppChrome } from "@/components/AppChrome";
+import { ServiceWorker } from "@/components/ServiceWorker";
 import { QueryProvider } from "@/providers/QueryProvider";
 import "./globals.css";
 
@@ -25,6 +25,13 @@ export const metadata: Metadata = {
     "A fast, friendly viewer for weekly menus with time-aware highlighting (IST).",
   icons: {
     icon: "/favicon.svg",
+    apple: "/icon-192.png",
+  },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "FC Menu",
   },
 };
 
@@ -36,7 +43,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <Script src="https://stat.sys256.com/script.js" strategy="lazyOnload" />
+        <script defer src="https://stat.sys256.com/script.js" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col scroll-optimized`}
@@ -92,6 +99,7 @@ export default function RootLayout({
               </div>
             </footer>
             <AppChrome />
+            <ServiceWorker />
           </ThemeProvider>
         </QueryProvider>
       </body>
