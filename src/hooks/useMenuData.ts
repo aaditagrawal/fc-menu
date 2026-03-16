@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { isTodayMonday } from "@/lib/date";
 import type { WeekMenu, Meal, MealKey, MenuItem } from "@/lib/types";
 
@@ -66,25 +66,25 @@ export function useWeekMenu(weekId: string | null, menuType: MenuType = 'normal'
   });
 }
 
+function subscribeOnline(callback: () => void) {
+  window.addEventListener("online", callback);
+  window.addEventListener("offline", callback);
+  return () => {
+    window.removeEventListener("online", callback);
+    window.removeEventListener("offline", callback);
+  };
+}
+
+function getOnlineSnapshot() {
+  return !navigator.onLine;
+}
+
+function getServerSnapshot() {
+  return false;
+}
+
 export function useOfflineStatus() {
-  const [isOffline, setIsOffline] = useState(false);
-
-  useEffect(() => {
-    setIsOffline(!navigator.onLine);
-
-    const handleOnline = () => setIsOffline(false);
-    const handleOffline = () => setIsOffline(true);
-
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, []);
-
-  return isOffline;
+  return useSyncExternalStore(subscribeOnline, getOnlineSnapshot, getServerSnapshot);
 }
 
 export function usePrefetchWeekMenu() {

@@ -1,35 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 export function MenuNotification() {
-  const [mounted, setMounted] = useState(false);
+  const shown = useRef(false);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    if (shown.current) return;
+    shown.current = true;
 
-  useEffect(() => {
-    if (!mounted) return;
-
-    console.log("MenuNotification component mounted - showing toast");
-
-    // Add a small delay to ensure everything is ready
     const timer = setTimeout(() => {
-      console.log("Attempting to show toast...");
-
-      // Try different toast methods
       toast(
         "The menu is now contributed by the Indian Kitchen and is up to date with what they provide.",
-        {
-          duration: 1500,
-        },
+        { duration: 1500 },
       );
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [mounted]);
+  }, []);
 
-  return null; // This component doesn't render anything
+  return null;
 }
