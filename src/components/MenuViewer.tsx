@@ -165,14 +165,11 @@ export function MenuViewer({
     return forCourt[0]?.weekMonday ?? null;
   }, [initialWeekId, selectedWeekId, weeks, resolvedFoodCourt]);
 
-  // Sync resolvedWeekId back to state only when it changes (needed for query param)
-  const prevResolvedWeekId = React.useRef(resolvedWeekId);
-  if (resolvedWeekId !== prevResolvedWeekId.current) {
-    prevResolvedWeekId.current = resolvedWeekId;
+  React.useEffect(() => {
     if (resolvedWeekId && resolvedWeekId !== selectedWeekId) {
       setSelectedWeekId(resolvedWeekId);
     }
-  }
+  }, [resolvedWeekId, selectedWeekId]);
 
   // Derive dateKey: use user selection if it's for this week, otherwise auto-detect
   const dateKey = React.useMemo(() => {

@@ -1,5 +1,26 @@
-const CACHE_NAME = "fc-menu-v1";
-const STATIC_ASSETS = ["/", "/weeks", "/favicon.svg", "/icon-192.png", "/icon-512.png"];
+const CACHE_NAME = "fc-menu-v2";
+const STATIC_ASSETS = ["/favicon.svg", "/icon-192.png", "/icon-512.png"];
+
+function isCacheableAsset(request, url) {
+  if (request.method !== "GET") return false;
+
+  if (url.origin !== self.location.origin) {
+    return true;
+  }
+
+  if (request.mode === "navigate") {
+    return false;
+  }
+
+  return (
+    url.pathname.startsWith("/_next/static/") ||
+    request.destination === "script" ||
+    request.destination === "style" ||
+    request.destination === "image" ||
+    request.destination === "font" ||
+    STATIC_ASSETS.includes(url.pathname)
+  );
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -23,13 +44,26 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
 
+  // Always prefer network for navigations so reloads get the latest HTML.
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(request).catch(async () => {
+        const cache = await caches.open(CACHE_NAME);
+        return cache.match("/") || Response.error();
+      })
+    );
+    return;
+  }
+
   // Network-first for API calls (menu data)
   if (url.hostname !== self.location.hostname) {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          if (response.ok && isCacheableAsset(request, url)) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          }
           return response;
         })
         .catch(() => caches.match(request))
@@ -37,12 +71,18 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Cache-first for static assets
+  if (!isCacheableAsset(request, url)) {
+    return;
+  }
+
+  // Cache-first for immutable/static assets only
   event.respondWith(
     caches.match(request).then((cached) => {
       const fetchPromise = fetch(request).then((response) => {
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+        }
         return response;
       });
       return cached || fetchPromise;
