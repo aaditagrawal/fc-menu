@@ -1,7 +1,25 @@
 "use client";
 
 import * as React from "react";
+import { useEffect } from "react";
 import { cn } from "@/lib/utils";
+
+function useClickOutside(
+  ref: React.RefObject<HTMLElement | null>,
+  open: boolean,
+  onClose: () => void
+) {
+  useEffect(() => {
+    if (!open) return;
+    function onDocClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        onClose();
+      }
+    }
+    document.addEventListener("click", onDocClick);
+    return () => document.removeEventListener("click", onDocClick);
+  }, [open, ref, onClose]);
+}
 
 export function InlineSelect<T extends string | number>({
   label,
@@ -22,19 +40,8 @@ export function InlineSelect<T extends string | number>({
   const ref = React.useRef<HTMLDivElement | null>(null);
   const buttonRef = React.useRef<HTMLButtonElement | null>(null);
 
-  React.useEffect(() => {
-    function onDocClick(e: MouseEvent) {
-      if (!ref.current) return;
-      if (!ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-
-    if (open) {
-      document.addEventListener("click", onDocClick);
-    }
-    return () => document.removeEventListener("click", onDocClick);
-  }, [open]);
+  const closeMenu = React.useCallback(() => setOpen(false), []);
+  useClickOutside(ref, open, closeMenu);
 
   const selected = options.find((o) => o.value === value);
 
@@ -95,5 +102,3 @@ export function InlineSelect<T extends string | number>({
     </div>
   );
 }
-
-

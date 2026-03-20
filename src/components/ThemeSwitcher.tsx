@@ -5,14 +5,15 @@ import { Moon, Sun, Monitor } from "lucide-react"
 import { useTheme } from "next-themes"
 
 import { Button } from "@/components/ui/button"
+import { useMountEffect } from "@/hooks/useMountEffect"
 
 export function ThemeSwitcher() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
 
-  React.useEffect(() => {
+  useMountEffect(() => {
     setMounted(true)
-  }, [])
+  })
 
   if (!mounted) {
     return (

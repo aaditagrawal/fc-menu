@@ -10,14 +10,15 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { DietaryFilter } from "@/components/DietaryFilter";
 import { type DietaryFilter as DietaryFilterType, getFilterState, setFilterState, filterWeekMenu } from "@/lib/filters";
+import { useMountEffect } from "@/hooks/useMountEffect";
 
 export function FullWeekView({ weekId }: { weekId: WeekId }) {
   const [dietaryFilter, setDietaryFilter] = React.useState<DietaryFilterType>('all');
 
-  React.useEffect(() => {
+  useMountEffect(() => {
     const saved = getFilterState();
     setDietaryFilter(saved.dietary);
-  }, []);
+  });
 
   const handleFilterChange = React.useCallback((filter: DietaryFilterType) => {
     setDietaryFilter(filter);

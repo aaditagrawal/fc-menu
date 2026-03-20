@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
+import { useMountEffect } from "@/hooks/useMountEffect";
 
 interface ScrollOptions {
   passive?: boolean;
@@ -14,12 +15,9 @@ export function useOptimizedScroll(
 ) {
   const { passive = true, capture = false, debounceMs = 80 } = options;
   const callbackRef = useRef(callback);
+  useEffect(() => { callbackRef.current = callback; });
   const rafRef = useRef<number | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    callbackRef.current = callback;
-  }, [callback]);
 
   const handleScroll = useCallback(
     (event: Event) => {
@@ -43,12 +41,12 @@ export function useOptimizedScroll(
     [debounceMs]
   );
 
-  useEffect(() => {
+  useMountEffect(() => {
     return () => {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, []);
+  });
 
   return {
     handleScroll,
@@ -109,7 +107,7 @@ export function useMomentumScroll() {
   const lastTsRef = useRef(0);
   const endTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
+  useMountEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
@@ -143,7 +141,7 @@ export function useMomentumScroll() {
         clearTimeout(endTimeoutRef.current);
       }
     };
-  }, []);
+  });
 
   return {
     containerRef,
@@ -158,7 +156,7 @@ export function useTouchScroll() {
   const isDraggingRef = useRef(false);
   const velocityRef = useRef({ x: 0, y: 0 });
 
-  useEffect(() => {
+  useMountEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
@@ -200,7 +198,7 @@ export function useTouchScroll() {
       container.removeEventListener("touchmove", handleTouchMove);
       container.removeEventListener("touchend", handleTouchEnd);
     };
-  }, []);
+  });
 
   return {
     containerRef,

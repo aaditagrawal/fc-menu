@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { toast } from "sonner";
+import { useMountEffect } from "@/hooks/useMountEffect";
 
 export function MenuNotification() {
   const shown = useRef(false);
 
-  useEffect(() => {
+  useMountEffect(() => {
     if (shown.current) return;
     shown.current = true;
 
@@ -18,7 +19,7 @@ export function MenuNotification() {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, []);
+  });
 
   return null;
 }

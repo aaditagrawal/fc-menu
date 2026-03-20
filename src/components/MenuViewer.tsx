@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Grid3X3, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { DietaryFilter } from "@/components/DietaryFilter";
 import { type DietaryFilter as DietaryFilterType, getFilterState, setFilterState, filterMeal } from "@/lib/filters";
+import { useMountEffect } from "@/hooks/useMountEffect";
 
 export type WeekId = string;
 
@@ -32,12 +33,12 @@ const LOADING_QUOTES = [
 function MenuViewerSkeleton() {
   const [quoteIndex, setQuoteIndex] = React.useState(0);
 
-  React.useEffect(() => {
+  useMountEffect(() => {
     const interval = setInterval(() => {
       setQuoteIndex((prev) => (prev + 1) % LOADING_QUOTES.length);
     }, 1800);
     return () => clearInterval(interval);
-  }, []);
+  });
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[320px] py-16 loading-fade-in">
@@ -96,6 +97,12 @@ function getPreferredFoodCourtFromCookie() {
   }
 }
 
+function persistFoodCourtCookie(foodCourt: string) {
+  try {
+    document.cookie = `preferredFoodCourt=${encodeURIComponent(foodCourt)}; path=/; max-age=${60 * 60 * 24 * 365}`;
+  } catch {}
+}
+
 export function MenuViewer({
   initialWeekId,
   initialWeek,
@@ -107,8 +114,8 @@ export function MenuViewer({
   const [selectedWeekId, setSelectedWeekId] = React.useState<WeekId | null>(initialWeekId ?? null);
   const [foodCourt, setFoodCourt] = React.useState<string>(initialWeek?.foodCourt ?? "");
   const [dietaryFilter, setDietaryFilter] = React.useState<DietaryFilterType>("all");
-  const [dateKey, setDateKey] = React.useState<string | null>(null);
-  const [isUserSelectedDay, setIsUserSelectedDay] = React.useState(false);
+  const [userDateKey, setUserDateKey] = React.useState<string | null>(null);
+  const [userDateWeekId, setUserDateWeekId] = React.useState<WeekId | null>(null);
   const [now, setNow] = React.useState(() => getISTNow());
 
   const carouselRef = React.useRef<MealCarouselHandle>(null);
@@ -118,7 +125,8 @@ export function MenuViewer({
   const week = weekMenuQuery.data ?? (menuType === 'normal' ? initialWeek : null) ?? null;
   const queryClient = useQueryClient();
 
-  React.useEffect(() => {
+  // Mount: read persisted state + start clock
+  useMountEffect(() => {
     const saved = getFilterState();
     const preferredFoodCourt = getPreferredFoodCourtFromCookie();
 
@@ -132,11 +140,10 @@ export function MenuViewer({
     }, 60 * 1000);
 
     return () => clearInterval(interval);
-  }, [initialWeek?.foodCourt]);
+  });
 
-  React.useEffect(() => {
-    setIsUserSelectedDay(false);
-  }, [selectedWeekId]);
+  // Derive whether user's day selection applies to the current week
+  const isUserSelectedDay = userDateKey !== null && userDateWeekId === selectedWeekId;
 
   const weeks = weeksInfo?.weeks;
   const availableFoodCourts = React.useMemo(() => {
@@ -147,34 +154,37 @@ export function MenuViewer({
 
   const resolvedFoodCourt = foodCourt || initialWeek?.foodCourt || availableFoodCourts[0] || "";
 
-  React.useEffect(() => {
-    if (week && !isUserSelectedDay) {
-      const ptr = findCurrentOrUpcomingMeal(week, now);
-      setDateKey(ptr?.dateKey ?? Object.keys(week.menu)[0]);
-    }
-  }, [week, now, isUserSelectedDay]);
-
-  const latestWeekId = React.useMemo(() => {
+  // Derive the selected week ID from available data
+  const resolvedWeekId = React.useMemo(() => {
+    if (initialWeekId) return initialWeekId;
+    if (selectedWeekId) return selectedWeekId;
     if (!weeks || !resolvedFoodCourt) return null;
     const forCourt = weeks
       .filter((w) => w.foodCourt === resolvedFoodCourt)
       .sort((a, b) => b.weekMonday.localeCompare(a.weekMonday));
     return forCourt[0]?.weekMonday ?? null;
-  }, [weeks, resolvedFoodCourt]);
+  }, [initialWeekId, selectedWeekId, weeks, resolvedFoodCourt]);
 
-  React.useEffect(() => {
-    const nextWeekId = initialWeekId ?? latestWeekId;
-    if (nextWeekId && nextWeekId !== selectedWeekId) {
-      setSelectedWeekId(nextWeekId);
+  // Sync resolvedWeekId back to state only when it changes (needed for query param)
+  const prevResolvedWeekId = React.useRef(resolvedWeekId);
+  if (resolvedWeekId !== prevResolvedWeekId.current) {
+    prevResolvedWeekId.current = resolvedWeekId;
+    if (resolvedWeekId && resolvedWeekId !== selectedWeekId) {
+      setSelectedWeekId(resolvedWeekId);
     }
-  }, [initialWeekId, latestWeekId, selectedWeekId]);
+  }
 
-  React.useEffect(() => {
-    if (!resolvedFoodCourt || initialWeek?.foodCourt) return;
-    try {
-      document.cookie = `preferredFoodCourt=${encodeURIComponent(resolvedFoodCourt)}; path=/; max-age=${60 * 60 * 24 * 365}`;
-    } catch {}
-  }, [resolvedFoodCourt, initialWeek?.foodCourt]);
+  // Derive dateKey: use user selection if it's for this week, otherwise auto-detect
+  const dateKey = React.useMemo(() => {
+    if (isUserSelectedDay && userDateKey && week?.menu[userDateKey]) {
+      return userDateKey;
+    }
+    if (week) {
+      const ptr = findCurrentOrUpcomingMeal(week, now);
+      return ptr?.dateKey ?? Object.keys(week.menu)[0];
+    }
+    return null;
+  }, [isUserSelectedDay, userDateKey, week, now]);
 
   const handleRefresh = React.useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ["weekMenu", selectedWeekId] });
@@ -187,6 +197,16 @@ export function MenuViewer({
     setDietaryFilter(filter);
     setFilterState({ dietary: filter });
   }, []);
+
+  const handleFoodCourtChange = React.useCallback((v: string) => {
+    setFoodCourt(v);
+    persistFoodCourtCookie(v);
+  }, []);
+
+  const handleDayChange = React.useCallback((v: string) => {
+    setUserDateKey(v);
+    setUserDateWeekId(selectedWeekId);
+  }, [selectedWeekId]);
 
   const foodCourtOptions = React.useMemo(
     () => availableFoodCourts.map((fc) => ({ label: fc, value: fc })),
@@ -278,7 +298,7 @@ export function MenuViewer({
               label="Mess"
               value={resolvedFoodCourt}
               options={foodCourtOptions}
-              onChange={(v) => setFoodCourt(String(v))}
+              onChange={(v) => handleFoodCourtChange(String(v))}
               className="text-sm"
             />
           )}
@@ -286,10 +306,7 @@ export function MenuViewer({
             label="Day"
             value={resolvedDateKey}
             options={dayOptions}
-            onChange={(v) => {
-              setIsUserSelectedDay(true);
-              setDateKey(String(v));
-            }}
+            onChange={(v) => handleDayChange(String(v))}
             className="text-sm"
           />
         </div>

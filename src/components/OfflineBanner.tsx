@@ -4,8 +4,7 @@ import { useOfflineStatus } from "@/hooks/useMenuData";
 import { WifiOff, Wifi } from "lucide-react";
 import { useEffect, useRef, useCallback } from "react";
 
-export function OfflineBanner() {
-  const isOffline = useOfflineStatus();
+function useOfflineBannerVisibility(isOffline: boolean) {
   const wasOffline = useRef(false);
   const bannerRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -32,6 +31,13 @@ export function OfflineBanner() {
       return () => clearTimeout(timerRef.current);
     }
   }, [isOffline, hideBanner]);
+
+  return bannerRef;
+}
+
+export function OfflineBanner() {
+  const isOffline = useOfflineStatus();
+  const bannerRef = useOfflineBannerVisibility(isOffline);
 
   return (
     <div
