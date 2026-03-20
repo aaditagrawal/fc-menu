@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import { useMountEffect } from "@/hooks/useMountEffect";
 
 export function ServiceWorker() {
-  useEffect(() => {
+  useMountEffect(() => {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js");
     }
-  }, []);
+  });
 
   return null;
 }

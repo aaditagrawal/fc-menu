@@ -4,6 +4,7 @@ import * as React from "react";
 import type { Meal, MealKey } from "@/lib/types";
 import { MealCard } from "@/components/MealCard";
 import { cn } from "@/lib/utils";
+import { useMountEffect } from "@/hooks/useMountEffect";
 
 export interface MealCarouselHandle {
   goPrev: () => void;
@@ -45,7 +46,7 @@ export const MealCarousel = React.forwardRef<
     scrollToHighlight();
   }, [scrollToHighlight]);
 
-  React.useEffect(() => {
+  useMountEffect(() => {
     let resizeTimeout: ReturnType<typeof setTimeout>;
     const handleResize = () => {
       clearTimeout(resizeTimeout);
@@ -56,9 +57,9 @@ export const MealCarousel = React.forwardRef<
       window.removeEventListener("resize", handleResize);
       clearTimeout(resizeTimeout);
     };
-  }, [scrollToHighlight]);
+  });
 
-  React.useEffect(() => {
+  useMountEffect(() => {
     const canUseOrientation = typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
     if (!canUseOrientation) return;
 
@@ -86,7 +87,7 @@ export const MealCarousel = React.forwardRef<
       }
       rafRef.current = null;
     };
-  }, []);
+  });
 
   const goPrev = React.useCallback(() => {
     const container = containerRef.current;
@@ -104,7 +105,7 @@ export const MealCarousel = React.forwardRef<
 
   React.useImperativeHandle(ref, () => ({ goPrev, goNext }), [goPrev, goNext]);
 
-  React.useEffect(() => {
+  useMountEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
@@ -120,7 +121,7 @@ export const MealCarousel = React.forwardRef<
 
     container.addEventListener("keydown", handleKeyDown);
     return () => container.removeEventListener("keydown", handleKeyDown);
-  }, [goPrev, goNext]);
+  });
 
   return (
     <div className="relative overflow-visible">
