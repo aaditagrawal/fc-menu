@@ -27,6 +27,11 @@ export interface HistoryResponse {
   weeks: WeekSummary[];
 }
 
+const MONDAY_HISTORY_STALE_MS = 5 * 60 * 1000;
+const NON_MONDAY_HISTORY_STALE_MS = 12 * 60 * 60 * 1000;
+const MONDAY_HISTORY_GC_MS = 15 * 60 * 1000;
+const NON_MONDAY_HISTORY_GC_MS = 24 * 60 * 60 * 1000;
+
 export function useWeeksInfo() {
   const isMonday = isTodayMonday();
   return useQuery({
@@ -36,9 +41,9 @@ export function useWeeksInfo() {
       if (!res.ok) throw new Error("Failed to fetch weeks info");
       return res.json();
     },
-    // On Monday, use shorter cache and always refetch on mount to get fresh data
-    staleTime: isMonday ? 5 * 60 * 1000 : 30 * 60 * 1000,
-    gcTime: isMonday ? 15 * 60 * 1000 : 60 * 60 * 1000,
+    // Monday stays aggressive; the rest of the week can lean on persisted cache.
+    staleTime: isMonday ? MONDAY_HISTORY_STALE_MS : NON_MONDAY_HISTORY_STALE_MS,
+    gcTime: isMonday ? MONDAY_HISTORY_GC_MS : NON_MONDAY_HISTORY_GC_MS,
     refetchOnMount: isMonday ? "always" : false,
     refetchOnWindowFocus: false,
   });
