@@ -484,3 +484,33 @@ body {
     background: oklch(var(--muted));
   }
 }
+
+/* Domain redirect banner */
+.domain-banner {
+  background: oklch(0.15 0 0);
+  overflow: hidden;
+}
+
+.domain-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    oklch(1 0 0 / 8%) 45%,
+    oklch(1 0 0 / 15%) 50%,
+    oklch(1 0 0 / 8%) 55%,
+    transparent 70%
+  );
+  animation: shine 3s ease-in-out infinite;
+}
+
+@keyframes shine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.dark .domain-banner {
+  background: oklch(0.25 0 0);
+}
