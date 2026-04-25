@@ -128,7 +128,7 @@ export const MealCarousel = React.forwardRef<
       <div
         ref={containerRef}
         tabIndex={0}
-        className="flex gap-4 overflow-x-auto py-2 px-3 sm:px-0 scroll-smooth scrollbar-hide"
+        className="flex gap-4 overflow-x-auto py-4 px-3 sm:px-0 scroll-smooth scrollbar-hide rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         style={{
           scrollbarWidth: "none",
           msOverflowStyle: "none",
@@ -146,8 +146,10 @@ export const MealCarousel = React.forwardRef<
                 itemRefs.current[idx] = el;
               }}
               className={cn(
-                "w-[85%] sm:w-[60%] md:w-[50%] lg:w-[38%] flex-shrink-0 px-1",
-                isHighlighted ? "opacity-100" : "opacity-75"
+                "w-[85%] sm:w-[60%] md:w-[50%] lg:w-[38%] flex-shrink-0 px-1 transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none",
+                isHighlighted
+                  ? "opacity-100 scale-100"
+                  : "opacity-60 scale-[0.97] motion-reduce:scale-100"
               )}
             >
               <MealCard

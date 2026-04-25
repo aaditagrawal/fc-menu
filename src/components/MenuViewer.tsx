@@ -283,11 +283,11 @@ export function MenuViewer({
   return (
     <div className="space-y-4 content-loaded">
       <header className="mb-4 space-y-3">
-        <div className="space-y-1">
-          <h1 className="text-2xl sm:text-3xl font-semibold">
+        <div className="space-y-1.5">
+          <h1 className="text-[26px] sm:text-[32px] font-semibold tracking-[-0.02em] leading-[1.1]">
             {resolvedFoodCourt.replace(/Food Court (\d+)/, "Food Court $1")}: Menu
           </h1>
-          <p className="text-muted-foreground">{week.week}</p>
+          <p className="text-[15px] tabular-nums text-muted-foreground tracking-[-0.005em]">{week.week}</p>
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           {foodCourtOptions.length > 1 && (

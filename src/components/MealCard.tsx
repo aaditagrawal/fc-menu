@@ -38,27 +38,18 @@ function MealItems({
 }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-      {items.map((item, idx) => {
-        const special = getSpecialType(item);
-        return (
-          <div
-            key={idx}
-            className={cn(
-              "rounded-md border px-3 py-2 text-sm break-words",
-              withBackdrop && "backdrop-blur-sm",
-              getItemClasses(item)
-            )}
-          >
-            {getItemName(item)}
-            {special && special !== "non-veg" && (
-              <span className="ml-1 text-[10px] font-medium opacity-75">
-                {special === "veg" && "(Veg Spl)"}
-                {special === "other" && "(Special)"}
-              </span>
-            )}
-          </div>
-        );
-      })}
+      {items.map((item, idx) => (
+        <div
+          key={idx}
+          className={cn(
+            "rounded-md border px-3 py-2 text-sm break-words",
+            withBackdrop && "backdrop-blur-sm",
+            getItemClasses(item)
+          )}
+        >
+          {getItemName(item)}
+        </div>
+      ))}
     </div>
   );
 }
@@ -105,14 +96,14 @@ function MealCardBase({
 
   const content = (
     <>
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-start justify-between mb-5">
         <div className="flex items-center gap-3">
-          <div className={cn("inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/15", gradient && "backdrop-blur-sm")}>
-            <Icon className="h-5 w-5 text-primary dark:text-foreground" />
+          <div className={cn("inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 ring-1 ring-primary/10", gradient && "backdrop-blur-sm ring-white/20")}>
+            <Icon className="h-[18px] w-[18px] text-primary dark:text-foreground" strokeWidth={1.75} />
           </div>
-          <div>
-            <h3 className="font-semibold text-lg">{title}</h3>
-            <p className="text-sm text-muted-foreground">{timeRange}</p>
+          <div className="space-y-0.5">
+            <h3 className="font-semibold text-[17px] tracking-[-0.01em] leading-none">{title}</h3>
+            <p className="text-[13px] tabular-nums text-muted-foreground leading-none">{timeRange}</p>
           </div>
         </div>
       </div>
@@ -122,16 +113,26 @@ function MealCardBase({
 
   if (!gradient) {
     return (
-      <Card className={cn("smooth-transition bg-card border", highlight ? "border-transparent" : "border-border/50")}>
+      <Card
+        className={cn(
+          "smooth-transition bg-card border rounded-2xl",
+          highlight
+            ? "border-border/70 elevated-card"
+            : "border-border/40 shadow-none"
+        )}
+      >
         <div className="relative p-6">{content}</div>
       </Card>
     );
   }
 
   return (
-    <div className="rounded-2xl p-[6px] relative smooth-transition" style={{ background: gradient, ...glow }}>
-      <div className="rounded-[14px] bg-card h-full w-full">
-        <Card className="bg-transparent border-0 shadow-none">
+    <div
+      className="rounded-2xl p-[1.5px] relative smooth-transition elevated-card"
+      style={{ background: gradient, ...glow }}
+    >
+      <div className="rounded-[calc(1rem-1.5px)] bg-card h-full w-full">
+        <Card className="bg-transparent border-0 shadow-none rounded-[inherit]">
           <div className="relative p-6">{content}</div>
         </Card>
       </div>
