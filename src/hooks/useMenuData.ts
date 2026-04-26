@@ -37,7 +37,7 @@ export function useWeeksInfo() {
   return useQuery({
     queryKey: ["weeksInfo"],
     queryFn: async (): Promise<HistoryResponse> => {
-      const res = await fetch(`${API_BASE}/api/history`);
+      const res = await fetch(`${API_BASE}/api/history`, { cache: "no-store" });
       if (!res.ok) throw new Error("Failed to fetch weeks info");
       return res.json();
     },
@@ -58,7 +58,7 @@ export function useWeekMenu(weekId: string | null, menuType: MenuType = 'normal'
     queryFn: async (): Promise<WeekMenu> => {
       const startDate = weekId?.split("_")[0] ?? "";
       // Always use V2 format for tag support
-      const res = await fetch(`${API_BASE}/api/${endpoint}?weekStart=${startDate}&v=2`);
+      const res = await fetch(`${API_BASE}/api/${endpoint}?weekStart=${startDate}&v=2`, { cache: "no-store" });
       if (!res.ok) throw new Error(`Failed to fetch week menu: ${weekId}`);
       return res.json();
     },
@@ -102,7 +102,7 @@ export function usePrefetchWeekMenu() {
       queryKey: ["weekMenu", weekId, menuType],
       queryFn: async (): Promise<WeekMenu> => {
         const startDate = weekId.split("_")[0];
-        const res = await fetch(`${API_BASE}/api/${endpoint}?weekStart=${startDate}&v=2`);
+        const res = await fetch(`${API_BASE}/api/${endpoint}?weekStart=${startDate}&v=2`, { cache: "no-store" });
         if (!res.ok) throw new Error(`Failed to prefetch week menu: ${weekId}`);
         return res.json();
       },
