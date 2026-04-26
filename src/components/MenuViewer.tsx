@@ -287,25 +287,24 @@ export function MenuViewer({
           <h1 className="text-[26px] sm:text-[32px] font-semibold tracking-[-0.02em] leading-[1.1]">
             {resolvedFoodCourt.replace(/Food Court (\d+)/, "Food Court $1")}: Menu
           </h1>
-          <p className="text-[15px] tabular-nums text-muted-foreground tracking-[-0.005em]">{week.week}</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          {foodCourtOptions.length > 1 && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            {foodCourtOptions.length > 1 && (
+              <InlineSelect
+                label="Mess"
+                value={resolvedFoodCourt}
+                options={foodCourtOptions}
+                onChange={(v) => handleFoodCourtChange(String(v))}
+                className="text-sm"
+              />
+            )}
             <InlineSelect
-              label="Mess"
-              value={resolvedFoodCourt}
-              options={foodCourtOptions}
-              onChange={(v) => handleFoodCourtChange(String(v))}
+              label="Day"
+              value={resolvedDateKey}
+              options={dayOptions}
+              onChange={(v) => handleDayChange(String(v))}
               className="text-sm"
             />
-          )}
-          <InlineSelect
-            label="Day"
-            value={resolvedDateKey}
-            options={dayOptions}
-            onChange={(v) => handleDayChange(String(v))}
-            className="text-sm"
-          />
+          </div>
         </div>
         <DietaryFilter value={dietaryFilter} onChange={handleDietaryFilterChange} />
       </header>

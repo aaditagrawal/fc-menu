@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { AppChrome } from "@/components/AppChrome";
-import { DomainBanner } from "@/components/DomainBanner";
 import { ServiceWorker } from "@/components/ServiceWorker";
 import { QueryProvider } from "@/providers/QueryProvider";
 import "./globals.css";
@@ -56,7 +55,6 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <DomainBanner />
             <main className="flex-1">{children}</main>
             <footer className="py-6 px-4 flex justify-center">
               <div className="inline-flex px-6 py-3 rounded-full bg-secondary/40 border max-w-full">
