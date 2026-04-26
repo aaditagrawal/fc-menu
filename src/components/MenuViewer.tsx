@@ -9,13 +9,18 @@ import { useWeeksInfo, useWeekMenu } from "@/hooks/useMenuData";
 import type { MenuType } from "@/hooks/useMenuData";
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Grid3X3, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { DietaryFilter } from "@/components/DietaryFilter";
 import { type DietaryFilter as DietaryFilterType, getFilterState, setFilterState, filterMeal } from "@/lib/filters";
+import { QUERY_PERSIST_STORAGE_KEY } from "@/lib/queryPersistence";
 import { useMountEffect } from "@/hooks/useMountEffect";
+import { toast } from "sonner";
 
 export type WeekId = string;
+
+const MENU_QUERY_ROOT_KEYS = new Set(["weekMenu", "weeksInfo"]);
 
 const LOADING_QUOTES = [
   "Warming up the tawa... 🍳",
@@ -103,6 +108,33 @@ function persistFoodCourtCookie(foodCourt: string) {
   } catch {}
 }
 
+function isMenuQuery(query: { queryKey: readonly unknown[] }) {
+  return MENU_QUERY_ROOT_KEYS.has(String(query.queryKey[0]));
+}
+
+async function clearPersistedMenuCaches() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.removeItem(QUERY_PERSIST_STORAGE_KEY);
+  } catch {}
+
+  if (!("caches" in window)) {
+    return;
+  }
+
+  try {
+    const cacheNames = await window.caches.keys();
+    await Promise.all(
+      cacheNames
+        .filter((cacheName) => cacheName.startsWith("fc-menu"))
+        .map((cacheName) => window.caches.delete(cacheName))
+    );
+  } catch {}
+}
+
 export function MenuViewer({
   initialWeekId,
   initialWeek,
@@ -117,8 +149,11 @@ export function MenuViewer({
   const [userDateKey, setUserDateKey] = React.useState<string | null>(null);
   const [userDateWeekId, setUserDateWeekId] = React.useState<WeekId | null>(null);
   const [now, setNow] = React.useState(() => getISTNow());
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [refreshNonce, setRefreshNonce] = React.useState(0);
 
   const carouselRef = React.useRef<MealCarouselHandle>(null);
+  const router = useRouter();
 
   const menuType: MenuType = dietaryFilter === 'jain' ? 'jain' : 'normal';
   const weekMenuQuery = useWeekMenu(selectedWeekId, menuType);
@@ -184,11 +219,30 @@ export function MenuViewer({
   }, [isUserSelectedDay, userDateKey, week, now]);
 
   const handleRefresh = React.useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: ["weekMenu", selectedWeekId] });
-    await queryClient.invalidateQueries({ queryKey: ["weeksInfo"] });
-    await queryClient.refetchQueries({ queryKey: ["weekMenu", selectedWeekId], type: "active" });
-    await queryClient.refetchQueries({ queryKey: ["weeksInfo"], type: "active" });
-  }, [queryClient, selectedWeekId]);
+    if (isRefreshing) {
+      return;
+    }
+
+    setIsRefreshing(true);
+    setUserDateKey(null);
+    setUserDateWeekId(null);
+    setSelectedWeekId(initialWeekId ?? null);
+    setNow(getISTNow());
+    setRefreshNonce((current) => current + 1);
+
+    try {
+      await queryClient.cancelQueries({ predicate: isMenuQuery });
+      await clearPersistedMenuCaches();
+      router.refresh();
+      await queryClient.resetQueries({ predicate: isMenuQuery, type: "all" });
+      await queryClient.refetchQueries({ predicate: isMenuQuery, type: "active" });
+      toast.success("Menu data fully refreshed");
+    } catch {
+      toast.error("Could not refresh menu data. Try again in a moment.");
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [initialWeekId, isRefreshing, queryClient, router]);
 
   const handleDietaryFilterChange = React.useCallback((filter: DietaryFilterType) => {
     setDietaryFilter(filter);
@@ -280,6 +334,8 @@ export function MenuViewer({
   const isPrimaryUpcoming = Boolean(picked?.isPrimaryUpcoming);
   const isLive = Boolean(picked?.isLive);
 
+  const isRefreshButtonBusy = isRefreshing || weekMenuQuery.isFetching;
+
   return (
     <div className="space-y-4 content-loaded">
       <header className="mb-4 space-y-3">
@@ -310,7 +366,14 @@ export function MenuViewer({
         <DietaryFilter value={dietaryFilter} onChange={handleDietaryFilterChange} />
       </header>
 
-      <MealCarousel ref={carouselRef} meals={meals} highlightKey={highlightKey} isPrimaryUpcoming={isPrimaryUpcoming} isLive={isLive} />
+      <MealCarousel
+        key={`${resolvedWeekId}:${resolvedDateKey}:${menuType}:${refreshNonce}`}
+        ref={carouselRef}
+        meals={meals}
+        highlightKey={highlightKey}
+        isPrimaryUpcoming={isPrimaryUpcoming}
+        isLive={isLive}
+      />
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-6">
         <div className="flex flex-wrap items-center gap-2">
@@ -323,11 +386,12 @@ export function MenuViewer({
 
           <Button
             onClick={handleRefresh}
-            disabled={weekMenuQuery.isPending}
+            disabled={isRefreshButtonBusy}
             variant="outline"
-            title="Refresh data"
+            title="Reload UI state and menu data"
+            aria-busy={isRefreshButtonBusy}
           >
-            {weekMenuQuery.isPending ? (
+            {isRefreshButtonBusy ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 Refreshing...
