@@ -70,8 +70,9 @@ export function InlineSelect<T extends string | number>({
         <div
           role="listbox"
           className={cn(
-            "absolute z-50 mt-2 min-w-[200px] rounded-md border bg-popover p-1 shadow-md",
+            "absolute z-50 mt-2 min-w-[220px] rounded-xl border border-border/70 bg-popover p-1 shadow-[0_4px_14px_-4px_oklch(0_0_0/0.12),0_2px_6px_-2px_oklch(0_0_0/0.06)]",
             "top-full left-0",
+            "animate-in fade-in-0 zoom-in-[0.98] slide-in-from-top-1 duration-150",
             menuClassName
           )}
           onClick={(e) => e.stopPropagation()}
@@ -83,8 +84,8 @@ export function InlineSelect<T extends string | number>({
               role="option"
               aria-selected={opt.value === value}
               className={cn(
-                "block w-full text-left px-3 py-2 rounded-md",
-                opt.value === value ? "bg-muted font-medium" : "hover:bg-muted",
+                "block w-full text-left px-3 py-2 rounded-lg text-[14px] transition-colors",
+                opt.value === value ? "bg-muted font-medium" : "hover:bg-muted/70",
                 "cursor-pointer"
               )}
               onClick={(e) => {
