@@ -141,4 +141,13 @@ export function isTodayMonday(nowIST: Date = getISTNow()): boolean {
   return nowIST.getDay() === 1;
 }
 
+/** Calendar week starts Monday (IST wall date from `nowIST`, consistent with menu date keys). */
+export function getMondayDateKeyContainingIST(nowIST: Date): string {
+  const dow = nowIST.getDay();
+  const delta = dow === 0 ? -6 : 1 - dow;
+  const monday = new Date(nowIST);
+  monday.setDate(monday.getDate() + delta);
+  return formatDateKey(monday);
+}
+
 
