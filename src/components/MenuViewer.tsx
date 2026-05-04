@@ -2,7 +2,13 @@
 
 import * as React from "react";
 import type { MealKey, WeekMenu } from "@/lib/types";
-import { findCurrentOrUpcomingMeal, pickHighlightMealForDay, getISTNow, sortDateKeysAsc } from "@/lib/date";
+import {
+  findCurrentOrUpcomingMeal,
+  pickHighlightMealForDay,
+  getISTNow,
+  sortDateKeysAsc,
+  getMondayDateKeyContainingIST,
+} from "@/lib/date";
 import { InlineSelect } from "@/components/InlineSelect";
 import { MealCarousel, type MealCarouselHandle } from "@/components/MealCarousel";
 import { useWeeksInfo, useWeekMenu } from "@/hooks/useMenuData";
@@ -17,6 +23,7 @@ import { type DietaryFilter as DietaryFilterType, getFilterState, setFilterState
 import { QUERY_PERSIST_STORAGE_KEY } from "@/lib/queryPersistence";
 import { useMountEffect } from "@/hooks/useMountEffect";
 import { toast } from "sonner";
+import { StaleWeekNotice } from "@/components/StaleWeekNotice";
 
 export type WeekId = string;
 
@@ -298,6 +305,12 @@ export function MenuViewer({
 
   // Compute the full week ID (e.g. "2026-02-02_to_2026-02-08") matching generateStaticParams format
   const ascDateKeys = sortDateKeysAsc(Object.keys(week.menu));
+  const thisWeekMondayKey = getMondayDateKeyContainingIST(now);
+  const displayedWeekMondayKey = ascDateKeys[0] ?? "";
+  const showStaleWeekNotice =
+    (initialWeekId == null || initialWeekId === "") &&
+    displayedWeekMondayKey !== "" &&
+    displayedWeekMondayKey < thisWeekMondayKey;
   const fullWeekId = `${ascDateKeys[0]}_to_${ascDateKeys[ascDateKeys.length - 1]}`;
   const resolvedDateKey =
     (dateKey && week.menu[dateKey] ? dateKey : null) ??
@@ -338,6 +351,7 @@ export function MenuViewer({
 
   return (
     <div className="space-y-4 content-loaded">
+      {showStaleWeekNotice && <StaleWeekNotice weekLabel={week.week} />}
       <header className="mb-4 space-y-3">
         <div className="space-y-1.5">
           <h1 className="text-[26px] sm:text-[32px] font-semibold tracking-[-0.02em] leading-[1.1]">
