@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev:portless": "portless run",
     "build": "next build",
     "start": "next start",
     "lint": "eslint src"
