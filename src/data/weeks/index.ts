@@ -1,9 +1,24 @@
 import type { WeekMenu, WeekMeta } from "@/lib/types";
 import { sortDateKeysAsc } from "@/lib/date";
+import { promises as fs } from "node:fs";
+import path from "node:path";
 
 export type WeekId = string;
 
 const API_BASE = process.env.MENU_API_URL ?? "https://tikm.coolstuff.work";
+const STATIC_MANIFEST_PATH = path.join(process.cwd(), "public", "data", "menu-bundle", "manifest.json");
+
+interface StaticWeekEntry {
+  week: string;
+  foodCourt: string;
+  startDate: string;
+  endDate: string;
+  path: string;
+}
+
+interface StaticMenuManifest {
+  normal: { weeks: StaticWeekEntry[] };
+}
 
 async function fetchMenuFromAPI(params?: { week?: string; weekStart?: string; date?: string }): Promise<WeekMenu> {
   const url = new URL(`${API_BASE}/api/menu`);
@@ -33,18 +48,36 @@ function computeWeekIdFromMenu(week: WeekMenu): WeekId {
 }
 
 export async function getAllWeeks(): Promise<WeekId[]> {
-  // Minimal implementation: return only the latest available week id.
+  const manifest = await readStaticManifest();
+  if (manifest) {
+    return manifest.normal.weeks.map(computeWeekIdFromEntry);
+  }
+
   const latest = await getLatestWeekId();
   return latest ? [latest] : [];
 }
 
 export async function getLatestWeekId(): Promise<WeekId> {
+  const manifest = await readStaticManifest();
+  if (manifest) {
+    const latest = [...manifest.normal.weeks].sort((a, b) => b.startDate.localeCompare(a.startDate))[0];
+    if (latest) return computeWeekIdFromEntry(latest);
+  }
+
   const latestWeek = await fetchMenuFromAPI();
   return computeWeekIdFromMenu(latestWeek);
 }
 
 export async function getWeekMenu(id: WeekId): Promise<WeekMenu> {
   const start = id.split("_to_")[0] ?? id;
+  const manifest = await readStaticManifest();
+  const entry = manifest?.normal.weeks.find((week) => week.startDate === start);
+  if (entry) {
+    const filePath = path.join(process.cwd(), "public", entry.path.replace(/^\//, ""));
+    const raw = await fs.readFile(filePath, "utf-8");
+    return JSON.parse(raw) as WeekMenu;
+  }
+
   return fetchMenuFromAPI({ weekStart: start });
 }
 
@@ -62,3 +95,15 @@ export async function getWeeksMeta(): Promise<WeekMeta[]> {
   return metas;
 }
 
+function computeWeekIdFromEntry(entry: StaticWeekEntry): WeekId {
+  return `${entry.startDate}_to_${entry.endDate}`;
+}
+
+async function readStaticManifest(): Promise<StaticMenuManifest | null> {
+  try {
+    const raw = await fs.readFile(STATIC_MANIFEST_PATH, "utf-8");
+    return JSON.parse(raw) as StaticMenuManifest;
+  } catch {
+    return null;
+  }
+}

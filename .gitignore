@@ -16,6 +16,7 @@
 # next.js
 /.next/
 /out/
+/public/data/menu-bundle/
 /.crush/
 CRUSH.md
 /.claude/

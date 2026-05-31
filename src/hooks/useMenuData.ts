@@ -4,11 +4,17 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSyncExternalStore } from "react";
 import { isTodayMonday } from "@/lib/date";
 import type { WeekMenu, Meal, MealKey, MenuItem } from "@/lib/types";
+import {
+  fetchStaticManifest,
+  fetchStaticWeek,
+  getWeeksForType,
+  normalizeWeekIdToStartDate,
+  type MenuType,
+} from "@/lib/staticMenuBundle";
 
 const API_BASE = process.env.NEXT_PUBLIC_MENU_API_URL ?? "https://tikm.coolstuff.work";
 
-// Menu type: 'normal' or 'jain'
-export type MenuType = 'normal' | 'jain';
+export type { MenuType };
 
 // Re-export types for convenience
 export type { WeekMenu, Meal, MealKey, MenuItem };
@@ -20,15 +26,13 @@ export interface WeekSummary {
   endDate: string;
   numDays: number;
   weekMonday: string;
-  lastModified: string;
+  lastModified?: string | null;
 }
 
 export interface HistoryResponse {
   weeks: WeekSummary[];
 }
 
-const MONDAY_HISTORY_STALE_MS = 5 * 60 * 1000;
-const NON_MONDAY_HISTORY_STALE_MS = 12 * 60 * 60 * 1000;
 const MONDAY_HISTORY_GC_MS = 15 * 60 * 1000;
 const NON_MONDAY_HISTORY_GC_MS = 24 * 60 * 60 * 1000;
 
@@ -37,14 +41,18 @@ export function useWeeksInfo() {
   return useQuery({
     queryKey: ["weeksInfo"],
     queryFn: async (): Promise<HistoryResponse> => {
-      const res = await fetch(`${API_BASE}/api/history`, { cache: "no-store" });
-      if (!res.ok) throw new Error("Failed to fetch weeks info");
-      return res.json();
+      try {
+        const manifest = await fetchStaticManifest();
+        return { weeks: manifest.normal.weeks };
+      } catch {
+        const res = await fetch(`${API_BASE}/api/history`);
+        if (!res.ok) throw new Error("Failed to fetch weeks info");
+        return res.json();
+      }
     },
-    // Monday stays aggressive; the rest of the week can lean on persisted cache.
-    staleTime: isMonday ? MONDAY_HISTORY_STALE_MS : NON_MONDAY_HISTORY_STALE_MS,
+    staleTime: 0,
     gcTime: isMonday ? MONDAY_HISTORY_GC_MS : NON_MONDAY_HISTORY_GC_MS,
-    refetchOnMount: isMonday ? "always" : false,
+    refetchOnMount: "always",
     refetchOnWindowFocus: false,
   });
 }
@@ -56,17 +64,23 @@ export function useWeekMenu(weekId: string | null, menuType: MenuType = 'normal'
   return useQuery({
     queryKey: ["weekMenu", weekId, menuType],
     queryFn: async (): Promise<WeekMenu> => {
-      const startDate = weekId?.split("_")[0] ?? "";
-      // Always use V2 format for tag support
-      const res = await fetch(`${API_BASE}/api/${endpoint}?weekStart=${startDate}&v=2`, { cache: "no-store" });
+      const startDate = normalizeWeekIdToStartDate(weekId);
+      try {
+        const manifest = await fetchStaticManifest();
+        const entry = getWeeksForType(manifest, menuType).find((week) => week.startDate === startDate);
+        if (entry) return fetchStaticWeek(entry);
+      } catch {
+        // Fall through to the live API for local development or incomplete static bundles.
+      }
+
+      const res = await fetch(`${API_BASE}/api/${endpoint}?weekStart=${startDate}&v=2`);
       if (!res.ok) throw new Error(`Failed to fetch week menu: ${weekId}`);
       return res.json();
     },
-    // On Monday, use shorter cache and always refetch on mount to get fresh data
-    staleTime: isMonday ? 5 * 60 * 1000 : 30 * 60 * 1000,
+    staleTime: 0,
     gcTime: isMonday ? 15 * 60 * 1000 : 60 * 60 * 1000,
     enabled: !!weekId,
-    refetchOnMount: isMonday ? "always" : false,
+    refetchOnMount: "always",
     refetchOnWindowFocus: false,
   });
 }
@@ -101,8 +115,16 @@ export function usePrefetchWeekMenu() {
     queryClient.prefetchQuery({
       queryKey: ["weekMenu", weekId, menuType],
       queryFn: async (): Promise<WeekMenu> => {
-        const startDate = weekId.split("_")[0];
-        const res = await fetch(`${API_BASE}/api/${endpoint}?weekStart=${startDate}&v=2`, { cache: "no-store" });
+        const startDate = normalizeWeekIdToStartDate(weekId);
+        try {
+          const manifest = await fetchStaticManifest();
+          const entry = getWeeksForType(manifest, menuType).find((week) => week.startDate === startDate);
+          if (entry) return fetchStaticWeek(entry);
+        } catch {
+          // Fall through to live API fallback.
+        }
+
+        const res = await fetch(`${API_BASE}/api/${endpoint}?weekStart=${startDate}&v=2`);
         if (!res.ok) throw new Error(`Failed to prefetch week menu: ${weekId}`);
         return res.json();
       },

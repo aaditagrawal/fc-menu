@@ -42,6 +42,13 @@ Lint:
 bun run lint
 ```
 
+Static menu bundle configuration:
+```env
+MENU_API_URL=https://tikm.coolstuff.work
+```
+
+`bun run build` fetches menu history from `MENU_API_URL`, writes a static bundle into `public/data/menu-bundle`, and then exports the site. The client reads that bundle and chooses the current week using IST dates, so future menus can be deployed early without becoming current early.
+
 ---
 
 ## Project Structure

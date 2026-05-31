@@ -6,6 +6,7 @@ import {
   findCurrentOrUpcomingMeal,
   pickHighlightMealForDay,
   getISTNow,
+  formatDateKey,
   sortDateKeysAsc,
   getMondayDateKeyContainingIST,
 } from "@/lib/date";
@@ -24,6 +25,7 @@ import { QUERY_PERSIST_STORAGE_KEY } from "@/lib/queryPersistence";
 import { useMountEffect } from "@/hooks/useMountEffect";
 import { toast } from "sonner";
 import { StaleWeekNotice } from "@/components/StaleWeekNotice";
+import { selectEffectiveWeek } from "@/lib/staticMenuBundle";
 
 export type WeekId = string;
 
@@ -199,13 +201,11 @@ export function MenuViewer({
   // Derive the selected week ID from available data
   const resolvedWeekId = React.useMemo(() => {
     if (initialWeekId) return initialWeekId;
-    if (selectedWeekId) return selectedWeekId;
-    if (!weeks || !resolvedFoodCourt) return null;
+    if (!weeks || !resolvedFoodCourt) return selectedWeekId;
     const forCourt = weeks
-      .filter((w) => w.foodCourt === resolvedFoodCourt)
-      .sort((a, b) => b.weekMonday.localeCompare(a.weekMonday));
-    return forCourt[0]?.weekMonday ?? null;
-  }, [initialWeekId, selectedWeekId, weeks, resolvedFoodCourt]);
+      .filter((w) => w.foodCourt === resolvedFoodCourt);
+    return selectEffectiveWeek(forCourt, formatDateKey(now))?.startDate ?? selectedWeekId;
+  }, [initialWeekId, selectedWeekId, weeks, resolvedFoodCourt, now]);
 
   React.useEffect(() => {
     if (resolvedWeekId && resolvedWeekId !== selectedWeekId) {

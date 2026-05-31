@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "dev:portless": "portless run",
-    "build": "next build",
+    "build:menu-data": "node scripts/build-menu-data.mjs",
+    "build": "node scripts/build-menu-data.mjs && next build",
     "start": "next start",
     "lint": "eslint src"
   },
