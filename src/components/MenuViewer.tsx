@@ -31,59 +31,6 @@ export type WeekId = string;
 
 const MENU_QUERY_ROOT_KEYS = new Set(["weekMenu", "weeksInfo"]);
 
-const LOADING_QUOTES = [
-  "Warming up the tawa... 🍳",
-  "Stirring the daal... 🥘",
-  "Flipping the rotis... 🫓",
-  "Checking the biryani... 🍚",
-  "Marinating the paneer... 🧈",
-  "Simmering the curry... 🍛",
-  "Tasting for masala... 🌶️",
-  "Rolling out parathas... 🥙",
-  "Tempering the tadka... ✨",
-  "Almost ready to serve... 🍽️",
-];
-
-function MenuViewerSkeleton() {
-  const [quoteIndex, setQuoteIndex] = React.useState(0);
-
-  useMountEffect(() => {
-    const interval = setInterval(() => {
-      setQuoteIndex((prev) => (prev + 1) % LOADING_QUOTES.length);
-    }, 1800);
-    return () => clearInterval(interval);
-  });
-
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[320px] py-16 loading-fade-in">
-      {/* Glowing background effect */}
-      <div className="relative">
-        <div className="absolute inset-0 rounded-full bg-amber-500/20 blur-2xl animate-pulse scale-150" />
-
-        {/* Elegant spinner */}
-        <div className="relative w-14 h-14">
-          <div className="absolute inset-0 rounded-full border-[3px] border-muted/30" />
-          <div
-            className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-amber-500 animate-spin"
-            style={{ animationDuration: '0.8s' }}
-          />
-          <div className="absolute inset-2 rounded-full bg-gradient-to-br from-amber-500/10 to-orange-500/10" />
-        </div>
-      </div>
-
-      {/* Witty quote with fade transition */}
-      <div className="mt-8 text-center max-w-xs">
-        <p
-          key={quoteIndex}
-          className="text-base font-medium text-foreground/80 animate-in fade-in duration-500"
-        >
-          {LOADING_QUOTES[quoteIndex]}
-        </p>
-      </div>
-    </div>
-  );
-}
-
 function ErrorState({ message }: { message: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 space-y-4">
@@ -281,23 +228,26 @@ export function MenuViewer({
     [week, sortedDateKeys]
   );
 
-  if (isWeeksLoading) {
-    return <MenuViewerSkeleton />;
-  }
-
-  if (weeksError) {
+  if (weeksError && !initialWeek) {
     return <ErrorState message="Failed to load menu data" />;
   }
 
-  if (!weeksInfo) {
+  if (!weeksInfo && !initialWeek) {
     if (weeksInfo === undefined) {
-      return <MenuViewerSkeleton />;
+      return null;
     }
     return <ErrorState message="No menu available" />;
   }
 
   if (!week) {
-    return <MenuViewerSkeleton />;
+    if (
+      isWeeksLoading ||
+      weekMenuQuery.isLoading ||
+      (resolvedWeekId !== null && resolvedWeekId !== selectedWeekId)
+    ) {
+      return null;
+    }
+    return <ErrorState message="No menu available" />;
   }
 
   const pointer = findCurrentOrUpcomingMeal(week, now);
