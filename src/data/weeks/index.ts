@@ -1,5 +1,6 @@
 import type { WeekMenu, WeekMeta } from "@/lib/types";
 import { sortDateKeysAsc } from "@/lib/date";
+import { selectEffectiveWeek } from "@/lib/staticMenuBundle";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
@@ -79,6 +80,25 @@ export async function getWeekMenu(id: WeekId): Promise<WeekMenu> {
   }
 
   return fetchMenuFromAPI({ weekStart: start });
+}
+
+/**
+ * Resolve the week that is effective at build time from the static bundle.
+ * Returned data is only a first-paint seed: the client always re-derives the
+ * effective week from a fresh manifest with the user's clock and replaces it.
+ */
+export async function getEffectiveWeekMenu(): Promise<WeekMenu | null> {
+  const manifest = await readStaticManifest();
+  if (!manifest) return null;
+
+  const entry = selectEffectiveWeek(manifest.normal.weeks);
+  if (!entry) return null;
+
+  try {
+    return await getWeekMenu(`${entry.startDate}_to_${entry.endDate}`);
+  } catch {
+    return null;
+  }
 }
 
 export async function getWeeksMeta(): Promise<WeekMeta[]> {

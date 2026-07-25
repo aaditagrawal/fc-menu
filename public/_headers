@@ -1,0 +1,20 @@
+# Hashed build artifacts: safe to cache forever.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Week menu files are content-hashed; a revised menu gets a new URL through
+# the manifest, so these are immutable too.
+/data/menu-bundle/normal/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/data/menu-bundle/jain/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# The manifest is the single freshness gate for menu data: always revalidate
+# (unchanged manifests are served as cheap 304s).
+/data/menu-bundle/manifest.json
+  Cache-Control: public, max-age=0, must-revalidate
+
+# The service worker must never be cached, or updates would lag a full cycle.
+/sw.js
+  Cache-Control: no-cache
