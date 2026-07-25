@@ -43,6 +43,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link
+          rel="preload"
+          href="/data/menu-bundle/manifest.json"
+          as="fetch"
+          crossOrigin="anonymous"
+        />
+        <link rel="preconnect" href="https://stat.sys256.com" />
         <script defer src="https://stat.sys256.com/script.js" />
       </head>
       <body

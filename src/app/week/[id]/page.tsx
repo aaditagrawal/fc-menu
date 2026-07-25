@@ -15,6 +15,9 @@ export async function generateStaticParams() {
 
 export default async function WeekPage({ params }: PageProps) {
   const { id } = await params;
+  const initialWeek = await import("@/data/weeks")
+    .then(({ getWeekMenu }) => getWeekMenu(id))
+    .catch(() => null);
 
   return (
     <div className="px-4 py-8 sm:px-6 md:px-8">
@@ -32,7 +35,7 @@ export default async function WeekPage({ params }: PageProps) {
             </Button>
           </div>
         </div>
-        <MenuViewer initialWeekId={id} />
+        <MenuViewer initialWeekId={id} initialWeek={initialWeek} />
       </div>
     </div>
   );

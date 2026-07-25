@@ -55,14 +55,43 @@ export function selectEffectiveWeek(
     .sort((a, b) => a.startDate.localeCompare(b.startDate))[0] ?? null;
 }
 
+// Several queries (weeks list, week menu, prefetches) need the manifest at the
+// same time; share one in-flight/recent fetch instead of downloading it per
+// query. The TTL is short so long-lived PWA sessions still pick up new weeks —
+// the manifest itself is served with must-revalidate, so a refetch after the
+// TTL is a cheap conditional request (304) unless a menu actually changed.
+const MANIFEST_SHARE_TTL_MS = 60 * 1000;
+
+let manifestPromise: Promise<StaticMenuManifest> | null = null;
+let manifestFetchedAt = 0;
+
+export function invalidateStaticManifestCache() {
+  manifestPromise = null;
+  manifestFetchedAt = 0;
+}
+
 export async function fetchStaticManifest(): Promise<StaticMenuManifest> {
-  const res = await fetch(STATIC_MENU_MANIFEST_PATH, { cache: "no-store" });
-  if (!res.ok) throw new Error("Failed to fetch static menu manifest");
-  return res.json();
+  const now = Date.now();
+  if (!manifestPromise || now - manifestFetchedAt > MANIFEST_SHARE_TTL_MS) {
+    manifestFetchedAt = now;
+    const promise: Promise<StaticMenuManifest> = fetch(STATIC_MENU_MANIFEST_PATH).then((res) => {
+      if (!res.ok) throw new Error("Failed to fetch static menu manifest");
+      return res.json();
+    });
+    manifestPromise = promise;
+    promise.catch(() => {
+      if (manifestPromise === promise) {
+        invalidateStaticManifestCache();
+      }
+    });
+  }
+  return manifestPromise;
 }
 
 export async function fetchStaticWeek(entry: StaticWeekEntry): Promise<WeekMenu> {
-  const res = await fetch(entry.path, { cache: "no-store" });
+  // Week files are content-hashed (a revised menu gets a new path via the
+  // manifest), so the browser's HTTP cache can hold them indefinitely.
+  const res = await fetch(entry.path);
   if (!res.ok) throw new Error(`Failed to fetch static menu week: ${entry.startDate}`);
   return res.json();
 }

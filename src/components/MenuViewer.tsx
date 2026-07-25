@@ -25,7 +25,7 @@ import { QUERY_PERSIST_STORAGE_KEY } from "@/lib/queryPersistence";
 import { useMountEffect } from "@/hooks/useMountEffect";
 import { toast } from "sonner";
 import { StaleWeekNotice } from "@/components/StaleWeekNotice";
-import { selectEffectiveWeek } from "@/lib/staticMenuBundle";
+import { invalidateStaticManifestCache, selectEffectiveWeek } from "@/lib/staticMenuBundle";
 
 export type WeekId = string;
 
@@ -107,17 +107,22 @@ export function MenuViewer({
   const [now, setNow] = React.useState(() => getISTNow());
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [refreshNonce, setRefreshNonce] = React.useState(0);
+  // Baked build-time data must never render during SSR/hydration: day and meal
+  // highlighting depend on the user's clock, not the build's.
+  const [isHydrated, setIsHydrated] = React.useState(false);
 
   const carouselRef = React.useRef<MealCarouselHandle>(null);
   const router = useRouter();
 
   const menuType: MenuType = dietaryFilter === 'jain' ? 'jain' : 'normal';
   const weekMenuQuery = useWeekMenu(selectedWeekId, menuType);
-  const week = weekMenuQuery.data ?? (menuType === 'normal' ? initialWeek : null) ?? null;
+  const bakedWeek = isHydrated && menuType === 'normal' ? initialWeek ?? null : null;
+  const week = weekMenuQuery.data ?? bakedWeek;
   const queryClient = useQueryClient();
 
   // Mount: read persisted state + start clock
   useMountEffect(() => {
+    setIsHydrated(true);
     const saved = getFilterState();
     const preferredFoodCourt = getPreferredFoodCourtFromCookie();
 
@@ -186,6 +191,7 @@ export function MenuViewer({
 
     try {
       await queryClient.cancelQueries({ predicate: isMenuQuery });
+      invalidateStaticManifestCache();
       await clearPersistedMenuCaches();
       router.refresh();
       await queryClient.resetQueries({ predicate: isMenuQuery, type: "all" });
@@ -228,11 +234,11 @@ export function MenuViewer({
     [week, sortedDateKeys]
   );
 
-  if (weeksError && !initialWeek) {
+  if (weeksError && !bakedWeek) {
     return <ErrorState message="Failed to load menu data" />;
   }
 
-  if (!weeksInfo && !initialWeek) {
+  if (!weeksInfo && !bakedWeek) {
     if (weeksInfo === undefined) {
       return null;
     }
