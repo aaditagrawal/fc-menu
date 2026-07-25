@@ -5,6 +5,9 @@ import type { WrappedStats } from "@/lib/wrapped/types";
 export const metadata = {
     title: "FC2 Menu Wrapped",
     description: "A look back at what Food Court 2 served this semester - Spotify Wrapped style!",
+    alternates: {
+        canonical: "/wrapped",
+    },
 };
 
 export default function WrappedPage() {

@@ -3,11 +3,14 @@ import { getEffectiveWeekMenu } from "@/data/weeks";
 
 export const metadata = {
   title: {
-    default: "Food Court Menus — The Indian Kitchen",
-    template: "%s — The Indian Kitchen",
+    default: "Food Court Menus - The Indian Kitchen",
+    template: "%s - The Indian Kitchen",
   },
   description:
     "A fast, friendly viewer for weekly menus with time-aware highlighting (IST).",
+  alternates: {
+    canonical: "/",
+  },
 };
 
 export default async function Home() {

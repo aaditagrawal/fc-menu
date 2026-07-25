@@ -17,12 +17,36 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://tikmit.com"),
   title: {
-    default: "Food Court Menus — The Indian Kitchen",
-    template: "%s — The Indian Kitchen",
+    default: "Food Court Menus - The Indian Kitchen",
+    template: "%s - The Indian Kitchen",
   },
   description:
     "A fast, friendly viewer for weekly menus with time-aware highlighting (IST).",
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: "Food Court Menus",
+    title: "Food Court Menus - The Indian Kitchen",
+    description:
+      "A fast, friendly viewer for weekly menus with time-aware highlighting (IST).",
+    images: [
+      {
+        url: "/icon-512.png",
+        width: 512,
+        height: 512,
+        alt: "Food Court Menus",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: "Food Court Menus - The Indian Kitchen",
+    description:
+      "A fast, friendly viewer for weekly menus with time-aware highlighting (IST).",
+    images: ["/icon-512.png"],
+  },
   icons: {
     icon: "/favicon.svg",
     apple: "/icon-192.png",
