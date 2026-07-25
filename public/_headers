@@ -1,3 +1,7 @@
+# Cache rules for the Cloudflare Workers deployment. The primary domain
+# (fc2.coolstuff.work) is served by Vercel, which ignores this file — the same
+# rules are mirrored in vercel.json. Keep the two in sync.
+
 # Hashed build artifacts: safe to cache forever.
 /_next/static/*
   Cache-Control: public, max-age=31536000, immutable
