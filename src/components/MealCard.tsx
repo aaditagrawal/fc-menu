@@ -62,7 +62,7 @@ function MealCardBase({
   highlight,
   primaryUpcoming,
   isLive,
-  tilt,
+  tiltEnabled,
 }: {
   title: string;
   timeRange: string;
@@ -71,17 +71,11 @@ function MealCardBase({
   highlight?: boolean;
   primaryUpcoming?: boolean;
   isLive?: boolean;
-  tilt?: { x: number; y: number };
+  tiltEnabled?: boolean;
 }) {
   const Icon = mealKey === "breakfast" ? Coffee : mealKey === "lunch" ? UtensilsCrossed : mealKey === "snacks" ? Cookie : Moon;
   const filteredItems = React.useMemo(() => filterMenuItems(meal.items), [meal.items]);
-
-  const glow =
-    highlight && tilt
-      ? {
-          transform: `translateY(${tilt.x * -2}px) rotateX(${tilt.x * 1.8}deg) rotateY(${tilt.y * 1.8}deg)`,
-        }
-      : undefined;
+  const tiltRef = React.useRef<HTMLDivElement>(null);
 
   const gradient = React.useMemo(() => {
     if (!highlight) return undefined;
@@ -93,6 +87,36 @@ function MealCardBase({
     }
     return undefined;
   }, [highlight, primaryUpcoming, isLive]);
+  const hasGradient = Boolean(gradient);
+
+  // Tilt writes straight to the element inside rAF — routing it through React
+  // state re-renders the whole card tree on every orientation tick.
+  React.useEffect(() => {
+    const el = tiltRef.current;
+    if (!tiltEnabled || !el) return;
+    if (!window.matchMedia("(pointer: coarse)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let raf: number | null = null;
+    function handler(e: DeviceOrientationEvent) {
+      if (raf !== null) return;
+      const x = Math.max(-1, Math.min(1, (e.beta ?? 0) / 45));
+      const y = Math.max(-1, Math.min(1, (e.gamma ?? 0) / 45));
+      raf = requestAnimationFrame(() => {
+        raf = null;
+        if (tiltRef.current) {
+          tiltRef.current.style.transform = `translate3d(0, ${x * -2}px, 0) rotateX(${x * 1.8}deg) rotateY(${y * 1.8}deg)`;
+        }
+      });
+    }
+
+    window.addEventListener("deviceorientation", handler, { passive: true });
+    return () => {
+      window.removeEventListener("deviceorientation", handler);
+      if (raf !== null) cancelAnimationFrame(raf);
+      el.style.transform = "";
+    };
+  }, [tiltEnabled, hasGradient]);
 
   const content = (
     <>
@@ -128,8 +152,9 @@ function MealCardBase({
 
   return (
     <div
+      ref={tiltRef}
       className="rounded-2xl p-[1.5px] relative smooth-transition elevated-card"
-      style={{ background: gradient, ...glow }}
+      style={{ background: gradient }}
     >
       <div className="rounded-[calc(1rem-1.5px)] bg-card h-full w-full">
         <Card className="bg-transparent border-0 shadow-none rounded-[inherit]">

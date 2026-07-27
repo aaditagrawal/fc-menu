@@ -48,7 +48,7 @@ export function DietaryFilter({ value, onChange, className }: DietaryFilterProps
             key={option.value}
             onClick={() => onChange(option.value)}
             className={cn(
-              "relative h-7 px-3 rounded-full text-xs font-medium transition-all flex items-center gap-1.5",
+              "relative h-7 px-3 rounded-full text-xs font-medium transition-[background-color,color,box-shadow] flex items-center gap-1.5",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               mainValue === option.value
                 ? "bg-background text-foreground shadow-sm"
@@ -79,7 +79,7 @@ export function DietaryFilter({ value, onChange, className }: DietaryFilterProps
           isJain ? "bg-amber-500" : "bg-muted-foreground/30"
         )}>
           <div className={cn(
-            "absolute top-[2px] h-[14px] w-[14px] rounded-full bg-white shadow-sm transition-transform",
+            "absolute top-[2px] h-[14px] w-[14px] rounded-full bg-white shadow-sm transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
             isJain ? "translate-x-[16px]" : "translate-x-[2px]"
           )} />
         </div>

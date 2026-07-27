@@ -16,7 +16,7 @@ export function StatNumber({
     suffix,
     prefix,
     className,
-    duration = 1500,
+    duration = 800,
 }: StatNumberProps) {
     const [displayValue, setDisplayValue] = useState(0);
     const [hasAnimated, setHasAnimated] = useState(false);

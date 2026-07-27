@@ -2,50 +2,41 @@
 
 import { useOfflineStatus } from "@/hooks/useMenuData";
 import { WifiOff, Wifi } from "lucide-react";
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function useOfflineBannerVisibility(isOffline: boolean) {
   const wasOffline = useRef(false);
-  const bannerRef = useRef<HTMLDivElement>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-
-  const hideBanner = useCallback(() => {
-    if (bannerRef.current) {
-      bannerRef.current.hidden = true;
-    }
-  }, []);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     if (isOffline) {
       wasOffline.current = true;
-      if (bannerRef.current) {
-        bannerRef.current.hidden = false;
-      }
-      clearTimeout(timerRef.current);
-    } else if (wasOffline.current) {
-      wasOffline.current = false;
-      if (bannerRef.current) {
-        bannerRef.current.hidden = false;
-      }
-      timerRef.current = setTimeout(hideBanner, 3000);
-      return () => clearTimeout(timerRef.current);
+      setVisible(true);
+      return;
     }
-  }, [isOffline, hideBanner]);
+    if (wasOffline.current) {
+      wasOffline.current = false;
+      setVisible(true);
+      const timer = setTimeout(() => setVisible(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isOffline]);
 
-  return bannerRef;
+  return visible;
 }
 
 export function OfflineBanner() {
   const isOffline = useOfflineStatus();
-  const bannerRef = useOfflineBannerVisibility(isOffline);
+  const visible = useOfflineBannerVisibility(isOffline);
 
   return (
     <div
-      ref={bannerRef}
-      hidden
-      className={`fixed bottom-4 left-4 right-4 z-50 flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-medium shadow-lg transition-all ${
-        isOffline ? "bg-amber-500 text-white" : "bg-green-500 text-white"
-      }`}
+      aria-hidden={!visible}
+      className={`fixed bottom-4 left-4 right-4 z-50 flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-medium shadow-lg transition-[transform,opacity] ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none ${
+        visible
+          ? "translate-y-0 opacity-100 duration-300"
+          : "translate-y-[calc(100%+1.5rem)] opacity-0 duration-200 pointer-events-none"
+      } ${isOffline ? "bg-amber-500 text-white" : "bg-green-500 text-white"}`}
     >
       {isOffline ? (
         <>

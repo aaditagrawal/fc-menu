@@ -5,8 +5,8 @@
   scroll-snap-type: y mandatory;
   overflow-y: scroll;
   height: 100vh;
+  height: 100dvh;
   scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
 }
 
 .wrapped-slide {
@@ -84,7 +84,7 @@
 @keyframes countUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(12px);
   }
 
   to {
@@ -94,14 +94,14 @@
 }
 
 .count-up {
-  animation: countUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: countUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Slide entrance animations */
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(40px);
+    transform: translateY(14px);
   }
 
   to {
@@ -123,7 +123,7 @@
 @keyframes scaleIn {
   from {
     opacity: 0;
-    transform: scale(0.9);
+    transform: scale(0.96);
   }
 
   to {
@@ -133,48 +133,48 @@
 }
 
 .animate-slide-up {
-  animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.4s ease-out forwards;
+  animation: fadeIn 0.3s ease-out forwards;
 }
 
 .animate-scale-in {
-  animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: scaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Staggered delays */
+/* Staggered delays — 40ms cascade steps, capped well under a beat */
 .delay-100 {
-  animation-delay: 100ms;
+  animation-delay: 40ms;
 }
 
 .delay-200 {
-  animation-delay: 200ms;
+  animation-delay: 80ms;
 }
 
 .delay-300 {
-  animation-delay: 300ms;
+  animation-delay: 120ms;
 }
 
 .delay-400 {
-  animation-delay: 400ms;
+  animation-delay: 160ms;
 }
 
 .delay-500 {
-  animation-delay: 500ms;
+  animation-delay: 200ms;
 }
 
 .delay-600 {
-  animation-delay: 600ms;
+  animation-delay: 240ms;
 }
 
 .delay-700 {
-  animation-delay: 700ms;
+  animation-delay: 280ms;
 }
 
 .delay-800 {
-  animation-delay: 800ms;
+  animation-delay: 320ms;
 }
 
 /* Big typography for dramatic numbers */
@@ -206,11 +206,13 @@
   border-radius: 9999px;
   font-size: 0.875rem;
   white-space: nowrap;
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.dish-tag:hover {
-  transform: scale(1.05);
+@media (hover: hover) and (pointer: fine) {
+  .dish-tag:hover {
+    transform: scale(1.05);
+  }
 }
 
 .dish-tag-lg {
@@ -231,7 +233,7 @@
 }
 
 .progress-ring-circle {
-  transition: stroke-dashoffset 1s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Navigation dots */
@@ -251,7 +253,7 @@
   height: 8px;
   border-radius: 9999px;
   background-color: oklch(0.5 0 0 / 30%);
-  transition: all 0.3s ease;
+  transition: background-color 150ms ease, height 200ms cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
 }
 

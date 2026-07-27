@@ -53,23 +53,7 @@ time,
 body {
   overflow-x: hidden;
   overscroll-behavior: auto;
-  -webkit-overflow-scrolling: touch;
   scroll-padding-top: 2rem;
-}
-
-/* Hardware acceleration for scrollable containers */
-.scroll-smooth {
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Enhanced smooth scrolling with momentum */
-@media (prefers-reduced-motion: no-preference) {
-  .scroll-momentum {
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x mandatory;
-  }
 }
 
 /* Reduce motion for accessibility */
@@ -246,240 +230,66 @@ body {
 
 /* Scroll container defaults */
 .scroll-optimized {
-  -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
 }
 
-/* Ultra-smooth momentum scrolling for mobile - 240Hz equivalent */
-@supports (-webkit-overflow-scrolling: touch) {
-  .scroll-momentum {
-    -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
-    scroll-snap-type: x mandatory;
-  }
-}
-
-/* Prevent rubber banding on iOS Safari for specific scroll containers only */
-@supports (-webkit-touch-callout: none) {
-
-  .scroll-container,
-  .scroll-momentum,
-  .scroll-optimized {
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
-/* Ultra-optimized scroll containers with maximum sensitivity */
 .scroll-container {
-  -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
   scroll-snap-type: x mandatory;
   scroll-padding: 1rem;
 }
 
-/* Maximum performance scroll grids */
 .scroll-grid {
   contain: layout paint;
 }
 
-/* Ultra-responsive scroll snap with instant feedback */
-.snap-enhanced {
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  scroll-padding-inline: 1rem;
-}
-
-/* Enhanced scroll indicators for better UX */
-.scroll-indicator::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, oklch(var(--primary)), transparent);
-  opacity: 0.4;
-  pointer-events: none;
-  animation: scrollPulse 2s ease-in-out infinite;
-}
-
-@keyframes scrollPulse {
-
-  0%,
-  100% {
-    opacity: 0.2;
-  }
-
-  50% {
-    opacity: 0.6;
-  }
-}
-
-/* Frosted glass button effect */
-.frosted-button {
-  background: oklch(1 0 0 / 80%);
-  backdrop-filter: blur(12px);
-  border: 1px solid oklch(1 0 0 / 20%);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.frosted-button:hover {
-  background: oklch(1 0 0 / 90%);
-  border-color: oklch(1 0 0 / 30%);
-  box-shadow: 0 4px 16px oklch(0 0 0 / 10%);
-}
-
-.dark .frosted-button {
-  background: oklch(0.15 0 0 / 80%);
-  border-color: oklch(1 0 0 / 15%);
-}
-
-.dark .frosted-button:hover {
-  background: oklch(0.15 0 0 / 90%);
-  border-color: oklch(1 0 0 / 25%);
-  box-shadow: 0 4px 16px oklch(0 0 0 / 30%);
-}
-
-/* Ultra-smooth transitions with cubic-bezier for natural feel */
+/* Compositor-only transitions with a strong ease-out */
 .smooth-transition {
   transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1),
     opacity 0.12s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Maximum hardware acceleration for ultra-smooth animations */
-.hardware-accelerated {
-  contain: layout paint;
-}
-
-/* Optimize for high DPI displays */
-@media (-webkit-min-device-pixel-ratio: 2),
-(min-resolution: 192dpi) {
-  .scroll-optimized {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-  }
-}
-
-/* Ultra-optimized touch targets for mobile with instant response */
+/* Touch scroll containers */
 @media (pointer: coarse) {
   .scroll-container {
     scroll-padding: 0.5rem;
     -webkit-tap-highlight-color: transparent;
     touch-action: pan-x pan-y;
   }
-
-  .smooth-transition {
-    transition-duration: 0.1s;
-  }
 }
 
-/* Ultra-smooth scroll for desktop with wheel optimization */
-@media (pointer: fine) {
-  .scroll-container {
-    scroll-behavior: smooth;
-    scroll-snap-type: x mandatory;
-  }
-}
-
-/* Enhanced scroll performance for reduced motion */
 @media (prefers-reduced-motion: reduce) {
 
-  .scroll-momentum,
   .scroll-container,
-  .snap-enhanced {
+  .scroll-optimized {
     scroll-behavior: auto;
-    -webkit-scroll-behavior: auto;
   }
 }
 
-/* ============================================
-   Loading Skeleton & Shimmer Animations
-   ============================================ */
-
-/* Base skeleton shimmer effect */
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-
-  100% {
-    background-position: 200% 0;
+/* Carousel cards: focus follows scroll position on the compositor thread.
+   Falls back to the state-driven highlight transition where unsupported. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view(inline)) {
+    .carousel-card {
+      transition: none;
+      animation: carousel-focus linear both;
+      animation-timeline: view(inline);
+    }
   }
 }
 
-/* Soft pulse for loading indicators */
-@keyframes softPulse {
+@keyframes carousel-focus {
 
   0%,
   100% {
-    opacity: 0.4;
+    transform: scale(0.96);
+    opacity: 0.55;
   }
 
   50% {
-    opacity: 0.7;
-  }
-}
-
-/* Skeleton base styles */
-.skeleton {
-  background: linear-gradient(90deg,
-      oklch(var(--muted)) 0%,
-      oklch(var(--muted) / 60%) 50%,
-      oklch(var(--muted)) 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
-  border-radius: 0.5rem;
-}
-
-.dark .skeleton {
-  background: linear-gradient(90deg,
-      oklch(0.22 0 0) 0%,
-      oklch(0.28 0 0) 50%,
-      oklch(0.22 0 0) 100%);
-  background-size: 200% 100%;
-}
-
-/* Skeleton text lines */
-.skeleton-text {
-  height: 1rem;
-  border-radius: 0.25rem;
-}
-
-.skeleton-text-lg {
-  height: 1.5rem;
-  border-radius: 0.375rem;
-}
-
-.skeleton-text-xl {
-  height: 2rem;
-  border-radius: 0.5rem;
-}
-
-/* Skeleton card */
-.skeleton-card {
-  border-radius: 0.75rem;
-  border: 1px solid oklch(var(--border));
-  background: oklch(var(--card));
-  overflow: hidden;
-}
-
-/* Loading container fade-in */
-.loading-fade-in {
-  animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-
-  to {
+    transform: scale(1);
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
@@ -500,57 +310,3 @@ body {
   }
 }
 
-/* Staggered skeleton animation delays */
-.skeleton-delay-1 {
-  animation-delay: 0.1s;
-}
-
-.skeleton-delay-2 {
-  animation-delay: 0.2s;
-}
-
-.skeleton-delay-3 {
-  animation-delay: 0.3s;
-}
-
-.skeleton-delay-4 {
-  animation-delay: 0.4s;
-}
-
-/* Reduced motion: disable shimmer, use pulse instead */
-@media (prefers-reduced-motion: reduce) {
-  .skeleton {
-    animation: softPulse 2s ease-in-out infinite;
-    background: oklch(var(--muted));
-  }
-}
-
-/* Domain redirect banner */
-.domain-banner {
-  background: oklch(0.15 0 0);
-  overflow: hidden;
-}
-
-.domain-banner::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    105deg,
-    transparent 30%,
-    oklch(1 0 0 / 8%) 45%,
-    oklch(1 0 0 / 15%) 50%,
-    oklch(1 0 0 / 8%) 55%,
-    transparent 70%
-  );
-  animation: shine 3s ease-in-out infinite;
-}
-
-@keyframes shine {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-.dark .domain-banner {
-  background: oklch(0.25 0 0);
-}

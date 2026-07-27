@@ -316,7 +316,7 @@ const MealGridCard = React.memo(function MealGridCard({
   const filteredItems = React.useMemo(() => filterMenuItems(meal.items), [meal.items]);
 
   return (
-    <Card className="hover:shadow-md transition-shadow smooth-transition">
+    <Card className="hover:shadow-md smooth-transition">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center justify-between gap-2 text-sm">
           <span className="flex items-center gap-1">

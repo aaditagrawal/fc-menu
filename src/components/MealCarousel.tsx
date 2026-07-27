@@ -22,8 +22,6 @@ export const MealCarousel = React.forwardRef<
 >(function MealCarousel({ meals, highlightKey, isPrimaryUpcoming, isLive }, ref) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const itemRefs = React.useRef<Array<HTMLDivElement | null>>([]);
-  const [tilt, setTilt] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const rafRef = React.useRef<number | null>(null);
   const highlightIndex = React.useMemo(
     () => Math.max(0, meals.findIndex((m) => m.key === highlightKey)),
     [meals, highlightKey]
@@ -39,7 +37,7 @@ export const MealCarousel = React.forwardRef<
     const elWidth = el.offsetWidth;
     const scrollX = elLeft - (containerWidth - elWidth) / 2;
 
-    container.scrollLeft = scrollX;
+    container.scrollTo({ left: scrollX, behavior: "instant" });
   }, [highlightIndex]);
 
   React.useLayoutEffect(() => {
@@ -56,36 +54,6 @@ export const MealCarousel = React.forwardRef<
     return () => {
       window.removeEventListener("resize", handleResize);
       clearTimeout(resizeTimeout);
-    };
-  });
-
-  useMountEffect(() => {
-    const canUseOrientation = typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
-    if (!canUseOrientation) return;
-
-    function handler(e: DeviceOrientationEvent) {
-      const nextX = Math.max(-1, Math.min(1, (e.beta ?? 0) / 45));
-      const nextY = Math.max(-1, Math.min(1, (e.gamma ?? 0) / 45));
-
-      if (rafRef.current) return;
-      rafRef.current = requestAnimationFrame(() => {
-        setTilt((prev) => {
-          if (Math.abs(prev.x - nextX) < 0.06 && Math.abs(prev.y - nextY) < 0.06) {
-            return prev;
-          }
-          return { x: nextX, y: nextY };
-        });
-        rafRef.current = null;
-      });
-    }
-
-    window.addEventListener("deviceorientation", handler, { passive: true });
-    return () => {
-      window.removeEventListener("deviceorientation", handler);
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-      }
-      rafRef.current = null;
     };
   });
 
@@ -128,11 +96,10 @@ export const MealCarousel = React.forwardRef<
       <div
         ref={containerRef}
         tabIndex={0}
-        className="flex gap-4 overflow-x-auto py-4 px-3 sm:px-0 scroll-smooth scrollbar-hide rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        className="flex gap-4 overflow-x-auto py-4 px-3 sm:px-0 snap-x snap-mandatory scrollbar-hide rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         style={{
           scrollbarWidth: "none",
           msOverflowStyle: "none",
-          WebkitOverflowScrolling: "touch",
           touchAction: "pan-x pan-y",
           overscrollBehaviorX: "contain",
         }}
@@ -146,7 +113,7 @@ export const MealCarousel = React.forwardRef<
                 itemRefs.current[idx] = el;
               }}
               className={cn(
-                "w-[85%] sm:w-[60%] md:w-[50%] lg:w-[38%] flex-shrink-0 px-1 transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none",
+                "carousel-card snap-center w-[85%] sm:w-[60%] md:w-[50%] lg:w-[38%] flex-shrink-0 px-1 transition-[transform,opacity] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none",
                 isHighlighted
                   ? "opacity-100 scale-100"
                   : "opacity-60 scale-[0.97] motion-reduce:scale-100"
@@ -160,7 +127,7 @@ export const MealCarousel = React.forwardRef<
                 highlight={isHighlighted}
                 primaryUpcoming={isPrimaryUpcoming && isHighlighted}
                 isLive={isLive && isHighlighted}
-                tilt={isHighlighted ? tilt : undefined}
+                tiltEnabled={isHighlighted}
               />
             </div>
           );
