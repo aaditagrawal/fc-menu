@@ -9,6 +9,7 @@ import {
   fetchStaticWeek,
   getWeeksForType,
   normalizeWeekIdToStartDate,
+  weeksCoverToday,
   type MenuType,
 } from "@/lib/staticMenuBundle";
 
@@ -36,6 +37,12 @@ export interface HistoryResponse {
 const MONDAY_HISTORY_GC_MS = 15 * 60 * 1000;
 const NON_MONDAY_HISTORY_GC_MS = 24 * 60 * 60 * 1000;
 
+async function fetchLiveHistory(): Promise<HistoryResponse> {
+  const res = await fetch(`${API_BASE}/api/history?v=2`);
+  if (!res.ok) throw new Error("Failed to fetch weeks info");
+  return res.json();
+}
+
 export function useWeeksInfo() {
   const isMonday = isTodayMonday();
   return useQuery({
@@ -43,11 +50,23 @@ export function useWeeksInfo() {
     queryFn: async (): Promise<HistoryResponse> => {
       try {
         const manifest = await fetchStaticManifest();
-        return { weeks: manifest.normal.weeks };
+        const weeks = manifest.normal.weeks;
+
+        // A bundle whose newest week already ended is behind the live API: the
+        // menu was uploaded after the last build. Without this the app is stuck
+        // showing the stale-week notice until someone redeploys, and Refresh
+        // Data can't help because it only re-reads the same manifest.
+        if (weeksCoverToday(weeks)) return { weeks };
+
+        try {
+          const live = await fetchLiveHistory();
+          if (live.weeks?.length) return live;
+        } catch {
+          // Keep the baked weeks: stale data beats no data.
+        }
+        return { weeks };
       } catch {
-        const res = await fetch(`${API_BASE}/api/history`);
-        if (!res.ok) throw new Error("Failed to fetch weeks info");
-        return res.json();
+        return fetchLiveHistory();
       }
     },
     staleTime: 0,

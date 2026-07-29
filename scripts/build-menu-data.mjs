@@ -5,12 +5,45 @@ import path from "node:path";
 const API_BASE = (process.env.MENU_API_URL || process.env.NEXT_PUBLIC_MENU_API_URL || "https://tikm.coolstuff.work").replace(/\/$/, "");
 const OUT_DIR = path.join(process.cwd(), "public", "data", "menu-bundle");
 
+// The upstream API sits behind a CDN that serves `Cache-Control: public`
+// responses for minutes at a time. This build is triggered by a deploy hook the
+// moment a menu is uploaded, so a plain GET routinely reads a cached history
+// from *before* the upload and bakes a bundle that is missing the new week.
+// `cache: "no-store"` only bypasses Node's own fetch cache, so every request
+// also gets a unique cache-key param to force an origin hit.
+const BUILD_ID = Date.now().toString(36);
+let requestCounter = 0;
+
+// The deploy hook can also fire fractionally before the upload is readable, so
+// a missing current week is retried before it is accepted as "not posted yet".
+const CURRENT_WEEK_RETRIES = 3;
+const CURRENT_WEEK_RETRY_DELAY_MS = 5_000;
+const IST_OFFSET_MS = (5 * 60 + 30) * 60_000;
+
 function hashContent(value) {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex").slice(0, 12);
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function istDateKey() {
+  return new Date(Date.now() + IST_OFFSET_MS).toISOString().slice(0, 10);
+}
+
+function coversDate(entries, dateKey) {
+  return entries.some((entry) => entry.startDate <= dateKey && dateKey <= entry.endDate);
+}
+
 async function fetchJson(url, options = {}) {
-  const res = await fetch(url, { cache: "no-store" });
+  const target = new URL(url);
+  target.searchParams.set("_cb", `${BUILD_ID}-${requestCounter++}`);
+
+  const res = await fetch(target, {
+    cache: "no-store",
+    headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+  });
   if (!res.ok) {
     if (options.optional) return null;
     throw new Error(`Failed to fetch ${url}: ${res.status}`);
@@ -62,6 +95,12 @@ async function writeWeek(type, summary) {
 }
 
 async function buildType(type) {
+  // Rebuilt from scratch each attempt so a retry can't leave behind week files
+  // that the manifest no longer references.
+  const typeDir = path.join(OUT_DIR, type);
+  await rm(typeDir, { recursive: true, force: true });
+  await mkdir(typeDir, { recursive: true });
+
   const endpoint = type === "jain" ? "jain-history" : "history";
   const history = await fetchJson(`${API_BASE}/api/${endpoint}?v=2`, { optional: type === "jain" });
   const summaries = Array.isArray(history?.weeks) ? history.weeks : [];
@@ -78,10 +117,23 @@ async function buildType(type) {
 
 async function main() {
   await rm(OUT_DIR, { recursive: true, force: true });
-  await mkdir(path.join(OUT_DIR, "normal"), { recursive: true });
-  await mkdir(path.join(OUT_DIR, "jain"), { recursive: true });
+  await mkdir(OUT_DIR, { recursive: true });
 
-  const normal = await buildType("normal");
+  const today = istDateKey();
+  let normal = await buildType("normal");
+
+  for (let attempt = 1; attempt <= CURRENT_WEEK_RETRIES && !coversDate(normal, today); attempt += 1) {
+    console.log(
+      `No week covers ${today} (IST) after ${normal.length} weeks; retrying history in ${CURRENT_WEEK_RETRY_DELAY_MS / 1000}s (${attempt}/${CURRENT_WEEK_RETRIES})`
+    );
+    await sleep(CURRENT_WEEK_RETRY_DELAY_MS);
+    normal = await buildType("normal");
+  }
+
+  if (!coversDate(normal, today)) {
+    console.warn(`WARNING: bundle has no week covering ${today} (IST) — the app will show the stale-week notice.`);
+  }
+
   const jain = await buildType("jain");
   const generatedAt = new Date().toISOString();
   const version = hashContent({ generatedAt, normal, jain });

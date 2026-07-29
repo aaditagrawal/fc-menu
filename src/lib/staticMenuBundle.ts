@@ -38,6 +38,19 @@ export function getWeekId(entry: StaticWeekEntry) {
   return `${entry.startDate}_to_${entry.endDate}`;
 }
 
+/**
+ * The bundle is baked at deploy time, so it can only be as fresh as the last
+ * build. When no baked week covers today, the bundle is behind the live API
+ * (a menu was uploaded after the build) — callers use this to fall back to the
+ * API instead of waiting for a redeploy.
+ */
+export function weeksCoverToday(
+  weeks: Array<{ startDate: string; endDate: string }>,
+  todayIST = formatDateKey(getISTNow())
+) {
+  return weeks.some((week) => week.startDate <= todayIST && todayIST <= week.endDate);
+}
+
 export function selectEffectiveWeek(
   weeks: Array<{ startDate: string; endDate: string }>,
   todayIST = formatDateKey(getISTNow())
