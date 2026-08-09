@@ -43,7 +43,7 @@ export function mealOrder(meal: MealKey): number {
 
 export function findCurrentOrUpcomingMeal(
   week: WeekMenu,
-  nowIST: Date = getISTNow()
+  nowIST: Date = getISTNow(),
 ): CurrentMealPointer | null {
   const dateKeys = sortDateKeysAsc(Object.keys(week.menu));
   if (dateKeys.length === 0) return null;
@@ -90,7 +90,7 @@ export function findCurrentOrUpcomingMeal(
 export function pickHighlightMealForDay(
   week: WeekMenu,
   dateKey: string,
-  nowIST: Date = getISTNow()
+  nowIST: Date = getISTNow(),
 ): { mealKey: MealKey; isPrimaryUpcoming: boolean; isLive: boolean } | null {
   const orderedMeals: MealKey[] = ["breakfast", "lunch", "snacks", "dinner"];
   const todayKey = formatDateKey(nowIST);
@@ -105,7 +105,8 @@ export function pickHighlightMealForDay(
       if (!m) continue;
       const s = parseTimeToMinutes(m.startTime);
       const e = parseTimeToMinutes(m.endTime);
-      if (minutes >= s && minutes <= e) return { mealKey: mk, isPrimaryUpcoming: true, isLive: true };
+      if (minutes >= s && minutes <= e)
+        return { mealKey: mk, isPrimaryUpcoming: true, isLive: true };
     }
     for (const mk of orderedMeals) {
       const m = day.meals[mk];
@@ -149,5 +150,3 @@ export function getMondayDateKeyContainingIST(nowIST: Date): string {
   monday.setDate(monday.getDate() + delta);
   return formatDateKey(monday);
 }
-
-

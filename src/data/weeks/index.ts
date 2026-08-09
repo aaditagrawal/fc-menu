@@ -7,7 +7,13 @@ import path from "node:path";
 export type WeekId = string;
 
 const API_BASE = process.env.MENU_API_URL ?? "https://tikm.coolstuff.work";
-const STATIC_MANIFEST_PATH = path.join(process.cwd(), "public", "data", "menu-bundle", "manifest.json");
+const STATIC_MANIFEST_PATH = path.join(
+  process.cwd(),
+  "public",
+  "data",
+  "menu-bundle",
+  "manifest.json",
+);
 
 interface StaticWeekEntry {
   week: string;
@@ -21,7 +27,11 @@ interface StaticMenuManifest {
   normal: { weeks: StaticWeekEntry[] };
 }
 
-async function fetchMenuFromAPI(params?: { week?: string; weekStart?: string; date?: string }): Promise<WeekMenu> {
+async function fetchMenuFromAPI(params?: {
+  week?: string;
+  weekStart?: string;
+  date?: string;
+}): Promise<WeekMenu> {
   const url = new URL(`${API_BASE}/api/menu`);
   url.searchParams.set("v", "2");
   if (params?.week) url.searchParams.set("week", params.week);
@@ -31,7 +41,7 @@ async function fetchMenuFromAPI(params?: { week?: string; weekStart?: string; da
   // Cache for 10 minutes on the server to reduce edge requests
   const res = await fetch(url.toString(), {
     next: { revalidate: 600 }, // Cache for 10 minutes on the server
-    cache: 'force-cache', // Prefer cached responses
+    cache: "force-cache", // Prefer cached responses
   });
 
   if (!res.ok) {
@@ -61,7 +71,9 @@ export async function getAllWeeks(): Promise<WeekId[]> {
 export async function getLatestWeekId(): Promise<WeekId> {
   const manifest = await readStaticManifest();
   if (manifest) {
-    const latest = [...manifest.normal.weeks].sort((a, b) => b.startDate.localeCompare(a.startDate))[0];
+    const latest = [...manifest.normal.weeks].sort((a, b) =>
+      b.startDate.localeCompare(a.startDate),
+    )[0];
     if (latest) return computeWeekIdFromEntry(latest);
   }
 

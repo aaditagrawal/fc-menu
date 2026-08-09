@@ -4,7 +4,7 @@ export type MealKey = "breakfast" | "lunch" | "snacks" | "dinner";
 export interface MealV1 {
   name: string;
   startTime: string; // HH:mm in IST
-  endTime: string;   // HH:mm in IST
+  endTime: string; // HH:mm in IST
   items: string[];
 }
 
@@ -17,7 +17,7 @@ export interface MenuItem {
 export interface Meal {
   name: string;
   startTime: string; // HH:mm in IST
-  endTime: string;   // HH:mm in IST
+  endTime: string; // HH:mm in IST
   items: MenuItem[];
   allergens?: string[];
 }
@@ -34,11 +34,11 @@ export interface WeekMenu {
 }
 
 // Tag types
-export const SPECIAL_TAGS = ['veg-special', 'non-veg-special', 'other-special'] as const;
-export const DIETARY_TAGS = ['non-veg', 'jain'] as const;
+export const SPECIAL_TAGS = ["veg-special", "non-veg-special", "other-special"] as const;
+export const DIETARY_TAGS = ["non-veg", "jain"] as const;
 
-export type SpecialTag = typeof SPECIAL_TAGS[number];
-export type DietaryTag = typeof DIETARY_TAGS[number];
+export type SpecialTag = (typeof SPECIAL_TAGS)[number];
+export type DietaryTag = (typeof DIETARY_TAGS)[number];
 export type MenuItemTag = SpecialTag | DietaryTag;
 
 export interface CurrentMealPointer {
@@ -53,5 +53,3 @@ export interface WeekMeta {
   foodCourt: string;
   week: string;
 }
-
-

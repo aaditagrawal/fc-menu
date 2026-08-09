@@ -24,14 +24,11 @@ export function QueryProvider({ children }: { children: ReactNode }) {
             networkMode: "offlineFirst",
           },
         },
-      })
+      }),
   );
 
   return (
-    <PersistQueryClientProvider
-      client={queryClient}
-      persistOptions={{ persister, buster: "v3" }}
-    >
+    <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, buster: "v3" }}>
       {children}
     </PersistQueryClientProvider>
   );

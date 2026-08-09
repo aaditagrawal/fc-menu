@@ -9,13 +9,12 @@ interface ScrollOptions {
   debounceMs?: number;
 }
 
-export function useOptimizedScroll(
-  callback: (event: Event) => void,
-  options: ScrollOptions = {}
-) {
+export function useOptimizedScroll(callback: (event: Event) => void, options: ScrollOptions = {}) {
   const { passive = true, capture = false, debounceMs = 80 } = options;
   const callbackRef = useRef(callback);
-  useEffect(() => { callbackRef.current = callback; });
+  useEffect(() => {
+    callbackRef.current = callback;
+  });
   const rafRef = useRef<number | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -38,7 +37,7 @@ export function useOptimizedScroll(
         callbackRef.current(event);
       }, debounceMs);
     },
-    [debounceMs]
+    [debounceMs],
   );
 
   useMountEffect(() => {
@@ -79,7 +78,7 @@ export function useSmoothScroll() {
       const element = elements[index] as HTMLElement | undefined;
       if (element) scrollToElement(element);
     },
-    [scrollToElement]
+    [scrollToElement],
   );
 
   const scrollToPosition = useCallback((x: number, y: number) => {

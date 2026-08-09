@@ -6,8 +6,7 @@ export const metadata = {
     default: "Food Court Menus - The Indian Kitchen",
     template: "%s - The Indian Kitchen",
   },
-  description:
-    "A fast, friendly viewer for weekly menus with time-aware highlighting (IST).",
+  description: "A fast, friendly viewer for weekly menus with time-aware highlighting (IST).",
   alternates: {
     canonical: "/",
   },

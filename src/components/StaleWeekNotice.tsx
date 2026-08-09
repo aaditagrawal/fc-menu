@@ -33,15 +33,10 @@ export function StaleWeekNotice({ weekLabel }: { weekLabel: string }) {
           >
             This week&apos;s menu isn&apos;t posted yet
           </h2>
-          <p
-            id="stale-week-notice-desc"
-            className="text-sm leading-relaxed text-muted-foreground"
-          >
-            You&apos;re seeing{" "}
-            <span className="font-medium text-foreground">{weekLabel}</span>,
-            the newest week that was uploaded. When this week&apos;s roster is
-            published, it will show up here; use Refresh Data below if it has
-            just gone live.
+          <p id="stale-week-notice-desc" className="text-sm leading-relaxed text-muted-foreground">
+            You&apos;re seeing <span className="font-medium text-foreground">{weekLabel}</span>, the
+            newest week that was uploaded. When this week&apos;s roster is published, it will show
+            up here; use Refresh Data below if it has just gone live.
           </p>
         </div>
         <Button

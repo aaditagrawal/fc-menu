@@ -9,11 +9,16 @@ import type { WeekId } from "@/components/MenuViewer";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { DietaryFilter } from "@/components/DietaryFilter";
-import { type DietaryFilter as DietaryFilterType, getFilterState, setFilterState, filterWeekMenu } from "@/lib/filters";
+import {
+  type DietaryFilter as DietaryFilterType,
+  getFilterState,
+  setFilterState,
+  filterWeekMenu,
+} from "@/lib/filters";
 import { useMountEffect } from "@/hooks/useMountEffect";
 
 export function FullWeekView({ weekId }: { weekId: WeekId }) {
-  const [dietaryFilter, setDietaryFilter] = React.useState<DietaryFilterType>('all');
+  const [dietaryFilter, setDietaryFilter] = React.useState<DietaryFilterType>("all");
 
   useMountEffect(() => {
     const saved = getFilterState();
@@ -25,11 +30,11 @@ export function FullWeekView({ weekId }: { weekId: WeekId }) {
     setFilterState({ dietary: filter });
   }, []);
 
-  const menuType: MenuType = dietaryFilter === 'jain' ? 'jain' : 'normal';
+  const menuType: MenuType = dietaryFilter === "jain" ? "jain" : "normal";
   const { data: weekData, isLoading, error } = useWeekMenu(weekId, menuType);
   const week = React.useMemo(
     () => (weekData ? filterWeekMenu(weekData, dietaryFilter) : null),
-    [weekData, dietaryFilter]
+    [weekData, dietaryFilter],
   );
 
   if (isLoading) {
@@ -56,7 +61,9 @@ export function FullWeekView({ weekId }: { weekId: WeekId }) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-semibold">Full Week Menu</h1>
-          <p className="text-muted-foreground">{week.week} • {week.foodCourt}</p>
+          <p className="text-muted-foreground">
+            {week.week} • {week.foodCourt}
+          </p>
         </div>
         <div className="flex items-center gap-3 self-start sm:self-auto">
           <DietaryFilter value={dietaryFilter} onChange={handleFilterChange} />

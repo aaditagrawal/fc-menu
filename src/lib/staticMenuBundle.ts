@@ -46,14 +46,14 @@ export function getWeekId(entry: StaticWeekEntry) {
  */
 export function weeksCoverToday(
   weeks: Array<{ startDate: string; endDate: string }>,
-  todayIST = formatDateKey(getISTNow())
+  todayIST = formatDateKey(getISTNow()),
 ) {
   return weeks.some((week) => week.startDate <= todayIST && todayIST <= week.endDate);
 }
 
 export function selectEffectiveWeek(
   weeks: Array<{ startDate: string; endDate: string }>,
-  todayIST = formatDateKey(getISTNow())
+  todayIST = formatDateKey(getISTNow()),
 ) {
   const current = weeks.find((week) => week.startDate <= todayIST && todayIST <= week.endDate);
   if (current) return current;
@@ -63,9 +63,11 @@ export function selectEffectiveWeek(
     .sort((a, b) => b.startDate.localeCompare(a.startDate))[0];
   if (mostRecentPast) return mostRecentPast;
 
-  return [...weeks]
-    .filter((week) => week.startDate > todayIST)
-    .sort((a, b) => a.startDate.localeCompare(b.startDate))[0] ?? null;
+  return (
+    [...weeks]
+      .filter((week) => week.startDate > todayIST)
+      .sort((a, b) => a.startDate.localeCompare(b.startDate))[0] ?? null
+  );
 }
 
 // Several queries (weeks list, week menu, prefetches) need the manifest at the

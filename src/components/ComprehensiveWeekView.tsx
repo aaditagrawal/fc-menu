@@ -64,9 +64,7 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
         {mobileViewMode === "detailed" ? (
           sortedDays.map((dateKey) => {
             const day = week.menu[dateKey];
-            return (
-              <DaySection key={dateKey} day={day} dateKey={dateKey} />
-            );
+            return <DaySection key={dateKey} day={day} dateKey={dateKey} />;
           })
         ) : (
           <MobileCompactWeekGrid week={week} sortedDays={sortedDays} />
@@ -80,16 +78,18 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
             className="grid gap-3 min-w-max pb-4 items-start scroll-grid"
             style={{
               gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`,
-              scrollSnapType: 'x mandatory',
-              scrollPadding: '1rem',
+              scrollSnapType: "x mandatory",
+              scrollPadding: "1rem",
             }}
           >
             {/* Sticky Header row with days */}
             <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/50 col-span-full">
-              <div className="grid gap-3 items-start px-4 py-3"
-                   style={{
-                     gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`,
-                   }}>
+              <div
+                className="grid gap-3 items-start px-4 py-3"
+                style={{
+                  gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`,
+                }}
+              >
                 <div>
                   <h3 className="font-semibold text-lg">Meals</h3>
                 </div>
@@ -105,19 +105,22 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
               </div>
             </div>
 
-            
-
             {/* Content rows */}
-            <div className="grid gap-3 items-start col-span-full"
-                 style={{
-                   gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`,
-                   paddingTop: '1rem'
-                 }}>
+            <div
+              className="grid gap-3 items-start col-span-full"
+              style={{
+                gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`,
+                paddingTop: "1rem",
+              }}
+            >
               {/* Empty cell for meal type headers */}
               <div></div>
               {sortedDays.map((dateKey) => (
-                <div key={`spacer-${dateKey}`} className="snap-start"
-                     style={{ scrollSnapAlign: 'start' }}></div>
+                <div
+                  key={`spacer-${dateKey}`}
+                  className="snap-start"
+                  style={{ scrollSnapAlign: "start" }}
+                ></div>
               ))}
             </div>
 
@@ -125,16 +128,18 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
             {mealOrder.map((mealKey) => (
               <React.Fragment key={mealKey}>
                 {/* Meal type header and content row */}
-                <div className="grid gap-3 items-start border-t border-border/50 col-span-full"
-                     style={{
-                       gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`
-                     }}>
+                <div
+                  className="grid gap-3 items-start border-t border-border/50 col-span-full"
+                  style={{
+                    gridTemplateColumns: `200px repeat(${dayCount}, minmax(280px, 1fr))`,
+                  }}
+                >
                   {/* Meal type header */}
                   <div className="p-3">
                     <div className="flex items-center gap-2">
                       <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/15">
                         {React.createElement(mealIcons[mealKey], {
-                          className: "h-4 w-4 text-primary"
+                          className: "h-4 w-4 text-primary",
                         })}
                       </span>
                       <div>
@@ -149,10 +154,13 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
                     const meal = day.meals[mealKey];
 
                     return (
-                      <div key={`${mealKey}-${dateKey}`} className="p-3 snap-start"
-                           style={{
-                             scrollSnapAlign: 'start'
-                           }}>
+                      <div
+                        key={`${mealKey}-${dateKey}`}
+                        className="p-3 snap-start"
+                        style={{
+                          scrollSnapAlign: "start",
+                        }}
+                      >
                         {meal ? (
                           <MealGridCard
                             meal={meal}
@@ -178,20 +186,23 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
 }
 
 function MobileCompactWeekGrid({ week, sortedDays }: { week: WeekMenu; sortedDays: string[] }) {
-  const getMealTimeLabel = React.useCallback((mealKey: MealKey): string => {
-    const uniqueRanges = new Set<string>();
+  const getMealTimeLabel = React.useCallback(
+    (mealKey: MealKey): string => {
+      const uniqueRanges = new Set<string>();
 
-    for (const dateKey of sortedDays) {
-      const meal = week.menu[dateKey]?.meals[mealKey];
-      if (meal) {
-        uniqueRanges.add(`${meal.startTime} - ${meal.endTime}`);
+      for (const dateKey of sortedDays) {
+        const meal = week.menu[dateKey]?.meals[mealKey];
+        if (meal) {
+          uniqueRanges.add(`${meal.startTime} - ${meal.endTime}`);
+        }
       }
-    }
 
-    if (uniqueRanges.size === 0) return "No timing";
-    if (uniqueRanges.size === 1) return [...uniqueRanges][0];
-    return "Times vary";
-  }, [sortedDays, week.menu]);
+      if (uniqueRanges.size === 0) return "No timing";
+      if (uniqueRanges.size === 1) return [...uniqueRanges][0];
+      return "Times vary";
+    },
+    [sortedDays, week.menu],
+  );
 
   return (
     <Card className="overflow-hidden">
@@ -213,9 +224,14 @@ function MobileCompactWeekGrid({ week, sortedDays }: { week: WeekMenu; sortedDay
             {sortedDays.map((dateKey) => {
               const day = week.menu[dateKey];
               return (
-                <div key={`compact-header-${dateKey}`} className="rounded-md border border-border/60 bg-muted/30 p-2 text-center">
+                <div
+                  key={`compact-header-${dateKey}`}
+                  className="rounded-md border border-border/60 bg-muted/30 p-2 text-center"
+                >
                   <p className="text-[11px] font-semibold leading-tight">{day.day.slice(0, 3)}</p>
-                  <p className="text-[10px] text-muted-foreground leading-tight">{dateKey.slice(5)}</p>
+                  <p className="text-[10px] text-muted-foreground leading-tight">
+                    {dateKey.slice(5)}
+                  </p>
                 </div>
               );
             })}
@@ -224,13 +240,17 @@ function MobileCompactWeekGrid({ week, sortedDays }: { week: WeekMenu; sortedDay
               <React.Fragment key={`compact-row-${mealKey}`}>
                 <div className="sticky left-0 z-10 rounded-md bg-background/95 backdrop-blur-sm px-1.5 py-2">
                   <div className="flex items-center gap-1">
-                  {React.createElement(mealIcons[mealKey], {
-                    className: "h-3 w-3 text-primary shrink-0"
-                  })}
-                    <p className="text-[10px] font-medium leading-tight truncate">{mealTitles[mealKey]}</p>
+                    {React.createElement(mealIcons[mealKey], {
+                      className: "h-3 w-3 text-primary shrink-0",
+                    })}
+                    <p className="text-[10px] font-medium leading-tight truncate">
+                      {mealTitles[mealKey]}
+                    </p>
                   </div>
                   <div className="min-w-0 mt-0.5">
-                    <p className="text-[9px] text-muted-foreground leading-tight">{getMealTimeLabel(mealKey)}</p>
+                    <p className="text-[9px] text-muted-foreground leading-tight">
+                      {getMealTimeLabel(mealKey)}
+                    </p>
                   </div>
                 </div>
                 {sortedDays.map((dateKey) => {
@@ -239,7 +259,10 @@ function MobileCompactWeekGrid({ week, sortedDays }: { week: WeekMenu; sortedDay
                   const filteredItems = meal ? filterMenuItems(meal.items) : [];
 
                   return (
-                    <div key={`compact-cell-${mealKey}-${dateKey}`} className="rounded-md border border-border/60 bg-card p-2">
+                    <div
+                      key={`compact-cell-${mealKey}-${dateKey}`}
+                      className="rounded-md border border-border/60 bg-card p-2"
+                    >
                       {meal ? (
                         <div className="space-y-1">
                           {filteredItems.length > 0 ? (
@@ -254,7 +277,9 @@ function MobileCompactWeekGrid({ week, sortedDays }: { week: WeekMenu; sortedDay
                               ))}
                             </div>
                           ) : (
-                            <p className="text-[10px] text-muted-foreground leading-tight">No items</p>
+                            <p className="text-[10px] text-muted-foreground leading-tight">
+                              No items
+                            </p>
                           )}
                         </div>
                       ) : (
@@ -334,13 +359,11 @@ const MealGridCard = React.memo(function MealGridCard({
                 key={idx}
                 className="text-xs rounded-md bg-muted/50 px-2 py-1 leading-tight border border-border/20"
               >
-                {typeof item === 'string' ? item : item.name}
+                {typeof item === "string" ? item : item.name}
               </div>
             ))
           ) : (
-            <div className="text-xs text-muted-foreground italic py-2">
-              No items available
-            </div>
+            <div className="text-xs text-muted-foreground italic py-2">No items available</div>
           )}
         </div>
       </CardContent>

@@ -2,11 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Static export for Cloudflare Pages
-  output: 'export',
+  output: "export",
 
   // Image optimization
   images: {
-    formats: ['image/avif', 'image/webp'],
+    formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 604800, // 7 days
     unoptimized: true,
   },
@@ -16,9 +16,8 @@ const nextConfig: NextConfig = {
 
   // Reduce function invocations
   experimental: {
-    optimizePackageImports: ['@tanstack/react-query', 'lucide-react'],
+    optimizePackageImports: ["@tanstack/react-query", "lucide-react"],
   },
-
 };
 
 export default nextConfig;

@@ -2,7 +2,11 @@ import { mkdir, rm, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
 
-const API_BASE = (process.env.MENU_API_URL || process.env.NEXT_PUBLIC_MENU_API_URL || "https://tikm.coolstuff.work").replace(/\/$/, "");
+const API_BASE = (
+  process.env.MENU_API_URL ||
+  process.env.NEXT_PUBLIC_MENU_API_URL ||
+  "https://tikm.coolstuff.work"
+).replace(/\/$/, "");
 const OUT_DIR = path.join(process.cwd(), "public", "data", "menu-bundle");
 
 // The upstream API sits behind a CDN that serves `Cache-Control: public`
@@ -122,16 +126,22 @@ async function main() {
   const today = istDateKey();
   let normal = await buildType("normal");
 
-  for (let attempt = 1; attempt <= CURRENT_WEEK_RETRIES && !coversDate(normal, today); attempt += 1) {
+  for (
+    let attempt = 1;
+    attempt <= CURRENT_WEEK_RETRIES && !coversDate(normal, today);
+    attempt += 1
+  ) {
     console.log(
-      `No week covers ${today} (IST) after ${normal.length} weeks; retrying history in ${CURRENT_WEEK_RETRY_DELAY_MS / 1000}s (${attempt}/${CURRENT_WEEK_RETRIES})`
+      `No week covers ${today} (IST) after ${normal.length} weeks; retrying history in ${CURRENT_WEEK_RETRY_DELAY_MS / 1000}s (${attempt}/${CURRENT_WEEK_RETRIES})`,
     );
     await sleep(CURRENT_WEEK_RETRY_DELAY_MS);
     normal = await buildType("normal");
   }
 
   if (!coversDate(normal, today)) {
-    console.warn(`WARNING: bundle has no week covering ${today} (IST) — the app will show the stale-week notice.`);
+    console.warn(
+      `WARNING: bundle has no week covering ${today} (IST) — the app will show the stale-week notice.`,
+    );
   }
 
   const jain = await buildType("jain");

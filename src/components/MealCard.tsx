@@ -44,7 +44,7 @@ function MealItems({
           className={cn(
             "rounded-md border px-3 py-2 text-sm break-words",
             withBackdrop && "backdrop-blur-sm",
-            getItemClasses(item)
+            getItemClasses(item),
           )}
         >
           {getItemName(item)}
@@ -73,7 +73,14 @@ function MealCardBase({
   isLive?: boolean;
   tiltEnabled?: boolean;
 }) {
-  const Icon = mealKey === "breakfast" ? Coffee : mealKey === "lunch" ? UtensilsCrossed : mealKey === "snacks" ? Cookie : Moon;
+  const Icon =
+    mealKey === "breakfast"
+      ? Coffee
+      : mealKey === "lunch"
+        ? UtensilsCrossed
+        : mealKey === "snacks"
+          ? Cookie
+          : Moon;
   const filteredItems = React.useMemo(() => filterMenuItems(meal.items), [meal.items]);
   const tiltRef = React.useRef<HTMLDivElement>(null);
 
@@ -122,12 +129,22 @@ function MealCardBase({
     <>
       <div className="flex items-start justify-between mb-5">
         <div className="flex items-center gap-3">
-          <div className={cn("inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 ring-1 ring-primary/10", gradient && "backdrop-blur-sm ring-white/20")}>
-            <Icon className="h-[18px] w-[18px] text-primary dark:text-foreground" strokeWidth={1.75} />
+          <div
+            className={cn(
+              "inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 ring-1 ring-primary/10",
+              gradient && "backdrop-blur-sm ring-white/20",
+            )}
+          >
+            <Icon
+              className="h-[18px] w-[18px] text-primary dark:text-foreground"
+              strokeWidth={1.75}
+            />
           </div>
           <div className="space-y-0.5">
             <h3 className="font-semibold text-[17px] tracking-[-0.01em] leading-none">{title}</h3>
-            <p className="text-[13px] tabular-nums text-muted-foreground leading-none">{timeRange}</p>
+            <p className="text-[13px] tabular-nums text-muted-foreground leading-none">
+              {timeRange}
+            </p>
           </div>
         </div>
       </div>
@@ -140,9 +157,7 @@ function MealCardBase({
       <Card
         className={cn(
           "smooth-transition bg-card border rounded-2xl",
-          highlight
-            ? "border-border/70 elevated-card"
-            : "border-border/40 shadow-none"
+          highlight ? "border-border/70 elevated-card" : "border-border/40 shadow-none",
         )}
       >
         <div className="relative p-6">{content}</div>

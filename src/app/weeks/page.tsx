@@ -13,7 +13,9 @@ export default async function WeeksPage() {
           {weeks.map((id) => (
             <li key={id} className="flex items-center justify-between p-3 rounded-lg border">
               <div>
-                <Link href={`/week/${id}`} className="underline font-medium">{id}</Link>
+                <Link href={`/week/${id}`} className="underline font-medium">
+                  {id}
+                </Link>
               </div>
               <div className="flex gap-2">
                 <Button asChild variant="outline" size="sm">
@@ -36,5 +38,3 @@ export default async function WeeksPage() {
     </div>
   );
 }
-
-

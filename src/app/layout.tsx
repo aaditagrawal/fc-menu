@@ -22,15 +22,13 @@ export const metadata: Metadata = {
     default: "Food Court Menus - The Indian Kitchen",
     template: "%s - The Indian Kitchen",
   },
-  description:
-    "A fast, friendly viewer for weekly menus with time-aware highlighting (IST).",
+  description: "A fast, friendly viewer for weekly menus with time-aware highlighting (IST).",
   openGraph: {
     type: "website",
     url: "/",
     siteName: "Food Court Menus",
     title: "Food Court Menus - The Indian Kitchen",
-    description:
-      "A fast, friendly viewer for weekly menus with time-aware highlighting (IST).",
+    description: "A fast, friendly viewer for weekly menus with time-aware highlighting (IST).",
     images: [
       {
         url: "/icon-512.png",
@@ -43,8 +41,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary",
     title: "Food Court Menus - The Indian Kitchen",
-    description:
-      "A fast, friendly viewer for weekly menus with time-aware highlighting (IST).",
+    description: "A fast, friendly viewer for weekly menus with time-aware highlighting (IST).",
     images: ["/icon-512.png"],
   },
   icons: {

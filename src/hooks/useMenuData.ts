@@ -76,9 +76,9 @@ export function useWeeksInfo() {
   });
 }
 
-export function useWeekMenu(weekId: string | null, menuType: MenuType = 'normal') {
+export function useWeekMenu(weekId: string | null, menuType: MenuType = "normal") {
   const isMonday = isTodayMonday();
-  const endpoint = menuType === 'jain' ? 'jain-menu' : 'menu';
+  const endpoint = menuType === "jain" ? "jain-menu" : "menu";
 
   return useQuery({
     queryKey: ["weekMenu", weekId, menuType],
@@ -86,7 +86,9 @@ export function useWeekMenu(weekId: string | null, menuType: MenuType = 'normal'
       const startDate = normalizeWeekIdToStartDate(weekId);
       try {
         const manifest = await fetchStaticManifest();
-        const entry = getWeeksForType(manifest, menuType).find((week) => week.startDate === startDate);
+        const entry = getWeeksForType(manifest, menuType).find(
+          (week) => week.startDate === startDate,
+        );
         if (entry) return fetchStaticWeek(entry);
       } catch {
         // Fall through to the live API for local development or incomplete static bundles.
@@ -128,8 +130,8 @@ export function useOfflineStatus() {
 export function usePrefetchWeekMenu() {
   const queryClient = useQueryClient();
 
-  return (weekId: string, menuType: MenuType = 'normal') => {
-    const endpoint = menuType === 'jain' ? 'jain-menu' : 'menu';
+  return (weekId: string, menuType: MenuType = "normal") => {
+    const endpoint = menuType === "jain" ? "jain-menu" : "menu";
 
     queryClient.prefetchQuery({
       queryKey: ["weekMenu", weekId, menuType],
@@ -137,7 +139,9 @@ export function usePrefetchWeekMenu() {
         const startDate = normalizeWeekIdToStartDate(weekId);
         try {
           const manifest = await fetchStaticManifest();
-          const entry = getWeeksForType(manifest, menuType).find((week) => week.startDate === startDate);
+          const entry = getWeeksForType(manifest, menuType).find(
+            (week) => week.startDate === startDate,
+          );
           if (entry) return fetchStaticWeek(entry);
         } catch {
           // Fall through to live API fallback.

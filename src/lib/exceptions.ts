@@ -1,4 +1,4 @@
-import type { MenuItem } from './types';
+import type { MenuItem } from "./types";
 
 /**
  * Exception strings that should not be rendered as menu items.
@@ -19,8 +19,8 @@ export const MENU_ITEM_EXCEPTIONS = [
  * Performs a case-insensitive exact match comparison.
  */
 export function shouldFilterMenuItem(item: string): boolean {
-  return MENU_ITEM_EXCEPTIONS.some(exception =>
-    item.trim().toLowerCase() === exception.toLowerCase()
+  return MENU_ITEM_EXCEPTIONS.some(
+    (exception) => item.trim().toLowerCase() === exception.toLowerCase(),
   );
 }
 
@@ -34,10 +34,10 @@ export function filterMenuItems(items: MenuItem[] | string[]): MenuItem[] | stri
   if (items.length === 0) return items;
 
   // Check if items are V2 format (objects with name property)
-  if (typeof items[0] === 'object' && 'name' in items[0]) {
-    return (items as MenuItem[]).filter(item => !shouldFilterMenuItem(item.name));
+  if (typeof items[0] === "object" && "name" in items[0]) {
+    return (items as MenuItem[]).filter((item) => !shouldFilterMenuItem(item.name));
   }
 
   // V1 format (strings)
-  return (items as string[]).filter(item => !shouldFilterMenuItem(item));
+  return (items as string[]).filter((item) => !shouldFilterMenuItem(item));
 }

@@ -6,6 +6,6 @@ import { useEffect } from "react";
  * Replaces direct useEffect(..., []) to make intent explicit.
  */
 export function useMountEffect(effect: () => void | (() => void)) {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // oxlint-disable-next-line react-hooks/exhaustive-deps
   useEffect(effect, []);
 }

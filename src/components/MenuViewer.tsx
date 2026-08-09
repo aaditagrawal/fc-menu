@@ -20,7 +20,12 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Grid3X3, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { DietaryFilter } from "@/components/DietaryFilter";
-import { type DietaryFilter as DietaryFilterType, getFilterState, setFilterState, filterMeal } from "@/lib/filters";
+import {
+  type DietaryFilter as DietaryFilterType,
+  getFilterState,
+  setFilterState,
+  filterMeal,
+} from "@/lib/filters";
 import { QUERY_PERSIST_STORAGE_KEY } from "@/lib/queryPersistence";
 import { useMountEffect } from "@/hooks/useMountEffect";
 import { toast } from "sonner";
@@ -35,10 +40,7 @@ function ErrorState({ message }: { message: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 space-y-4">
       <div className="text-red-500 text-sm">{message}</div>
-      <Button
-        variant="outline"
-        onClick={() => window.location.reload()}
-      >
+      <Button variant="outline" onClick={() => window.location.reload()}>
         Try Again
       </Button>
     </div>
@@ -86,7 +88,7 @@ async function clearPersistedMenuCaches() {
     await Promise.all(
       cacheNames
         .filter((cacheName) => cacheName.startsWith("fc-menu"))
-        .map((cacheName) => window.caches.delete(cacheName))
+        .map((cacheName) => window.caches.delete(cacheName)),
     );
   } catch {}
 }
@@ -114,9 +116,9 @@ export function MenuViewer({
   const carouselRef = React.useRef<MealCarouselHandle>(null);
   const router = useRouter();
 
-  const menuType: MenuType = dietaryFilter === 'jain' ? 'jain' : 'normal';
+  const menuType: MenuType = dietaryFilter === "jain" ? "jain" : "normal";
   const weekMenuQuery = useWeekMenu(selectedWeekId, menuType);
-  const bakedWeek = isHydrated && menuType === 'normal' ? initialWeek ?? null : null;
+  const bakedWeek = isHydrated && menuType === "normal" ? (initialWeek ?? null) : null;
   const week = weekMenuQuery.data ?? bakedWeek;
   const queryClient = useQueryClient();
 
@@ -154,8 +156,7 @@ export function MenuViewer({
   const resolvedWeekId = React.useMemo(() => {
     if (initialWeekId) return initialWeekId;
     if (!weeks || !resolvedFoodCourt) return selectedWeekId;
-    const forCourt = weeks
-      .filter((w) => w.foodCourt === resolvedFoodCourt);
+    const forCourt = weeks.filter((w) => w.foodCourt === resolvedFoodCourt);
     return selectEffectiveWeek(forCourt, formatDateKey(now))?.startDate ?? selectedWeekId;
   }, [initialWeekId, selectedWeekId, weeks, resolvedFoodCourt, now]);
 
@@ -214,24 +215,25 @@ export function MenuViewer({
     persistFoodCourtCookie(v);
   }, []);
 
-  const handleDayChange = React.useCallback((v: string) => {
-    setUserDateKey(v);
-    setUserDateWeekId(selectedWeekId);
-  }, [selectedWeekId]);
+  const handleDayChange = React.useCallback(
+    (v: string) => {
+      setUserDateKey(v);
+      setUserDateWeekId(selectedWeekId);
+    },
+    [selectedWeekId],
+  );
 
   const foodCourtOptions = React.useMemo(
     () => availableFoodCourts.map((fc) => ({ label: fc, value: fc })),
-    [availableFoodCourts]
+    [availableFoodCourts],
   );
 
   const sortedDateKeys = React.useMemo(() => (week ? Object.keys(week.menu).sort() : []), [week]);
 
   const dayOptions = React.useMemo(
     () =>
-      week
-        ? sortedDateKeys.map((k) => ({ label: `${week.menu[k].day} • ${k}`, value: k }))
-        : [],
-    [week, sortedDateKeys]
+      week ? sortedDateKeys.map((k) => ({ label: `${week.menu[k].day} • ${k}`, value: k })) : [],
+    [week, sortedDateKeys],
   );
 
   if (weeksError && !bakedWeek) {
@@ -299,7 +301,7 @@ export function MenuViewer({
     .filter((m) => m.meal.items.length > 0);
 
   const picked = pickHighlightMealForDay(week, resolvedDateKey, now);
-  const highlightKey = (picked?.mealKey ?? (meals[0]?.key ?? "breakfast")) as MealKey;
+  const highlightKey = (picked?.mealKey ?? meals[0]?.key ?? "breakfast") as MealKey;
   const isPrimaryUpcoming = Boolean(picked?.isPrimaryUpcoming);
   const isLive = Boolean(picked?.isLive);
 

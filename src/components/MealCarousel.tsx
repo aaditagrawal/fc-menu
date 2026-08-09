@@ -23,8 +23,12 @@ export const MealCarousel = React.forwardRef<
   const containerRef = React.useRef<HTMLDivElement>(null);
   const itemRefs = React.useRef<Array<HTMLDivElement | null>>([]);
   const highlightIndex = React.useMemo(
-    () => Math.max(0, meals.findIndex((m) => m.key === highlightKey)),
-    [meals, highlightKey]
+    () =>
+      Math.max(
+        0,
+        meals.findIndex((m) => m.key === highlightKey),
+      ),
+    [meals, highlightKey],
   );
 
   const scrollToHighlight = React.useCallback(() => {
@@ -116,7 +120,7 @@ export const MealCarousel = React.forwardRef<
                 "carousel-card snap-center w-[85%] sm:w-[60%] md:w-[50%] lg:w-[38%] flex-shrink-0 px-1 transition-[transform,opacity] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none",
                 isHighlighted
                   ? "opacity-100 scale-100"
-                  : "opacity-60 scale-[0.97] motion-reduce:scale-100"
+                  : "opacity-60 scale-[0.97] motion-reduce:scale-100",
               )}
             >
               <MealCard
