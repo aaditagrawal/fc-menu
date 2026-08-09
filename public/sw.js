@@ -181,16 +181,21 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Other static assets: cache-first, refreshing the copy on a miss.
+  // Other static assets: cache-first, refreshing the copy in the background.
   event.respondWith(
     caches.match(request).then((cached) => {
-      const fetchPromise = fetch(request).then((response) => {
-        if (response.ok) {
-          putInCache(request, response, event);
-        }
-        return response;
-      });
-      return cached || fetchPromise;
+      const network = fetch(request);
+      // Registered while the respondWith promise is still pending: keeps the
+      // worker alive for the background write even when the cache wins and
+      // the response settles early (a late waitUntil would throw).
+      event.waitUntil(
+        network
+          .then((response) => {
+            if (response.ok) return putInCache(request, response);
+          })
+          .catch(() => {})
+      );
+      return cached || network;
     })
   );
 });
