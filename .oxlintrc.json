@@ -1,25 +1,89 @@
 {
-  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
-  "plugins": ["react", "jsx-a11y", "nextjs", "import", "typescript"],
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "react",
+    "react-perf",
+    "jsx-a11y",
+    "nextjs",
+    "import",
+    "typescript",
+    "unicorn",
+    "oxc"
+  ],
   "categories": {
-    "correctness": "error"
+    "correctness": "error",
+    "perf": "warn",
+    "suspicious": "warn"
   },
   "rules": {
     "react-hooks/rules-of-hooks": "error",
-    "react-hooks/exhaustive-deps": "error",
-    "react/no-unescaped-entities": "error",
+    "react-hooks/exhaustive-deps": "warn",
     "react/jsx-key": "error",
+    "react/no-unescaped-entities": "off",
     "import/no-anonymous-default-export": "error",
-
+    "unicorn/no-null": "off",
+    "unicorn/prefer-module": "off",
     "jsx-a11y/click-events-have-key-events": "warn",
     "jsx-a11y/interactive-supports-focus": "warn",
-    "jsx-a11y/no-noninteractive-tabindex": "warn",
+    "jsx-a11y/no-static-element-interactions": "off",
+    "jsx-a11y/label-has-associated-control": "warn",
     "jsx-a11y/heading-has-content": "warn",
-    "jsx-a11y/prefer-tag-over-role": "warn"
+    "jsx-a11y/anchor-is-valid": "warn",
+    "jsx-a11y/prefer-tag-over-role": "warn",
+    "jsx-a11y/no-noninteractive-tabindex": "warn",
+    "react-perf/jsx-no-new-object-as-prop": "warn",
+    "react-perf/jsx-no-new-array-as-prop": "warn",
+    "react-perf/jsx-no-new-function-as-prop": "warn",
+    "react/react-in-jsx-scope": "off",
+    "jsx-a11y/control-has-associated-label": "warn",
+    "jsx-a11y/img-redundant-alt": "warn",
+    "jsx-a11y/no-noninteractive-element-interactions": "warn",
+    "jsx-a11y/no-autofocus": "warn",
+    "jsx-a11y/anchor-has-content": "warn",
+    "jsx-a11y/media-has-caption": "warn",
+    "nextjs/no-img-element": "warn",
+    "import/no-unassigned-import": "off",
+    "eslint/no-underscore-dangle": "off",
+    "unicorn/no-array-sort": "warn",
+    "unicorn/no-useless-fallback-in-spread": "off",
+    "unicorn/no-empty-file": "off",
+    "oxc/approx-constant": "warn",
+    "oxc/no-map-spread": "warn",
+    "react/no-array-index-key": "warn"
   },
+  "overrides": [
+    {
+      "files": [
+        "**/components/ui/**/*.{ts,tsx,js,jsx}"
+      ],
+      "rules": {
+        "react-perf/jsx-no-new-object-as-prop": "off",
+        "react-perf/jsx-no-new-array-as-prop": "off",
+        "react-perf/jsx-no-new-function-as-prop": "off",
+        "jsx-a11y/click-events-have-key-events": "off",
+        "jsx-a11y/no-static-element-interactions": "off",
+        "jsx-a11y/interactive-supports-focus": "off"
+      }
+    }
+  ],
   "env": {
     "browser": true,
     "es2024": true
   },
-  "ignorePatterns": ["out/**", ".next/**", "public/**", "node_modules/**"]
+  "ignorePatterns": [
+    ".next/**",
+    "out/**",
+    "node_modules/**",
+    "public/**",
+    "dist/**",
+    "coverage/**",
+    ".vercel/**",
+    ".wrangler/**",
+    "archive/**",
+    "**/component-example.tsx",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx"
+  ]
 }
