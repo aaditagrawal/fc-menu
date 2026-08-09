@@ -10,22 +10,22 @@ export function SummarySlide() {
                 <div className="text-5xl animate-scale-in">✨</div>
 
                 <div className="space-y-4">
-                    <h2 className="text-3xl sm:text-4xl font-bold animate-slide-up delay-100" style={{ opacity: 0, animationFillMode: 'forwards' }}>
+                    <h2 className="text-3xl sm:text-4xl font-bold animate-slide-up stagger-1">
                         That&apos;s a Wrap!
                     </h2>
                 </div>
 
-                <div className="animate-slide-up delay-300 py-8" style={{ opacity: 0, animationFillMode: 'forwards' }}>
+                <div className="animate-slide-up stagger-3 py-8">
                     <p className="text-lg sm:text-2xl font-medium leading-relaxed max-w-md mx-auto">
                         Around <span className="accent-rose font-bold">4,000</span> people eat at<br />The Indian Kitchen every meal.<br /><br />
                         <span className="text-muted-foreground">That&apos;s a lot of food! 🍛</span>
                     </p>
                 </div>
 
-                <div className="pt-8 space-y-3 animate-fade-in delay-500 max-w-xs mx-auto" style={{ opacity: 0, animationFillMode: 'forwards' }}>
+                <div className="pt-8 space-y-3 animate-fade-in stagger-5 max-w-xs mx-auto">
                     <Link
                         href="/"
-                        className="group flex items-center justify-center gap-2 w-full px-4 py-2 text-sm font-medium hover:text-rose transition-colors"
+                        className="group flex items-center justify-center gap-2 w-full px-4 py-2 text-sm font-medium hover-accent-rose transition-colors"
                     >
                         <MoveLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
                         Back to Home

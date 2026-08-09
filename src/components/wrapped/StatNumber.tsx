@@ -23,11 +23,50 @@ export function StatNumber({
     const ref = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        if (hasAnimated) return;
+        const el = ref.current;
+        if (!el) return;
+
+        let rafId: number | null = null;
+
+        const animateValue = () => {
+            setHasAnimated(true);
+
+            if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+                setDisplayValue(value);
+                return;
+            }
+
+            const startTime = performance.now();
+
+            const animate = (currentTime: number) => {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                // Easing function: easeOutExpo
+                const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+                setDisplayValue(Math.floor(value * easeProgress));
+
+                if (progress < 1) {
+                    rafId = requestAnimationFrame(animate);
+                }
+            };
+
+            rafId = requestAnimationFrame(animate);
+        };
+
+        if (typeof IntersectionObserver === "undefined") {
+            animateValue();
+            return () => {
+                if (rafId !== null) cancelAnimationFrame(rafId);
+            };
+        }
+
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
-                    if (entry.isIntersecting && !hasAnimated) {
-                        setHasAnimated(true);
+                    if (entry.isIntersecting) {
+                        observer.disconnect();
                         animateValue();
                     }
                 });
@@ -35,36 +74,13 @@ export function StatNumber({
             { threshold: 0.5 }
         );
 
-        if (ref.current) {
-            observer.observe(ref.current);
-        }
+        observer.observe(el);
 
-        return () => observer.disconnect();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [hasAnimated]);
-
-    const animateValue = () => {
-        const startTime = performance.now();
-        const startValue = 0;
-        const endValue = value;
-
-        const animate = (currentTime: number) => {
-            const elapsed = currentTime - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-
-            // Easing function: easeOutExpo
-            const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
-            const currentValue = Math.floor(startValue + (endValue - startValue) * easeProgress);
-
-            setDisplayValue(currentValue);
-
-            if (progress < 1) {
-                requestAnimationFrame(animate);
-            }
+        return () => {
+            observer.disconnect();
+            if (rafId !== null) cancelAnimationFrame(rafId);
         };
-
-        requestAnimationFrame(animate);
-    };
+    }, [hasAnimated, value, duration]);
 
     return (
         <div ref={ref} className={cn("stat-number font-mono", className)}>

@@ -13,6 +13,7 @@
   scroll-snap-align: start;
   scroll-snap-stop: always;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -80,24 +81,16 @@
   background-color: oklch(0.75 0.18 90 / 15%);
 }
 
-/* Number counter animation */
-@keyframes countUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Hover variant of the rose accent (no matching Tailwind token exists) */
+.hover-accent-rose:hover {
+  color: oklch(0.65 0.25 350);
 }
 
-.count-up {
-  animation: countUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.dark .hover-accent-rose:hover {
+  color: oklch(0.7 0.22 350);
 }
 
-/* Slide entrance animations */
+/* Slide entrance keyframes */
 @keyframes slideUp {
   from {
     opacity: 0;
@@ -132,48 +125,62 @@
   }
 }
 
-.animate-slide-up {
-  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* Entrances are gated on slide visibility: .wrapped-anim is added by JS only
+   when IntersectionObserver exists, so without JS everything stays visible.
+   `backwards` fill applies the from-state during each element's stagger delay. */
+.wrapped-anim .wrapped-slide:not(.is-visible) .animate-slide-up,
+.wrapped-anim .wrapped-slide:not(.is-visible) .animate-fade-in,
+.wrapped-anim .wrapped-slide:not(.is-visible) .animate-scale-in,
+.wrapped-anim .wrapped-slide:not(.is-visible) .dish-tag {
+  opacity: 0;
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out forwards;
+.wrapped-anim .wrapped-slide.is-visible .animate-slide-up {
+  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
-.animate-scale-in {
-  animation: scaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.wrapped-anim .wrapped-slide.is-visible .animate-fade-in {
+  animation: fadeIn 0.3s ease-out backwards;
+}
+
+.wrapped-anim .wrapped-slide.is-visible .animate-scale-in {
+  animation: scaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.wrapped-anim .wrapped-slide.is-visible .dish-tag {
+  animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
 /* Staggered delays — 40ms cascade steps, capped well under a beat */
-.delay-100 {
+.stagger-1 {
   animation-delay: 40ms;
 }
 
-.delay-200 {
+.stagger-2 {
   animation-delay: 80ms;
 }
 
-.delay-300 {
+.stagger-3 {
   animation-delay: 120ms;
 }
 
-.delay-400 {
+.stagger-4 {
   animation-delay: 160ms;
 }
 
-.delay-500 {
+.stagger-5 {
   animation-delay: 200ms;
 }
 
-.delay-600 {
+.stagger-6 {
   animation-delay: 240ms;
 }
 
-.delay-700 {
+.stagger-7 {
   animation-delay: 280ms;
 }
 
-.delay-800 {
+.stagger-8 {
   animation-delay: 320ms;
 }
 
@@ -225,15 +232,6 @@
   font-size: 0.75rem;
   padding: 0.375rem 0.75rem;
   opacity: 0.8;
-}
-
-/* Progress ring */
-.progress-ring {
-  transform: rotate(-90deg);
-}
-
-.progress-ring-circle {
-  transition: stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Navigation dots */
@@ -289,10 +287,10 @@
   align-items: center;
   gap: 0.5rem;
   opacity: 0.6;
-  animation: bounce 2s infinite;
+  animation: scrollHintBounce 2s infinite;
 }
 
-@keyframes bounce {
+@keyframes scrollHintBounce {
 
   0%,
   20%,

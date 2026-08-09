@@ -21,7 +21,7 @@ export function TopItemsSlide({
             <div className="text-center space-y-8 max-w-xl mx-auto">
                 <div className="text-5xl animate-scale-in">{emoji}</div>
 
-                <h2 className="text-2xl sm:text-3xl font-bold animate-slide-up delay-100" style={{ opacity: 0, animationFillMode: 'forwards' }}>
+                <h2 className="text-2xl sm:text-3xl font-bold animate-slide-up stagger-1">
                     {title}
                 </h2>
 
@@ -31,8 +31,6 @@ export function TopItemsSlide({
                             key={item.name}
                             className="flex items-center gap-4 animate-slide-up"
                             style={{
-                                opacity: 0,
-                                animationFillMode: 'forwards',
                                 animationDelay: `${200 + index * 100}ms`,
                             }}
                         >
@@ -56,7 +54,7 @@ export function TopItemsSlide({
                 </div>
 
                 {items[0] && (
-                    <p className="text-sm text-muted-foreground mt-4 animate-fade-in delay-800" style={{ opacity: 0, animationFillMode: 'forwards' }}>
+                    <p className="text-sm text-muted-foreground mt-4 animate-fade-in stagger-8">
                         You probably had <span className={`font-medium ${accentClass}`}>{items[0].name}</span> on most days!
                     </p>
                 )}

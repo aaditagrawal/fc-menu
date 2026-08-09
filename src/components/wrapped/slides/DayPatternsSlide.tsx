@@ -23,7 +23,7 @@ export function DayPatternsSlide({ patterns }: DayPatternsSlideProps) {
                     Day Signatures
                 </h2>
 
-                <p className="text-muted-foreground animate-slide-up delay-100" style={{ opacity: 0, animationFillMode: 'forwards' }}>
+                <p className="text-muted-foreground animate-slide-up stagger-1">
                     Dishes that stood out each day
                 </p>
 
@@ -33,8 +33,6 @@ export function DayPatternsSlide({ patterns }: DayPatternsSlideProps) {
                             key={pattern.dayName}
                             className="stat-card flex flex-col items-center text-center animate-slide-up"
                             style={{
-                                opacity: 0,
-                                animationFillMode: 'forwards',
                                 animationDelay: `${200 + index * 100}ms`,
                             }}
                         >
@@ -62,7 +60,7 @@ export function DayPatternsSlide({ patterns }: DayPatternsSlideProps) {
                     ))}
                 </div>
 
-                <p className="text-xs text-muted-foreground mt-4 animate-fade-in delay-800" style={{ opacity: 0, animationFillMode: 'forwards' }}>
+                <p className="text-xs text-muted-foreground mt-4 animate-fade-in stagger-8">
                     Excluding daily staples like rice, roti, and curd
                 </p>
             </div>
