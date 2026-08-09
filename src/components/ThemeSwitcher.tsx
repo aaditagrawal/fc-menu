@@ -18,7 +18,9 @@ export function ThemeSwitcher() {
   if (!mounted) {
     return (
       <Button variant="outline" size="icon" disabled>
-        <Sun className="h-[1.2rem] w-[1.2rem]" />
+        <span key="placeholder" className="theme-icon-swap inline-flex">
+          <Sun className="h-[1.2rem] w-[1.2rem]" />
+        </span>
         <span className="sr-only">Toggle theme</span>
       </Button>
     )
@@ -58,7 +60,9 @@ export function ThemeSwitcher() {
 
   return (
     <Button variant="outline" size="icon" onClick={cycleTheme}>
-      {getIcon()}
+      <span key={theme} className="theme-icon-swap inline-flex">
+        {getIcon()}
+      </span>
       <span className="sr-only">{getLabel()}</span>
     </Button>
   )

@@ -11,6 +11,14 @@ export interface MealCarouselHandle {
   goNext: () => void;
 }
 
+let reducedMotionMql: MediaQueryList | null = null;
+
+function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined") return false;
+  reducedMotionMql ??= window.matchMedia("(prefers-reduced-motion: reduce)");
+  return reducedMotionMql.matches;
+}
+
 export const MealCarousel = React.forwardRef<
   MealCarouselHandle,
   {
@@ -57,19 +65,32 @@ export const MealCarousel = React.forwardRef<
     };
   });
 
+  // Page by exactly one card so arrow keys don't fight mandatory scroll-snap.
+  const getCardStep = React.useCallback(() => {
+    const container = containerRef.current;
+    const firstCard = itemRefs.current[0];
+    if (!container || !firstCard) return container?.clientWidth ?? 0;
+    const gap = parseFloat(getComputedStyle(container).columnGap);
+    return firstCard.offsetWidth + (Number.isNaN(gap) ? 16 : gap);
+  }, []);
+
   const goPrev = React.useCallback(() => {
     const container = containerRef.current;
     if (!container) return;
-    const scrollAmount = container.clientWidth * 0.6;
-    container.scrollBy({ left: -scrollAmount, behavior: "smooth" });
-  }, []);
+    container.scrollBy({
+      left: -getCardStep(),
+      behavior: prefersReducedMotion() ? "instant" : "smooth",
+    });
+  }, [getCardStep]);
 
   const goNext = React.useCallback(() => {
     const container = containerRef.current;
     if (!container) return;
-    const scrollAmount = container.clientWidth * 0.6;
-    container.scrollBy({ left: scrollAmount, behavior: "smooth" });
-  }, []);
+    container.scrollBy({
+      left: getCardStep(),
+      behavior: prefersReducedMotion() ? "instant" : "smooth",
+    });
+  }, [getCardStep]);
 
   React.useImperativeHandle(ref, () => ({ goPrev, goNext }), [goPrev, goNext]);
 
@@ -91,6 +112,46 @@ export const MealCarousel = React.forwardRef<
     return () => container.removeEventListener("keydown", handleKeyDown);
   });
 
+  // Where scroll-driven animations are unsupported (Firefox), the carousel-focus
+  // CSS animation never runs, so dim/scale must follow the centered card instead.
+  const [viewTimelineSupported, setViewTimelineSupported] = React.useState(true);
+  const [centeredIndex, setCenteredIndex] = React.useState<number | null>(null);
+
+  React.useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const supported =
+      typeof CSS !== "undefined" &&
+      CSS.supports("animation-timeline", "view(inline)");
+    setViewTimelineSupported(supported);
+    if (supported || typeof IntersectionObserver === "undefined") return;
+
+    const cards = itemRefs.current.filter(
+      (el): el is HTMLDivElement => el !== null
+    );
+    const observer = new IntersectionObserver(
+      (entries) => {
+        let best: { index: number; ratio: number } | null = null;
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const index = cards.indexOf(entry.target as HTMLDivElement);
+          if (index !== -1 && (best === null || entry.intersectionRatio > best.ratio)) {
+            best = { index, ratio: entry.intersectionRatio };
+          }
+        }
+        if (best) setCenteredIndex(best.index);
+      },
+      { root: container, threshold: 0.6 }
+    );
+    cards.forEach((card) => observer.observe(card));
+    return () => observer.disconnect();
+  }, [meals]);
+
+  const focusedIndex = viewTimelineSupported
+    ? highlightIndex
+    : (centeredIndex ?? highlightIndex);
+
   return (
     <div className="relative overflow-visible">
       <div
@@ -106,6 +167,7 @@ export const MealCarousel = React.forwardRef<
       >
         {meals.map(({ key, meal, timeRange, title }, idx) => {
           const isHighlighted = key === highlightKey;
+          const isFocused = idx === focusedIndex;
           return (
             <div
               key={key}
@@ -114,7 +176,7 @@ export const MealCarousel = React.forwardRef<
               }}
               className={cn(
                 "carousel-card snap-center w-[85%] sm:w-[60%] md:w-[50%] lg:w-[38%] flex-shrink-0 px-1 transition-[transform,opacity] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none",
-                isHighlighted
+                isFocused
                   ? "opacity-100 scale-100"
                   : "opacity-60 scale-[0.97] motion-reduce:scale-100"
               )}

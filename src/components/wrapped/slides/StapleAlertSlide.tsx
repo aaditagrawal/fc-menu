@@ -12,17 +12,17 @@ export function StapleAlertSlide({ mostRepeated }: StapleAlertSlideProps) {
             <div className="text-center space-y-8 max-w-xl mx-auto">
                 <div className="text-6xl animate-scale-in">🍚</div>
 
-                <h2 className="text-2xl sm:text-3xl font-bold animate-slide-up delay-100" style={{ opacity: 0, animationFillMode: 'forwards' }}>
+                <h2 className="text-2xl sm:text-3xl font-bold animate-slide-up stagger-1">
                     The Real MVP
                 </h2>
 
-                <p className="text-muted-foreground animate-slide-up delay-200" style={{ opacity: 0, animationFillMode: 'forwards' }}>
+                <p className="text-muted-foreground animate-slide-up stagger-2">
                     Every hero needs a sidekick...
                     <br />
                     or in this case, a main character
                 </p>
 
-                <div className="stat-card border-2 border-rose py-8 animate-scale-in delay-300" style={{ opacity: 0, animationFillMode: 'forwards' }}>
+                <div className="stat-card border-2 border-rose py-8 animate-scale-in stagger-3">
                     <p className="text-2xl sm:text-3xl font-bold accent-rose mb-4">
                         {mostRepeated.name}
                     </p>
@@ -32,7 +32,7 @@ export function StapleAlertSlide({ mostRepeated }: StapleAlertSlideProps) {
                     </div>
                 </div>
 
-                <p className="text-sm text-muted-foreground mt-4 animate-fade-in delay-600" style={{ opacity: 0, animationFillMode: 'forwards' }}>
+                <p className="text-sm text-muted-foreground mt-4 animate-fade-in stagger-6">
                     The unsung hero of every meal 🫡
                 </p>
             </div>

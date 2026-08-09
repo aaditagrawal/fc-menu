@@ -21,34 +21,34 @@ export function TotalMealsSlide() {
 
                 <StatNumber value={STATIC_TOTAL_MEALS} className="accent-rose" />
 
-                <p className="text-2xl sm:text-3xl font-medium animate-slide-up delay-200" style={{ opacity: 0, animationFillMode: 'forwards' }}>
+                <p className="text-2xl sm:text-3xl font-medium animate-slide-up stagger-2">
                     meal services
                 </p>
 
-                <p className="text-muted-foreground animate-slide-up delay-300" style={{ opacity: 0, animationFillMode: 'forwards' }}>
+                <p className="text-muted-foreground animate-slide-up stagger-3">
                     across <span className="font-mono font-bold">{STATIC_TOTAL_DAYS}</span> days
                 </p>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-8 border-t border-border/30 max-w-xl mx-auto">
-                    <div className="stat-card animate-slide-up delay-400" style={{ opacity: 0, animationFillMode: 'forwards' }}>
+                    <div className="stat-card animate-slide-up stagger-4">
                         <div className="text-2xl font-mono font-bold">{STATIC_MEAL_COUNTS.breakfast}</div>
                         <div className="text-sm text-muted-foreground">Breakfasts</div>
                     </div>
-                    <div className="stat-card animate-slide-up delay-500" style={{ opacity: 0, animationFillMode: 'forwards' }}>
+                    <div className="stat-card animate-slide-up stagger-5">
                         <div className="text-2xl font-mono font-bold">{STATIC_MEAL_COUNTS.lunch}</div>
                         <div className="text-sm text-muted-foreground">Lunches</div>
                     </div>
-                    <div className="stat-card animate-slide-up delay-600" style={{ opacity: 0, animationFillMode: 'forwards' }}>
+                    <div className="stat-card animate-slide-up stagger-6">
                         <div className="text-2xl font-mono font-bold">{STATIC_MEAL_COUNTS.snacks}</div>
                         <div className="text-sm text-muted-foreground">Snacks</div>
                     </div>
-                    <div className="stat-card animate-slide-up delay-700" style={{ opacity: 0, animationFillMode: 'forwards' }}>
+                    <div className="stat-card animate-slide-up stagger-7">
                         <div className="text-2xl font-mono font-bold">{STATIC_MEAL_COUNTS.dinner}</div>
                         <div className="text-sm text-muted-foreground">Dinners</div>
                     </div>
                 </div>
 
-                <p className="text-sm text-muted-foreground italic mt-4 animate-fade-in delay-800" style={{ opacity: 0, animationFillMode: 'forwards' }}>
+                <p className="text-sm text-muted-foreground italic mt-4 animate-fade-in stagger-8">
                     That&apos;s a lot of rice 🍚
                 </p>
             </div>

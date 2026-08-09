@@ -7,9 +7,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Coffee, UtensilsCrossed, Cookie, Moon } from "lucide-react";
 import { filterMenuItems } from "@/lib/exceptions";
+import { useMountEffect } from "@/hooks/useMountEffect";
 
 interface ComprehensiveWeekViewProps {
   week: WeekMenu;
+}
+
+const DESKTOP_MEDIA_QUERY = "(min-width: 1024px)";
+
+function subscribeDesktopBreakpoint(callback: () => void) {
+  const mql = window.matchMedia(DESKTOP_MEDIA_QUERY);
+  mql.addEventListener("change", callback);
+  return () => mql.removeEventListener("change", callback);
+}
+
+function getDesktopSnapshot() {
+  return window.matchMedia(DESKTOP_MEDIA_QUERY).matches;
+}
+
+// SSR and hydration render both trees (responsive classes decide visibility),
+// so the server snapshot only needs to be stable, not accurate.
+function getDesktopServerSnapshot() {
+  return true;
 }
 
 const mealOrder: MealKey[] = ["breakfast", "lunch", "snacks", "dinner"];
@@ -36,10 +55,25 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
   const dayCount = sortedDays.length;
   const [mobileViewMode, setMobileViewMode] = React.useState<MobileViewMode>("detailed");
 
+  // SSR and the first client render must match, so both trees render until
+  // mount (responsive classes hide one). After mount, render only the matching
+  // tree and drop the hiding classes — a lone tree carrying `hidden lg:block`
+  // or `block lg:hidden` would be display:none on the other breakpoint.
+  const [mounted, setMounted] = React.useState(false);
+  useMountEffect(() => {
+    setMounted(true);
+  });
+  const isDesktop = React.useSyncExternalStore(
+    subscribeDesktopBreakpoint,
+    getDesktopSnapshot,
+    getDesktopServerSnapshot
+  );
+
   return (
     <div className="space-y-8">
       {/* Mobile/Tablet View - Days stacked vertically */}
-      <div className="block lg:hidden space-y-6">
+      {(!mounted || !isDesktop) && (
+      <div className={mounted ? "space-y-6" : "block lg:hidden space-y-6"}>
         <div className="inline-flex rounded-lg border border-border bg-muted/40 p-1">
           <Button
             type="button"
@@ -72,9 +106,11 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
           <MobileCompactWeekGrid week={week} sortedDays={sortedDays} />
         )}
       </div>
+      )}
 
       {/* Desktop View - Transposed grid: Meals as rows, Days as columns */}
-      <div className="hidden lg:block">
+      {(!mounted || isDesktop) && (
+      <div className={mounted ? undefined : "hidden lg:block"}>
         <div className="overflow-x-auto scroll-smooth snap-x snap-mandatory scroll-container">
           <div
             className="grid gap-3 min-w-max pb-4 items-start scroll-grid"
@@ -173,6 +209,7 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }

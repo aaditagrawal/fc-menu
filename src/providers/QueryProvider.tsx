@@ -30,7 +30,16 @@ export function QueryProvider({ children }: { children: ReactNode }) {
   return (
     <PersistQueryClientProvider
       client={queryClient}
-      persistOptions={{ persister, buster: "v3" }}
+      persistOptions={{
+        persister,
+        buster: "v3",
+        maxAge: 12 * 60 * 60 * 1000,
+        dehydrateOptions: {
+          // Only immutable week payloads are worth serializing on every cache
+          // write; the manifest is tiny and cheap to refetch.
+          shouldDehydrateQuery: (q) => q.queryKey[0] === "weekMenu" && q.state.status === "success",
+        },
+      }}
     >
       {children}
     </PersistQueryClientProvider>

@@ -153,7 +153,7 @@ function MealCardBase({
   return (
     <div
       ref={tiltRef}
-      className="rounded-2xl p-[1.5px] relative smooth-transition elevated-card"
+      className="rounded-2xl p-[1.5px] relative smooth-transition-shadow elevated-card"
       style={{ background: gradient }}
     >
       <div className="rounded-[calc(1rem-1.5px)] bg-card h-full w-full">

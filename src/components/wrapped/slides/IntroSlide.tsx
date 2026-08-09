@@ -20,10 +20,10 @@ export function IntroSlide({ dateRange }: IntroSlideProps) {
                 <div className="text-2xl sm:text-3xl font-mono accent-yellow">
                     {year}
                 </div>
-                <p className="text-muted-foreground text-base sm:text-lg max-w-md mx-auto mt-8 animate-fade-in delay-300" style={{ opacity: 0, animationFillMode: 'forwards' }}>
+                <p className="text-muted-foreground text-base sm:text-lg max-w-md mx-auto mt-8 animate-fade-in stagger-3">
                     A look back at what Food Court 2 served this semester
                 </p>
-                <p className="text-xs text-muted-foreground/70 max-w-sm mx-auto animate-fade-in delay-500" style={{ opacity: 0, animationFillMode: 'forwards' }}>
+                <p className="text-xs text-muted-foreground/70 max-w-sm mx-auto animate-fade-in stagger-5">
                     Data from mid-August to December 2025
                     <br />
                     <span className="opacity-70">Since the launch of fc2.coolstuff.work</span>
