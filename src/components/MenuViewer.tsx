@@ -25,7 +25,7 @@ import { QUERY_PERSIST_STORAGE_KEY } from "@/lib/queryPersistence";
 import { useMountEffect } from "@/hooks/useMountEffect";
 import { toast } from "sonner";
 import { StaleWeekNotice } from "@/components/StaleWeekNotice";
-import { invalidateStaticManifestCache, selectEffectiveWeek } from "@/lib/staticMenuBundle";
+import { invalidateStaticManifestCache, normalizeWeekIdToStartDate, selectEffectiveWeek } from "@/lib/staticMenuBundle";
 
 export type WeekId = string;
 
@@ -60,7 +60,7 @@ function getPreferredFoodCourtFromCookie() {
 
 function persistFoodCourtCookie(foodCourt: string) {
   try {
-    document.cookie = `preferredFoodCourt=${encodeURIComponent(foodCourt)}; path=/; max-age=${60 * 60 * 24 * 365}`;
+    document.cookie = `preferredFoodCourt=${encodeURIComponent(foodCourt)}; path=/; max-age=${60 * 60 * 24 * 365}; Secure; SameSite=Lax`;
   } catch {}
 }
 
@@ -104,25 +104,40 @@ export function MenuViewer({
   const [dietaryFilter, setDietaryFilter] = React.useState<DietaryFilterType>("all");
   const [userDateKey, setUserDateKey] = React.useState<string | null>(null);
   const [userDateWeekId, setUserDateWeekId] = React.useState<WeekId | null>(null);
-  const [now, setNow] = React.useState(() => getISTNow());
+  // First render (SSR and hydration alike) must be clock-independent so the
+  // static HTML matches the client's first paint: `now` stays null and every
+  // consumer below treats null as "no clock yet". The real IST clock activates
+  // in the mount effect and ticks every minute from there.
+  const [now, setNow] = React.useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [refreshNonce, setRefreshNonce] = React.useState(0);
-  // Baked build-time data must never render during SSR/hydration: day and meal
-  // highlighting depend on the user's clock, not the build's.
-  const [isHydrated, setIsHydrated] = React.useState(false);
 
   const carouselRef = React.useRef<MealCarouselHandle>(null);
   const router = useRouter();
 
   const menuType: MenuType = dietaryFilter === 'jain' ? 'jain' : 'normal';
-  const weekMenuQuery = useWeekMenu(selectedWeekId, menuType);
-  const bakedWeek = isHydrated && menuType === 'normal' ? initialWeek ?? null : null;
+  // The baked week renders even during SSR so the static HTML shows the menu
+  // immediately; only clock-derived highlighting waits for mount.
+  const bakedWeek = menuType === 'normal' ? initialWeek ?? null : null;
+  // Seed the query with the baked week when the selected week IS the baked
+  // week, so it isn't re-fetched right after hydration.
+  const bakedWeekStart = React.useMemo(
+    () => (initialWeek ? sortDateKeysAsc(Object.keys(initialWeek.menu))[0] : undefined),
+    [initialWeek]
+  );
+  const initialWeekData =
+    menuType === 'normal' &&
+    initialWeek &&
+    normalizeWeekIdToStartDate(selectedWeekId) === bakedWeekStart
+      ? initialWeek
+      : undefined;
+  const weekMenuQuery = useWeekMenu(selectedWeekId, menuType, initialWeekData);
   const week = weekMenuQuery.data ?? bakedWeek;
   const queryClient = useQueryClient();
 
   // Mount: read persisted state + start clock
   useMountEffect(() => {
-    setIsHydrated(true);
+    setNow(getISTNow());
     const saved = getFilterState();
     const preferredFoodCourt = getPreferredFoodCourtFromCookie();
 
@@ -150,10 +165,11 @@ export function MenuViewer({
 
   const resolvedFoodCourt = foodCourt || initialWeek?.foodCourt || availableFoodCourts[0] || "";
 
-  // Derive the selected week ID from available data
+  // Derive the selected week ID from available data. Without a clock (SSR /
+  // first render) there is no "today" to resolve against — keep the selection.
   const resolvedWeekId = React.useMemo(() => {
     if (initialWeekId) return initialWeekId;
-    if (!weeks || !resolvedFoodCourt) return selectedWeekId;
+    if (!weeks || !resolvedFoodCourt || now === null) return selectedWeekId;
     const forCourt = weeks
       .filter((w) => w.foodCourt === resolvedFoodCourt);
     return selectEffectiveWeek(forCourt, formatDateKey(now))?.startDate ?? selectedWeekId;
@@ -165,17 +181,29 @@ export function MenuViewer({
     }
   }, [resolvedWeekId, selectedWeekId]);
 
-  // Derive dateKey: use user selection if it's for this week, otherwise auto-detect
+  const sortedDateKeys = React.useMemo(
+    () => (week ? sortDateKeysAsc(Object.keys(week.menu)) : []),
+    [week]
+  );
+
+  // One clock-based pointer shared by day resolution and meal highlighting;
+  // null until the clock activates on mount so SSR and first render agree.
+  const pointer = React.useMemo(
+    () => (week && now !== null ? findCurrentOrUpcomingMeal(week, now) : null),
+    [week, now]
+  );
+
+  // Derive dateKey: use user selection if it's for this week, otherwise the
+  // clock-based pointer, falling back to the first day when there is no clock.
   const dateKey = React.useMemo(() => {
     if (isUserSelectedDay && userDateKey && week?.menu[userDateKey]) {
       return userDateKey;
     }
     if (week) {
-      const ptr = findCurrentOrUpcomingMeal(week, now);
-      return ptr?.dateKey ?? Object.keys(week.menu)[0];
+      return pointer?.dateKey ?? sortedDateKeys[0] ?? null;
     }
     return null;
-  }, [isUserSelectedDay, userDateKey, week, now]);
+  }, [isUserSelectedDay, userDateKey, week, pointer, sortedDateKeys]);
 
   const handleRefresh = React.useCallback(async () => {
     if (isRefreshing) {
@@ -224,8 +252,6 @@ export function MenuViewer({
     [availableFoodCourts]
   );
 
-  const sortedDateKeys = React.useMemo(() => (week ? Object.keys(week.menu).sort() : []), [week]);
-
   const dayOptions = React.useMemo(
     () =>
       week
@@ -233,6 +259,34 @@ export function MenuViewer({
         : [],
     [week, sortedDateKeys]
   );
+
+  const resolvedDateKey = React.useMemo(() => {
+    if (!week) return null;
+    return (
+      (dateKey && week.menu[dateKey] ? dateKey : null) ??
+      (pointer?.dateKey && week.menu[pointer.dateKey] ? pointer.dateKey : null) ??
+      sortedDateKeys[0] ??
+      null
+    );
+  }, [week, dateKey, pointer, sortedDateKeys]);
+
+  const day = week && resolvedDateKey ? week.menu[resolvedDateKey] : undefined;
+
+  // filterMeal returns fresh object identities every call, so memoize to keep
+  // React.memo'd meal components from re-rendering on every clock tick.
+  const meals = React.useMemo(() => {
+    if (!day?.meals) return [];
+    const order: MealKey[] = ["breakfast", "lunch", "snacks", "dinner"];
+    return order
+      .filter((k) => day.meals[k])
+      .map((k) => ({
+        key: k,
+        meal: filterMeal(day.meals[k]!, dietaryFilter),
+        timeRange: `${day.meals[k]!.startTime} – ${day.meals[k]!.endTime} IST`,
+        title: k[0].toUpperCase() + k.slice(1),
+      }))
+      .filter((m) => m.meal.items.length > 0);
+  }, [day, dietaryFilter]);
 
   if (weeksError && !bakedWeek) {
     return <ErrorState message="Failed to load menu data" />;
@@ -256,28 +310,19 @@ export function MenuViewer({
     return <ErrorState message="No menu available" />;
   }
 
-  const pointer = findCurrentOrUpcomingMeal(week, now);
-  const fallbackDateKey = sortedDateKeys[0];
-
   // Compute the full week ID (e.g. "2026-02-02_to_2026-02-08") matching generateStaticParams format
-  const ascDateKeys = sortDateKeysAsc(Object.keys(week.menu));
-  const thisWeekMondayKey = getMondayDateKeyContainingIST(now);
-  const displayedWeekMondayKey = ascDateKeys[0] ?? "";
+  const displayedWeekMondayKey = sortedDateKeys[0] ?? "";
+  // Clock-dependent, so it can only appear post-hydration.
   const showStaleWeekNotice =
+    now !== null &&
     (initialWeekId == null || initialWeekId === "") &&
     displayedWeekMondayKey !== "" &&
-    displayedWeekMondayKey < thisWeekMondayKey;
-  const fullWeekId = `${ascDateKeys[0]}_to_${ascDateKeys[ascDateKeys.length - 1]}`;
-  const resolvedDateKey =
-    (dateKey && week.menu[dateKey] ? dateKey : null) ??
-    (pointer?.dateKey && week.menu[pointer.dateKey] ? pointer.dateKey : null) ??
-    fallbackDateKey;
+    displayedWeekMondayKey < getMondayDateKeyContainingIST(now);
+  const fullWeekId = `${sortedDateKeys[0]}_to_${sortedDateKeys[sortedDateKeys.length - 1]}`;
 
   if (!resolvedDateKey) {
     return <ErrorState message="No menu days available" />;
   }
-
-  const day = week.menu[resolvedDateKey];
 
   if (!day) {
     return <ErrorState message="No menu data for selected day" />;
@@ -287,18 +332,8 @@ export function MenuViewer({
     return <ErrorState message="No meals data for selected day" />;
   }
 
-  const order: MealKey[] = ["breakfast", "lunch", "snacks", "dinner"];
-  const meals = order
-    .filter((k) => day.meals[k])
-    .map((k) => ({
-      key: k,
-      meal: filterMeal(day.meals[k]!, dietaryFilter),
-      timeRange: `${day.meals[k]!.startTime} – ${day.meals[k]!.endTime} IST`,
-      title: k[0].toUpperCase() + k.slice(1),
-    }))
-    .filter((m) => m.meal.items.length > 0);
-
-  const picked = pickHighlightMealForDay(week, resolvedDateKey, now);
+  // No clock yet → no pointer: highlight falls back to the first meal.
+  const picked = now !== null ? pickHighlightMealForDay(week, resolvedDateKey, now) : null;
   const highlightKey = (picked?.mealKey ?? (meals[0]?.key ?? "breakfast")) as MealKey;
   const isPrimaryUpcoming = Boolean(picked?.isPrimaryUpcoming);
   const isLive = Boolean(picked?.isLive);
@@ -311,7 +346,7 @@ export function MenuViewer({
       <header className="mb-4 space-y-3">
         <div className="space-y-1.5">
           <h1 className="text-[26px] sm:text-[32px] font-semibold tracking-[-0.02em] leading-[1.1]">
-            {resolvedFoodCourt.replace(/Food Court (\d+)/, "Food Court $1")}: Menu
+            {resolvedFoodCourt}: Menu
           </h1>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             {foodCourtOptions.length > 1 && (

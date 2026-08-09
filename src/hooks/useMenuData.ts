@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useSyncExternalStore } from "react";
 import { isTodayMonday } from "@/lib/date";
 import type { WeekMenu, Meal, MealKey, MenuItem } from "@/lib/types";
@@ -76,12 +76,13 @@ export function useWeeksInfo() {
   });
 }
 
-export function useWeekMenu(weekId: string | null, menuType: MenuType = 'normal') {
+export function useWeekMenu(weekId: string | null, menuType: MenuType = 'normal', initialData?: WeekMenu) {
   const isMonday = isTodayMonday();
   const endpoint = menuType === 'jain' ? 'jain-menu' : 'menu';
 
   return useQuery({
-    queryKey: ["weekMenu", weekId, menuType],
+    // Normalize so "2026-08-03" and "2026-08-03_to_2026-08-09" share one entry.
+    queryKey: ["weekMenu", normalizeWeekIdToStartDate(weekId), menuType],
     queryFn: async (): Promise<WeekMenu> => {
       const startDate = normalizeWeekIdToStartDate(weekId);
       try {
@@ -96,10 +97,14 @@ export function useWeekMenu(weekId: string | null, menuType: MenuType = 'normal'
       if (!res.ok) throw new Error(`Failed to fetch week menu: ${weekId}`);
       return res.json();
     },
-    staleTime: 0,
+    // Short staleTime, never Infinity: a menu revision keeps this query key but
+    // moves to a new content-hashed file via the manifest, so in-session
+    // revalidation must stay possible. Baked initialData starts fresh, so it
+    // isn't re-fetched right after hydration; later remounts revalidate.
+    staleTime: 60_000,
     gcTime: isMonday ? 15 * 60 * 1000 : 60 * 60 * 1000,
     enabled: !!weekId,
-    refetchOnMount: "always",
+    initialData,
     refetchOnWindowFocus: false,
   });
 }
@@ -123,30 +128,4 @@ function getServerSnapshot() {
 
 export function useOfflineStatus() {
   return useSyncExternalStore(subscribeOnline, getOnlineSnapshot, getServerSnapshot);
-}
-
-export function usePrefetchWeekMenu() {
-  const queryClient = useQueryClient();
-
-  return (weekId: string, menuType: MenuType = 'normal') => {
-    const endpoint = menuType === 'jain' ? 'jain-menu' : 'menu';
-
-    queryClient.prefetchQuery({
-      queryKey: ["weekMenu", weekId, menuType],
-      queryFn: async (): Promise<WeekMenu> => {
-        const startDate = normalizeWeekIdToStartDate(weekId);
-        try {
-          const manifest = await fetchStaticManifest();
-          const entry = getWeeksForType(manifest, menuType).find((week) => week.startDate === startDate);
-          if (entry) return fetchStaticWeek(entry);
-        } catch {
-          // Fall through to live API fallback.
-        }
-
-        const res = await fetch(`${API_BASE}/api/${endpoint}?weekStart=${startDate}&v=2`);
-        if (!res.ok) throw new Error(`Failed to prefetch week menu: ${weekId}`);
-        return res.json();
-      },
-    });
-  };
 }

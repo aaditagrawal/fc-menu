@@ -19,6 +19,12 @@ export default async function FullWeekPage({ params }: PageProps) {
 
   return (
     <div className="px-4 py-8 sm:px-6 md:px-8">
+      <link
+        rel="preload"
+        href="/data/menu-bundle/manifest.json"
+        as="fetch"
+        crossOrigin="anonymous"
+      />
       <div className="mx-auto max-w-full space-y-6">
         <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-2">
