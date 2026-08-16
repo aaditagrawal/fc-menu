@@ -1,4 +1,5 @@
 import { formatDateKey, getISTNow } from "@/lib/date";
+import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
 import type { WeekMenu } from "@/lib/types";
 
 export type MenuType = "normal" | "jain";
@@ -89,10 +90,12 @@ export async function fetchStaticManifest(): Promise<StaticMenuManifest> {
   const now = Date.now();
   if (!manifestPromise || now - manifestFetchedAt > MANIFEST_SHARE_TTL_MS) {
     manifestFetchedAt = now;
-    const promise: Promise<StaticMenuManifest> = fetch(STATIC_MENU_MANIFEST_PATH).then((res) => {
-      if (!res.ok) throw new Error("Failed to fetch static menu manifest");
-      return res.json();
-    });
+    const promise: Promise<StaticMenuManifest> = fetchWithTimeout(STATIC_MENU_MANIFEST_PATH).then(
+      (res) => {
+        if (!res.ok) throw new Error("Failed to fetch static menu manifest");
+        return res.json();
+      },
+    );
     manifestPromise = promise;
     promise.catch(() => {
       if (manifestPromise === promise) {
@@ -106,7 +109,7 @@ export async function fetchStaticManifest(): Promise<StaticMenuManifest> {
 export async function fetchStaticWeek(entry: StaticWeekEntry): Promise<WeekMenu> {
   // Week files are content-hashed (a revised menu gets a new path via the
   // manifest), so the browser's HTTP cache can hold them indefinitely.
-  const res = await fetch(entry.path);
+  const res = await fetchWithTimeout(entry.path);
   if (!res.ok) throw new Error(`Failed to fetch static menu week: ${entry.startDate}`);
   return res.json();
 }

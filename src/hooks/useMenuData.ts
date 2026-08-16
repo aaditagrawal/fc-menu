@@ -13,6 +13,7 @@ import {
   type MenuType,
 } from "@/lib/staticMenuBundle";
 import { EmptyWeekError, hasMenuDays } from "@/lib/menuWeek";
+import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
 
 const API_BASE = process.env.NEXT_PUBLIC_MENU_API_URL ?? "https://tikm.coolstuff.work";
 
@@ -39,7 +40,7 @@ const MONDAY_HISTORY_GC_MS = 15 * 60 * 1000;
 const NON_MONDAY_HISTORY_GC_MS = 24 * 60 * 60 * 1000;
 
 async function fetchLiveHistory(): Promise<HistoryResponse> {
-  const res = await fetch(`${API_BASE}/api/history?v=2`);
+  const res = await fetchWithTimeout(`${API_BASE}/api/history?v=2`);
   if (!res.ok) throw new Error("Failed to fetch weeks info");
   return res.json();
 }
@@ -99,7 +100,7 @@ async function fetchWeekMenu(weekId: string | null, menuType: MenuType): Promise
     // Fall through to the live API for local development or incomplete static bundles.
   }
 
-  const res = await fetch(`${API_BASE}/api/${endpoint}?weekStart=${startDate}&v=2`);
+  const res = await fetchWithTimeout(`${API_BASE}/api/${endpoint}?weekStart=${startDate}&v=2`);
   // 404 is the API saying this week has no menu of this type — an absence, not
   // a failure. A 503 or anything else is a real fault and stays a plain error
   // so it retries and falls back to the baked bundle.
