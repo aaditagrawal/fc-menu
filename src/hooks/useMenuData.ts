@@ -104,16 +104,25 @@ async function fetchWeekMenu(weekId: string | null, menuType: MenuType): Promise
       } catch {
         // Fall through to the live API.
       }
-    } else if (
-      menuType === "jain" &&
-      manifest.normal.weeks.some((week) => week.startDate === startDate)
-    ) {
-      // The bundle covers this week (its normal menu is baked in) yet has no
-      // jain entry, so no jain menu existed at build time — answer the absence
+    } else if (menuType === "jain" && manifest.jain.weeks.length > 0) {
+      // Jain absence can sometimes be answered from the bundle, but only
+      // carefully. Jain entries' startDate comes from the payload's first day,
+      // not the week's Monday, so match by date-range overlap — never startDate
+      // equality. An empty jain list proves nothing: the build fetches jain
+      // history as optional, so [] may just mean that request failed. Only when
+      // the bundle demonstrably covers this week's normal menu and no jain week
+      // overlaps its range is the jain menu known absent at build time — answer
       // immediately instead of firing a doomed fetch and making the normal
-      // fallback wait on it. When the bundle doesn't cover the week at all it
-      // may simply be stale, so fetch and infer as before.
-      throw new EmptyWeekError(weekId);
+      // fallback wait on it. Everything else falls through to fetch-and-infer.
+      const normalEntry = manifest.normal.weeks.find((week) => week.startDate === startDate);
+      if (
+        normalEntry &&
+        !manifest.jain.weeks.some(
+          (week) => week.startDate <= normalEntry.endDate && normalEntry.startDate <= week.endDate,
+        )
+      ) {
+        throw new EmptyWeekError(weekId);
+      }
     }
   }
 
