@@ -102,8 +102,8 @@ async function clearIndexedDb() {
             // A delete blocked by another open tab never fires onsuccess; don't
             // hang the reset on it.
             request.onsuccess = request.onerror = request.onblocked = () => resolve();
-          })
-      )
+          }),
+      ),
     );
   } catch {}
 }

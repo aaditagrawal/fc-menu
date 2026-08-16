@@ -15,16 +15,11 @@ export function JainFallbackNotice({ onShowRegular }: { onShowRegular?: () => vo
       className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-4 py-3 sm:px-5"
     >
       <div className="flex items-start gap-3">
-        <Salad
-          className="mt-0.5 h-5 w-5 shrink-0 text-amber-700 dark:text-amber-400"
-          aria-hidden
-        />
+        <Salad className="mt-0.5 h-5 w-5 shrink-0 text-amber-700 dark:text-amber-400" aria-hidden />
         <p className="min-w-0 flex-1 text-sm leading-relaxed text-muted-foreground">
-          <span className="font-medium text-foreground">
-            No Jain menu for this week yet.
-          </span>{" "}
-          Showing the regular menu with non-veg items hidden — it is not a Jain
-          menu, so check before you eat.
+          <span className="font-medium text-foreground">No Jain menu for this week yet.</span>{" "}
+          Showing the regular menu with non-veg items hidden — it is not a Jain menu, so check
+          before you eat.
           {onShowRegular && (
             <>
               {" "}

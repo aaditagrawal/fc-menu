@@ -96,9 +96,7 @@ async function fetchWeekMenu(weekId: string | null, menuType: MenuType): Promise
   }
 
   if (manifest) {
-    const entry = getWeeksForType(manifest, menuType).find(
-      (week) => week.startDate === startDate,
-    );
+    const entry = getWeeksForType(manifest, menuType).find((week) => week.startDate === startDate);
     if (entry) {
       try {
         const staticWeek: unknown = await fetchStaticWeek(entry);

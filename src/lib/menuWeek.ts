@@ -32,9 +32,7 @@ export function isValidWeekMenu(value: unknown): value is WeekMenu {
     if (typeof day !== "object" || day === null) return false;
     const dayMenu = day as Record<string, unknown>;
     return (
-      typeof dayMenu.day === "string" &&
-      typeof dayMenu.meals === "object" &&
-      dayMenu.meals !== null
+      typeof dayMenu.day === "string" && typeof dayMenu.meals === "object" && dayMenu.meals !== null
     );
   });
 }
@@ -52,10 +50,7 @@ export class EmptyWeekError extends Error {
  * EmptyWeekError, or a stale empty week was restored from the persisted cache
  * that a previous version of the app wrote.
  */
-export function isEmptyWeekResult(query: {
-  data?: WeekMenu | null;
-  error?: unknown;
-}): boolean {
+export function isEmptyWeekResult(query: { data?: WeekMenu | null; error?: unknown }): boolean {
   if (query.error instanceof EmptyWeekError) return true;
   return query.data != null && !hasMenuDays(query.data);
 }
