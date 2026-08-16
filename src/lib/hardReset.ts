@@ -18,18 +18,14 @@ const PRESERVED_LOCAL_STORAGE_KEYS = ["theme"];
 export const RESET_PARAM = "fresh";
 
 function expireCookies() {
-  const { hostname, pathname } = window.location;
+  const { pathname } = window.location;
 
-  // A cookie is only deleted by an expiry write whose domain and path match the
-  // original exactly, and JS can't read either attribute back. So sweep every
-  // plausible combination: host-only plus each parent domain, root path plus
-  // each prefix of the current path.
-  const domains: (string | null)[] = [null];
-  const hostParts = hostname.split(".");
-  for (let i = 0; i < hostParts.length - 1; i++) {
-    domains.push(hostParts.slice(i).join("."));
-  }
-
+  // Expiry writes are host-only (no domain attribute) on purpose: this origin
+  // can share a parent domain with sibling apps, and a domain= write would
+  // reach over and expire their cookies too. Every cookie this app sets is
+  // host-only. A deletion still has to match the original path exactly, and
+  // JS can't read paths back, so sweep the root path plus each prefix of the
+  // current path.
   const paths = ["/"];
   let prefix = "";
   for (const segment of pathname.split("/").filter(Boolean)) {
@@ -42,10 +38,7 @@ function expireCookies() {
     if (!name) continue;
 
     for (const path of paths) {
-      for (const domain of domains) {
-        const scope = domain ? `; domain=${domain}` : "";
-        document.cookie = `${name}=; path=${path}${scope}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-      }
+      document.cookie = `${name}=; path=${path}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
     }
   }
 }
