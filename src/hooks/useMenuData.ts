@@ -12,7 +12,7 @@ import {
   weeksCoverToday,
   type MenuType,
 } from "@/lib/staticMenuBundle";
-import { EmptyWeekError, hasMenuDays } from "@/lib/menuWeek";
+import { EmptyWeekError, hasMenuDays, isValidWeekMenu } from "@/lib/menuWeek";
 import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
 
 const API_BASE = process.env.NEXT_PUBLIC_MENU_API_URL ?? "https://tikm.coolstuff.work";
@@ -93,8 +93,8 @@ async function fetchWeekMenu(weekId: string | null, menuType: MenuType): Promise
       (week) => week.startDate === startDate,
     );
     if (entry) {
-      const staticWeek = await fetchStaticWeek(entry);
-      if (hasMenuDays(staticWeek)) return staticWeek;
+      const staticWeek: unknown = await fetchStaticWeek(entry);
+      if (isValidWeekMenu(staticWeek) && hasMenuDays(staticWeek)) return staticWeek;
     }
   } catch {
     // Fall through to the live API for local development or incomplete static bundles.
@@ -107,7 +107,10 @@ async function fetchWeekMenu(weekId: string | null, menuType: MenuType): Promise
   if (res.status === 404) throw new EmptyWeekError(weekId);
   if (!res.ok) throw new Error(`Failed to fetch week menu: ${weekId}`);
 
-  const week = (await res.json()) as WeekMenu;
+  const week: unknown = await res.json();
+  // A structurally wrong payload is a fault, not an absence — keep it a plain
+  // error so it retries instead of reading as "no menu this week".
+  if (!isValidWeekMenu(week)) throw new Error(`Malformed week menu payload: ${weekId}`);
   // Older API builds report that same absence as a 200 with an empty menu.
   // Rejecting it here keeps the payload out of the persisted cache, so one
   // momentary backend blip can't follow the visitor around for days.

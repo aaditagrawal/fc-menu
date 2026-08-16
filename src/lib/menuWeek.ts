@@ -17,6 +17,28 @@ export function hasMenuDays(week: WeekMenu | null | undefined): week is WeekMenu
   return week != null && Object.keys(week.menu ?? {}).length > 0;
 }
 
+/**
+ * Structural check for data crossing a trust boundary — a live API payload,
+ * a static bundle file, or a week restored from the persisted cache. Anything
+ * that fails is a fault (bad payload, corrupted storage), not an absent menu,
+ * so callers treat it as a plain retriable error rather than EmptyWeekError.
+ */
+export function isValidWeekMenu(value: unknown): value is WeekMenu {
+  if (typeof value !== "object" || value === null) return false;
+  const { foodCourt, week, menu } = value as Record<string, unknown>;
+  if (typeof foodCourt !== "string" || typeof week !== "string") return false;
+  if (typeof menu !== "object" || menu === null || Array.isArray(menu)) return false;
+  return Object.values(menu).every((day) => {
+    if (typeof day !== "object" || day === null) return false;
+    const dayMenu = day as Record<string, unknown>;
+    return (
+      typeof dayMenu.day === "string" &&
+      typeof dayMenu.meals === "object" &&
+      dayMenu.meals !== null
+    );
+  });
+}
+
 /** Thrown by the week queries so an empty payload is never cached as data. */
 export class EmptyWeekError extends Error {
   constructor(weekId: string | null | undefined) {
