@@ -39,6 +39,15 @@ export type WeekId = string;
 
 const MENU_QUERY_ROOT_KEYS = new Set(["weekMenu", "weeksInfo"]);
 
+// Same spinner FullWeekView shows — loading must never be a blank screen.
+function LoadingState() {
+  return (
+    <div className="flex items-center justify-center py-12">
+      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
+
 function getPreferredFoodCourtFromCookie() {
   if (typeof document === "undefined") {
     return null;
@@ -250,7 +259,7 @@ export function MenuViewer({
 
   if (!weeksInfo && !bakedWeek) {
     if (weeksInfo === undefined) {
-      return null;
+      return <LoadingState />;
     }
     return <ErrorState message="No menu available" />;
   }
@@ -261,7 +270,7 @@ export function MenuViewer({
       activeWeekQuery.isLoading ||
       (resolvedWeekId !== null && resolvedWeekId !== selectedWeekId)
     ) {
-      return null;
+      return <LoadingState />;
     }
     // An empty week is a different situation from a failed request, and saying
     // so stops people retrying against a menu that simply isn't up yet.
