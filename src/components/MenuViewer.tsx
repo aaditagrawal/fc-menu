@@ -33,6 +33,7 @@ import { StaleWeekNotice } from "@/components/StaleWeekNotice";
 import { ErrorState } from "@/components/ErrorState";
 import { JainFallbackNotice } from "@/components/JainFallbackNotice";
 import { hasMenuDays, isEmptyWeekResult } from "@/lib/menuWeek";
+import { hardResetAndReload } from "@/lib/hardReset";
 import { invalidateStaticManifestCache, selectEffectiveWeek } from "@/lib/staticMenuBundle";
 
 export type WeekId = string;
@@ -110,6 +111,10 @@ export function MenuViewer({
   const [now, setNow] = React.useState(() => getISTNow());
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [refreshNonce, setRefreshNonce] = React.useState(0);
+  // Two-tap reset: first tap arms the button, second actually wipes. The armed
+  // state disarms itself so a stray tap can't linger as a loaded gun.
+  const [resetStage, setResetStage] = React.useState<"idle" | "confirm" | "resetting">("idle");
+  const resetDisarmTimeoutRef = React.useRef<number | null>(null);
   // Baked build-time data must never render during SSR/hydration: day and meal
   // highlighting depend on the user's clock, not the build's.
   const [isHydrated, setIsHydrated] = React.useState(false);
@@ -154,7 +159,12 @@ export function MenuViewer({
       setNow(getISTNow());
     }, 60 * 1000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (resetDisarmTimeoutRef.current !== null) {
+        window.clearTimeout(resetDisarmTimeoutRef.current);
+      }
+    };
   });
 
   // Derive whether user's day selection applies to the current week
@@ -221,6 +231,27 @@ export function MenuViewer({
       setIsRefreshing(false);
     }
   }, [initialWeekId, isRefreshing, queryClient, router]);
+
+  const handleResetAppData = React.useCallback(() => {
+    if (resetStage === "resetting") {
+      return;
+    }
+
+    if (resetStage === "idle") {
+      setResetStage("confirm");
+      resetDisarmTimeoutRef.current = window.setTimeout(() => setResetStage("idle"), 5000);
+      return;
+    }
+
+    if (resetDisarmTimeoutRef.current !== null) {
+      window.clearTimeout(resetDisarmTimeoutRef.current);
+      resetDisarmTimeoutRef.current = null;
+    }
+    setResetStage("resetting");
+    hardResetAndReload().catch(() => {
+      window.location.reload();
+    });
+  }, [resetStage]);
 
   const handleDietaryFilterChange = React.useCallback((filter: DietaryFilterType) => {
     setDietaryFilter(filter);
@@ -399,6 +430,25 @@ export function MenuViewer({
               </>
             ) : (
               "Refresh Data"
+            )}
+          </Button>
+
+          <Button
+            onClick={handleResetAppData}
+            disabled={resetStage === "resetting"}
+            variant={resetStage === "confirm" ? "destructive" : "ghost"}
+            title="Clear all saved app data and reload"
+            aria-busy={resetStage === "resetting"}
+          >
+            {resetStage === "resetting" ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Resetting...
+              </>
+            ) : resetStage === "confirm" ? (
+              "Confirm Reset?"
+            ) : (
+              "Reset App Data"
             )}
           </Button>
         </div>
