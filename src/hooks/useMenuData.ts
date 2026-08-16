@@ -11,6 +11,7 @@ import {
   normalizeWeekIdToStartDate,
   weeksCoverToday,
   type MenuType,
+  type StaticMenuManifest,
 } from "@/lib/staticMenuBundle";
 import { EmptyWeekError, hasMenuDays, isValidWeekMenu } from "@/lib/menuWeek";
 import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
@@ -87,17 +88,35 @@ async function fetchWeekMenu(weekId: string | null, menuType: MenuType): Promise
   const endpoint = menuType === "jain" ? "jain-menu" : "menu";
   const startDate = normalizeWeekIdToStartDate(weekId);
 
+  let manifest: StaticMenuManifest | null = null;
   try {
-    const manifest = await fetchStaticManifest();
+    manifest = await fetchStaticManifest();
+  } catch {
+    // Fall through to the live API for local development or incomplete static bundles.
+  }
+
+  if (manifest) {
     const entry = getWeeksForType(manifest, menuType).find(
       (week) => week.startDate === startDate,
     );
     if (entry) {
-      const staticWeek: unknown = await fetchStaticWeek(entry);
-      if (isValidWeekMenu(staticWeek) && hasMenuDays(staticWeek)) return staticWeek;
+      try {
+        const staticWeek: unknown = await fetchStaticWeek(entry);
+        if (isValidWeekMenu(staticWeek) && hasMenuDays(staticWeek)) return staticWeek;
+      } catch {
+        // Fall through to the live API.
+      }
+    } else if (
+      menuType === "jain" &&
+      manifest.normal.weeks.some((week) => week.startDate === startDate)
+    ) {
+      // The bundle covers this week (its normal menu is baked in) yet has no
+      // jain entry, so no jain menu existed at build time — answer the absence
+      // immediately instead of firing a doomed fetch and making the normal
+      // fallback wait on it. When the bundle doesn't cover the week at all it
+      // may simply be stale, so fetch and infer as before.
+      throw new EmptyWeekError(weekId);
     }
-  } catch {
-    // Fall through to the live API for local development or incomplete static bundles.
   }
 
   const res = await fetchWithTimeout(`${API_BASE}/api/${endpoint}?weekStart=${startDate}&v=2`);
