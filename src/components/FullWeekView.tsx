@@ -16,6 +16,9 @@ import {
   filterWeekMenu,
 } from "@/lib/filters";
 import { useMountEffect } from "@/hooks/useMountEffect";
+import { ErrorState } from "@/components/ErrorState";
+import { JainFallbackNotice } from "@/components/JainFallbackNotice";
+import { hasMenuDays, isEmptyWeekResult } from "@/lib/menuWeek";
 
 export function FullWeekView({ weekId }: { weekId: WeekId }) {
   const [dietaryFilter, setDietaryFilter] = React.useState<DietaryFilterType>("all");
@@ -31,10 +34,22 @@ export function FullWeekView({ weekId }: { weekId: WeekId }) {
   }, []);
 
   const menuType: MenuType = dietaryFilter === "jain" ? "jain" : "normal";
-  const { data: weekData, isLoading, error } = useWeekMenu(weekId, menuType);
+  const weekMenuQuery = useWeekMenu(weekId, menuType);
+
+  // Weeks without a Jain menu — and any week the API blanks out on failure —
+  // come back as a 200 with an empty menu. See MenuViewer for the same guard.
+  const jainWeekIsEmpty = menuType === "jain" && isEmptyWeekResult(weekMenuQuery);
+  const normalFallbackQuery = useWeekMenu(jainWeekIsEmpty ? weekId : null, "normal");
+
+  const activeQuery = jainWeekIsEmpty ? normalFallbackQuery : weekMenuQuery;
+  const { isLoading } = activeQuery;
+  // The regular menu carries egg and meat, which is the last thing to hand
+  // someone who asked for Jain. Fall back to it vegetarian-only.
+  const effectiveDietaryFilter: DietaryFilterType = jainWeekIsEmpty ? "veg-only" : dietaryFilter;
+  const weekData = hasMenuDays(activeQuery.data) ? activeQuery.data : null;
   const week = React.useMemo(
-    () => (weekData ? filterWeekMenu(weekData, dietaryFilter) : null),
-    [weekData, dietaryFilter],
+    () => (weekData ? filterWeekMenu(weekData, effectiveDietaryFilter) : null),
+    [weekData, effectiveDietaryFilter],
   );
 
   if (isLoading) {
@@ -45,19 +60,21 @@ export function FullWeekView({ weekId }: { weekId: WeekId }) {
     );
   }
 
-  if (error || !week) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 space-y-4">
-        <div className="text-red-500 text-sm">Failed to load week menu</div>
-        <Button variant="outline" onClick={() => window.location.reload()}>
-          Try Again
-        </Button>
-      </div>
-    );
+  if (!week) {
+    if (isEmptyWeekResult(activeQuery)) {
+      return (
+        <ErrorState
+          message="This week's menu hasn't been published yet"
+          hint="It usually goes up at the start of the week. If you think it should be here, Reset App Data clears this site's saved data and reloads from scratch."
+        />
+      );
+    }
+    return <ErrorState message="Couldn't load the week menu" />;
   }
 
   return (
     <div className="space-y-2">
+      {jainWeekIsEmpty && <JainFallbackNotice onShowRegular={() => handleFilterChange("all")} />}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-semibold">Full Week Menu</h1>

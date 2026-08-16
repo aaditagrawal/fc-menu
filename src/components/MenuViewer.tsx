@@ -30,19 +30,21 @@ import { QUERY_PERSIST_STORAGE_KEY } from "@/lib/queryPersistence";
 import { useMountEffect } from "@/hooks/useMountEffect";
 import { toast } from "sonner";
 import { StaleWeekNotice } from "@/components/StaleWeekNotice";
+import { ErrorState } from "@/components/ErrorState";
+import { JainFallbackNotice } from "@/components/JainFallbackNotice";
+import { hasMenuDays, isEmptyWeekResult } from "@/lib/menuWeek";
+import { HardResetButton } from "@/components/HardResetButton";
 import { invalidateStaticManifestCache, selectEffectiveWeek } from "@/lib/staticMenuBundle";
 
 export type WeekId = string;
 
 const MENU_QUERY_ROOT_KEYS = new Set(["weekMenu", "weeksInfo"]);
 
-function ErrorState({ message }: { message: string }) {
+// Same spinner FullWeekView shows — loading must never be a blank screen.
+function LoadingState() {
   return (
-    <div className="flex flex-col items-center justify-center py-12 space-y-4">
-      <div className="text-red-500 text-sm">{message}</div>
-      <Button variant="outline" onClick={() => window.location.reload()}>
-        Try Again
-      </Button>
+    <div className="flex items-center justify-center py-12">
+      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
     </div>
   );
 }
@@ -118,8 +120,24 @@ export function MenuViewer({
 
   const menuType: MenuType = dietaryFilter === "jain" ? "jain" : "normal";
   const weekMenuQuery = useWeekMenu(selectedWeekId, menuType);
-  const bakedWeek = isHydrated && menuType === "normal" ? (initialWeek ?? null) : null;
-  const week = weekMenuQuery.data ?? bakedWeek;
+
+  // An empty week means either a backend blip (both menu endpoints answer 200
+  // with `{ menu: {} }` when their own lookup fails) or a week with no Jain
+  // upload. For Jain, the regular week is a useful fallback; for everyone else
+  // the baked bundle below is. Either way an empty week is never rendered.
+  const jainWeekIsEmpty = menuType === "jain" && isEmptyWeekResult(weekMenuQuery);
+  const normalFallbackQuery = useWeekMenu(jainWeekIsEmpty ? selectedWeekId : null, "normal");
+
+  const activeWeekQuery = jainWeekIsEmpty ? normalFallbackQuery : weekMenuQuery;
+  const effectiveMenuType: MenuType = jainWeekIsEmpty ? "normal" : menuType;
+  // The regular menu carries egg and meat, which is the last thing to hand
+  // someone who asked for Jain. Fall back to it vegetarian-only.
+  const effectiveDietaryFilter: DietaryFilterType = jainWeekIsEmpty ? "veg-only" : dietaryFilter;
+  const bakedWeek =
+    isHydrated && effectiveMenuType === "normal" && hasMenuDays(initialWeek) ? initialWeek : null;
+  // hasMenuDays also screens out empty weeks restored from a persisted cache
+  // written before those payloads were rejected.
+  const week = (hasMenuDays(activeWeekQuery.data) ? activeWeekQuery.data : null) ?? bakedWeek;
   const queryClient = useQueryClient();
 
   // Mount: read persisted state + start clock
@@ -242,7 +260,7 @@ export function MenuViewer({
 
   if (!weeksInfo && !bakedWeek) {
     if (weeksInfo === undefined) {
-      return null;
+      return <LoadingState />;
     }
     return <ErrorState message="No menu available" />;
   }
@@ -250,12 +268,22 @@ export function MenuViewer({
   if (!week) {
     if (
       isWeeksLoading ||
-      weekMenuQuery.isLoading ||
+      activeWeekQuery.isLoading ||
       (resolvedWeekId !== null && resolvedWeekId !== selectedWeekId)
     ) {
-      return null;
+      return <LoadingState />;
     }
-    return <ErrorState message="No menu available" />;
+    // An empty week is a different situation from a failed request, and saying
+    // so stops people retrying against a menu that simply isn't up yet.
+    if (isEmptyWeekResult(activeWeekQuery)) {
+      return (
+        <ErrorState
+          message="This week's menu hasn't been published yet"
+          hint="It usually goes up at the start of the week. If you think it should be here, Reset App Data clears this site's saved data and reloads from scratch."
+        />
+      );
+    }
+    return <ErrorState message="Couldn't load the menu" />;
   }
 
   const pointer = findCurrentOrUpcomingMeal(week, now);
@@ -294,7 +322,7 @@ export function MenuViewer({
     .filter((k) => day.meals[k])
     .map((k) => ({
       key: k,
-      meal: filterMeal(day.meals[k]!, dietaryFilter),
+      meal: filterMeal(day.meals[k]!, effectiveDietaryFilter),
       timeRange: `${day.meals[k]!.startTime} – ${day.meals[k]!.endTime} IST`,
       title: k[0].toUpperCase() + k.slice(1),
     }))
@@ -305,10 +333,13 @@ export function MenuViewer({
   const isPrimaryUpcoming = Boolean(picked?.isPrimaryUpcoming);
   const isLive = Boolean(picked?.isLive);
 
-  const isRefreshButtonBusy = isRefreshing || weekMenuQuery.isFetching;
+  const isRefreshButtonBusy = isRefreshing || activeWeekQuery.isFetching;
 
   return (
     <div className="space-y-4 content-loaded">
+      {jainWeekIsEmpty && (
+        <JainFallbackNotice onShowRegular={() => handleDietaryFilterChange("all")} />
+      )}
       {showStaleWeekNotice && <StaleWeekNotice weekLabel={week.week} />}
       <header className="mb-4 space-y-3">
         <div className="space-y-1.5">
@@ -338,7 +369,7 @@ export function MenuViewer({
       </header>
 
       <MealCarousel
-        key={`${resolvedWeekId}:${resolvedDateKey}:${menuType}:${refreshNonce}`}
+        key={`${resolvedWeekId}:${resolvedDateKey}:${effectiveMenuType}:${refreshNonce}`}
         ref={carouselRef}
         meals={meals}
         highlightKey={highlightKey}
@@ -394,6 +425,11 @@ export function MenuViewer({
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
+      </div>
+
+      {/* Kept apart from the routine actions above: this one wipes everything. */}
+      <div className="mt-2">
+        <HardResetButton size="sm" className="text-muted-foreground" />
       </div>
     </div>
   );
