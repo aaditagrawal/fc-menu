@@ -29,13 +29,20 @@ export function getFilterState(): FilterState {
   try {
     const stored = localStorage.getItem(FILTER_STORAGE_KEY);
     if (stored) {
-      const parsed = JSON.parse(stored);
-      if (isValidFilter(parsed.dietary)) {
-        return { dietary: parsed.dietary };
+      try {
+        const parsed: unknown = JSON.parse(stored);
+        const dietary = (parsed as Partial<FilterState> | null)?.dietary;
+        if (isValidFilter(dietary)) {
+          return { dietary };
+        }
+      } catch {
+        // Unparseable — fall through to removal below.
       }
+      // A corrupt or outdated value would otherwise re-fail on every load.
+      localStorage.removeItem(FILTER_STORAGE_KEY);
     }
   } catch {
-    // ignore
+    // localStorage itself is unavailable; nothing to clean up.
   }
 
   return { dietary: "all" };
