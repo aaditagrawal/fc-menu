@@ -16,6 +16,10 @@ import { hasMenuDays, isValidWeekMenu } from "@/lib/menuWeek";
 // fails to parse at all is discarded by the persist layer itself.
 function deserializeValidated(cached: string): PersistedClient {
   const client = JSON.parse(cached) as PersistedClient;
+  // An unexpected overall shape must not throw here — the persist layer would
+  // respond by discarding the entire cache when at worst only the bad entries
+  // deserve to go. Hand it back and let the buster/version checks handle it.
+  if (!Array.isArray(client?.clientState?.queries)) return client;
   client.clientState.queries = client.clientState.queries.filter((query) => {
     if (query.queryKey[0] !== "weekMenu") return true;
     const { data } = query.state;
