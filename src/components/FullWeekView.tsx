@@ -65,7 +65,7 @@ export function FullWeekView({ weekId }: { weekId: WeekId }) {
       return (
         <ErrorState
           message="This week's menu hasn't been published yet"
-          hint="It usually goes up at the start of the week. If you think it should be here, Try Again clears this site's saved data and reloads from scratch."
+          hint="It usually goes up at the start of the week. If you think it should be here, Reset App Data clears this site's saved data and reloads from scratch."
         />
       );
     }

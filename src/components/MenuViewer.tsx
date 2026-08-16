@@ -33,7 +33,7 @@ import { StaleWeekNotice } from "@/components/StaleWeekNotice";
 import { ErrorState } from "@/components/ErrorState";
 import { JainFallbackNotice } from "@/components/JainFallbackNotice";
 import { hasMenuDays, isEmptyWeekResult } from "@/lib/menuWeek";
-import { hardResetAndReload } from "@/lib/hardReset";
+import { HardResetButton } from "@/components/HardResetButton";
 import { invalidateStaticManifestCache, selectEffectiveWeek } from "@/lib/staticMenuBundle";
 
 export type WeekId = string;
@@ -111,10 +111,6 @@ export function MenuViewer({
   const [now, setNow] = React.useState(() => getISTNow());
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [refreshNonce, setRefreshNonce] = React.useState(0);
-  // Two-tap reset: first tap arms the button, second actually wipes. The armed
-  // state disarms itself so a stray tap can't linger as a loaded gun.
-  const [resetStage, setResetStage] = React.useState<"idle" | "confirm" | "resetting">("idle");
-  const resetDisarmTimeoutRef = React.useRef<number | null>(null);
   // Baked build-time data must never render during SSR/hydration: day and meal
   // highlighting depend on the user's clock, not the build's.
   const [isHydrated, setIsHydrated] = React.useState(false);
@@ -159,12 +155,7 @@ export function MenuViewer({
       setNow(getISTNow());
     }, 60 * 1000);
 
-    return () => {
-      clearInterval(interval);
-      if (resetDisarmTimeoutRef.current !== null) {
-        window.clearTimeout(resetDisarmTimeoutRef.current);
-      }
-    };
+    return () => clearInterval(interval);
   });
 
   // Derive whether user's day selection applies to the current week
@@ -232,27 +223,6 @@ export function MenuViewer({
     }
   }, [initialWeekId, isRefreshing, queryClient, router]);
 
-  const handleResetAppData = React.useCallback(() => {
-    if (resetStage === "resetting") {
-      return;
-    }
-
-    if (resetStage === "idle") {
-      setResetStage("confirm");
-      resetDisarmTimeoutRef.current = window.setTimeout(() => setResetStage("idle"), 5000);
-      return;
-    }
-
-    if (resetDisarmTimeoutRef.current !== null) {
-      window.clearTimeout(resetDisarmTimeoutRef.current);
-      resetDisarmTimeoutRef.current = null;
-    }
-    setResetStage("resetting");
-    hardResetAndReload().catch(() => {
-      window.location.reload();
-    });
-  }, [resetStage]);
-
   const handleDietaryFilterChange = React.useCallback((filter: DietaryFilterType) => {
     setDietaryFilter(filter);
     setFilterState({ dietary: filter });
@@ -309,7 +279,7 @@ export function MenuViewer({
       return (
         <ErrorState
           message="This week's menu hasn't been published yet"
-          hint="It usually goes up at the start of the week. If you think it should be here, Try Again clears this site's saved data and reloads from scratch."
+          hint="It usually goes up at the start of the week. If you think it should be here, Reset App Data clears this site's saved data and reloads from scratch."
         />
       );
     }
@@ -432,25 +402,6 @@ export function MenuViewer({
               "Refresh Data"
             )}
           </Button>
-
-          <Button
-            onClick={handleResetAppData}
-            disabled={resetStage === "resetting"}
-            variant={resetStage === "confirm" ? "destructive" : "ghost"}
-            title="Clear all saved app data and reload"
-            aria-busy={resetStage === "resetting"}
-          >
-            {resetStage === "resetting" ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Resetting...
-              </>
-            ) : resetStage === "confirm" ? (
-              "Confirm Reset?"
-            ) : (
-              "Reset App Data"
-            )}
-          </Button>
         </div>
 
         {/* Desktop-only carousel navigation - far right */}
@@ -474,6 +425,11 @@ export function MenuViewer({
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
+      </div>
+
+      {/* Kept apart from the routine actions above: this one wipes everything. */}
+      <div className="mt-2">
+        <HardResetButton size="sm" className="text-muted-foreground" />
       </div>
     </div>
   );

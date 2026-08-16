@@ -121,6 +121,14 @@ export async function hardResetSiteData() {
 export async function hardResetAndReload() {
   if (typeof window === "undefined") return;
 
+  // Offline, the service worker and CacheStorage hold the only copy of the app
+  // the browser can still serve — wiping them and navigating would brick the
+  // PWA until the network returns. Refuse; callers fall back to a plain
+  // reload, which the cached app still answers.
+  if (!navigator.onLine) {
+    throw new Error("Refusing to reset app data while offline");
+  }
+
   await hardResetSiteData();
 
   // The cache-busting param guarantees the navigation isn't answered from the
