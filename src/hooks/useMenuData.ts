@@ -12,6 +12,7 @@ import {
   weeksCoverToday,
   type MenuType,
 } from "@/lib/staticMenuBundle";
+import { EmptyWeekError, hasMenuDays } from "@/lib/menuWeek";
 
 const API_BASE = process.env.NEXT_PUBLIC_MENU_API_URL ?? "https://tikm.coolstuff.work";
 
@@ -66,7 +67,12 @@ export function useWeeksInfo() {
         }
         return { weeks };
       } catch {
-        return fetchLiveHistory();
+        const live = await fetchLiveHistory();
+        // An empty week list is the same manufactured "success" the menu
+        // endpoints produce on failure; treat it as an error so it is retried
+        // rather than persisted as the truth.
+        if (!live.weeks?.length) throw new Error("Menu history is empty");
+        return live;
       }
     },
     staleTime: 0,
@@ -76,31 +82,55 @@ export function useWeeksInfo() {
   });
 }
 
+async function fetchWeekMenu(weekId: string | null, menuType: MenuType): Promise<WeekMenu> {
+  const endpoint = menuType === "jain" ? "jain-menu" : "menu";
+  const startDate = normalizeWeekIdToStartDate(weekId);
+
+  try {
+    const manifest = await fetchStaticManifest();
+    const entry = getWeeksForType(manifest, menuType).find(
+      (week) => week.startDate === startDate,
+    );
+    if (entry) {
+      const staticWeek = await fetchStaticWeek(entry);
+      if (hasMenuDays(staticWeek)) return staticWeek;
+    }
+  } catch {
+    // Fall through to the live API for local development or incomplete static bundles.
+  }
+
+  const res = await fetch(`${API_BASE}/api/${endpoint}?weekStart=${startDate}&v=2`);
+  // 404 is the API saying this week has no menu of this type — an absence, not
+  // a failure. A 503 or anything else is a real fault and stays a plain error
+  // so it retries and falls back to the baked bundle.
+  if (res.status === 404) throw new EmptyWeekError(weekId);
+  if (!res.ok) throw new Error(`Failed to fetch week menu: ${weekId}`);
+
+  const week = (await res.json()) as WeekMenu;
+  // Older API builds report that same absence as a 200 with an empty menu.
+  // Rejecting it here keeps the payload out of the persisted cache, so one
+  // momentary backend blip can't follow the visitor around for days.
+  if (!hasMenuDays(week)) throw new EmptyWeekError(weekId);
+  return week;
+}
+
+function retryWeekQuery(failureCount: number, error: unknown) {
+  // An empty week is a definite answer, not a flake — retrying just stalls the
+  // UI before it can fall back.
+  if (error instanceof EmptyWeekError) return false;
+  return failureCount < 1;
+}
+
 export function useWeekMenu(weekId: string | null, menuType: MenuType = "normal") {
   const isMonday = isTodayMonday();
-  const endpoint = menuType === "jain" ? "jain-menu" : "menu";
 
   return useQuery({
     queryKey: ["weekMenu", weekId, menuType],
-    queryFn: async (): Promise<WeekMenu> => {
-      const startDate = normalizeWeekIdToStartDate(weekId);
-      try {
-        const manifest = await fetchStaticManifest();
-        const entry = getWeeksForType(manifest, menuType).find(
-          (week) => week.startDate === startDate,
-        );
-        if (entry) return fetchStaticWeek(entry);
-      } catch {
-        // Fall through to the live API for local development or incomplete static bundles.
-      }
-
-      const res = await fetch(`${API_BASE}/api/${endpoint}?weekStart=${startDate}&v=2`);
-      if (!res.ok) throw new Error(`Failed to fetch week menu: ${weekId}`);
-      return res.json();
-    },
+    queryFn: () => fetchWeekMenu(weekId, menuType),
     staleTime: 0,
     gcTime: isMonday ? 15 * 60 * 1000 : 60 * 60 * 1000,
     enabled: !!weekId,
+    retry: retryWeekQuery,
     refetchOnMount: "always",
     refetchOnWindowFocus: false,
   });
@@ -131,26 +161,10 @@ export function usePrefetchWeekMenu() {
   const queryClient = useQueryClient();
 
   return (weekId: string, menuType: MenuType = "normal") => {
-    const endpoint = menuType === "jain" ? "jain-menu" : "menu";
-
     queryClient.prefetchQuery({
       queryKey: ["weekMenu", weekId, menuType],
-      queryFn: async (): Promise<WeekMenu> => {
-        const startDate = normalizeWeekIdToStartDate(weekId);
-        try {
-          const manifest = await fetchStaticManifest();
-          const entry = getWeeksForType(manifest, menuType).find(
-            (week) => week.startDate === startDate,
-          );
-          if (entry) return fetchStaticWeek(entry);
-        } catch {
-          // Fall through to live API fallback.
-        }
-
-        const res = await fetch(`${API_BASE}/api/${endpoint}?weekStart=${startDate}&v=2`);
-        if (!res.ok) throw new Error(`Failed to prefetch week menu: ${weekId}`);
-        return res.json();
-      },
+      queryFn: () => fetchWeekMenu(weekId, menuType),
+      retry: retryWeekQuery,
     });
   };
 }

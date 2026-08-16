@@ -28,7 +28,7 @@ export function QueryProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, buster: "v3" }}>
+    <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, buster: "v4" }}>
       {children}
     </PersistQueryClientProvider>
   );
