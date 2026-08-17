@@ -61,19 +61,50 @@ export const MealCarousel = React.forwardRef<
     };
   });
 
+  // iOS-style rubber band when navigating past either end: the rail nudges
+  // outward and springs back with one damped overshoot. WAAPI on the scroller
+  // (transform only) so it runs on the compositor; the edge scrims are
+  // siblings, so they stay put while the content shifts under them.
+  const bounceAnimation = React.useRef<Animation | null>(null);
+  const bounceEdge = React.useCallback((direction: "start" | "end") => {
+    const container = containerRef.current;
+    if (!container) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const shift = direction === "start" ? 16 : -16;
+    bounceAnimation.current?.cancel();
+    bounceAnimation.current = container.animate(
+      [
+        { transform: "translateX(0)" },
+        { transform: `translateX(${shift}px)`, offset: 0.3 },
+        { transform: `translateX(${shift * -0.25}px)`, offset: 0.7 },
+        { transform: "translateX(0)" },
+      ],
+      { duration: 340, easing: "cubic-bezier(0.23, 1, 0.32, 1)" },
+    );
+  }, []);
+
   const goPrev = React.useCallback(() => {
     const container = containerRef.current;
     if (!container) return;
+    if (container.scrollLeft <= 1) {
+      bounceEdge("start");
+      return;
+    }
     const scrollAmount = container.clientWidth * 0.6;
     container.scrollBy({ left: -scrollAmount, behavior: "smooth" });
-  }, []);
+  }, [bounceEdge]);
 
   const goNext = React.useCallback(() => {
     const container = containerRef.current;
     if (!container) return;
+    const maxScroll = container.scrollWidth - container.clientWidth;
+    if (container.scrollLeft >= maxScroll - 1) {
+      bounceEdge("end");
+      return;
+    }
     const scrollAmount = container.clientWidth * 0.6;
     container.scrollBy({ left: scrollAmount, behavior: "smooth" });
-  }, []);
+  }, [bounceEdge]);
 
   React.useImperativeHandle(ref, () => ({ goPrev, goNext }), [goPrev, goNext]);
 
@@ -117,7 +148,9 @@ export const MealCarousel = React.forwardRef<
                 itemRefs.current[idx] = el;
               }}
               className={cn(
-                "carousel-card snap-center w-[85%] sm:w-[60%] md:w-[50%] lg:w-[38%] flex-shrink-0 px-1 transition-[transform,opacity] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none",
+                // Tailwind v4 emits scale-* as the standalone `scale` property,
+                // so it must be listed explicitly — `transform` won't animate it.
+                "carousel-card snap-center w-[85%] sm:w-[60%] md:w-[50%] lg:w-[38%] flex-shrink-0 px-1 transition-[scale,opacity] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none",
                 isHighlighted
                   ? "opacity-100 scale-100"
                   : "opacity-60 scale-[0.97] motion-reduce:scale-100",

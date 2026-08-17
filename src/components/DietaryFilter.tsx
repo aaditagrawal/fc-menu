@@ -50,7 +50,8 @@ export function DietaryFilter({ value, onChange, className }: DietaryFilterProps
             key={option.value}
             onClick={() => onChange(option.value)}
             className={cn(
-              "relative h-7 px-3 rounded-full text-xs font-medium transition-[background-color,color,box-shadow] flex items-center gap-1.5",
+              "relative h-7 px-3 rounded-full text-xs font-medium transition-[background-color,color,box-shadow,scale] duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] flex items-center gap-1.5",
+              "active:scale-[0.96] motion-reduce:active:scale-100 motion-reduce:transition-none",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               mainValue === option.value
                 ? "bg-background text-foreground shadow-sm"
@@ -68,7 +69,7 @@ export function DietaryFilter({ value, onChange, className }: DietaryFilterProps
         role="switch"
         aria-checked={isJain}
         onClick={() => onChange(isJain ? "all" : "jain")}
-        className="flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full"
+        className="group flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full"
       >
         <span
           className={cn(
@@ -84,10 +85,13 @@ export function DietaryFilter({ value, onChange, className }: DietaryFilterProps
             isJain ? "bg-amber-500" : "bg-muted-foreground/30",
           )}
         >
+          {/* iOS switch detail: the knob stretches inward from its anchored
+              side while pressed, then springs to the other side on release. */}
           <div
             className={cn(
               "absolute top-[2px] h-[14px] w-[14px] rounded-full bg-white shadow-sm transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
-              isJain ? "translate-x-[16px]" : "translate-x-[2px]",
+              "group-active:scale-x-[1.25] motion-reduce:group-active:scale-x-100",
+              isJain ? "translate-x-[16px] origin-right" : "translate-x-[2px] origin-left",
             )}
           />
         </div>
