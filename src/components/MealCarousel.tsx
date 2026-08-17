@@ -137,6 +137,17 @@ export const MealCarousel = React.forwardRef<
           );
         })}
       </div>
+      {/* Edge fades are static overlay scrims, not a mask-image on the
+          scroller: masking a scroll container can knock it off composited
+          scrolling (notably in Safari), while these layers never repaint. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 left-0 w-6 sm:w-12 bg-linear-to-r from-background to-transparent"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 right-0 w-6 sm:w-12 bg-linear-to-l from-background to-transparent"
+      />
     </div>
   );
 });
