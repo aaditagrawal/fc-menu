@@ -1,4 +1,6 @@
-import type { WeekMenu } from "@/lib/types";
+import { isJsonObject, isJsonString, type JsonValue } from "@/lib/json";
+import { MEAL_KEYS } from "@/lib/types";
+import type { DayMenu, Meal, MenuItem, WeekMenu } from "@/lib/types";
 
 /**
  * A week with no days is never something to render.
@@ -17,24 +19,75 @@ export function hasMenuDays(week: WeekMenu | null | undefined): week is WeekMenu
   return week != null && Object.keys(week.menu ?? {}).length > 0;
 }
 
+function parseStringArray(value: JsonValue): string[] {
+  return Array.isArray(value) ? value.filter(isJsonString) : [];
+}
+
 /**
- * Structural check for data crossing a trust boundary — a live API payload,
- * a static bundle file, or a week restored from the persisted cache. Anything
- * that fails is a fault (bad payload, corrupted storage), not an absent menu,
- * so callers treat it as a plain retriable error rather than EmptyWeekError.
+ * V1 payloads carried a bare string per item; V2 carries a tagged object.
+ * Upgrading V1 here is what lets the rest of the app work with one item shape.
+ * A legacy item has no tags, so tag-driven filters see it as plain food.
  */
-export function isValidWeekMenu(value: unknown): value is WeekMenu {
-  if (typeof value !== "object" || value === null) return false;
-  const { foodCourt, week, menu } = value as Record<string, unknown>;
-  if (typeof foodCourt !== "string" || typeof week !== "string") return false;
-  if (typeof menu !== "object" || menu === null || Array.isArray(menu)) return false;
-  return Object.values(menu).every((day) => {
-    if (typeof day !== "object" || day === null) return false;
-    const dayMenu = day as Record<string, unknown>;
-    return (
-      typeof dayMenu.day === "string" && typeof dayMenu.meals === "object" && dayMenu.meals !== null
-    );
-  });
+function parseMenuItem(value: JsonValue): MenuItem | null {
+  if (isJsonString(value)) return { name: value, tags: [] };
+  if (!isJsonObject(value) || !isJsonString(value.name)) return null;
+  return { name: value.name, tags: parseStringArray(value.tags) };
+}
+
+/**
+ * A meal that cannot be decoded is dropped rather than failing its whole week:
+ * one malformed meal is not a reason to blank a menu that otherwise renders,
+ * and every reader already treats a meal lookup as optional.
+ */
+function parseMeal(value: JsonValue): Meal | null {
+  if (!isJsonObject(value)) return null;
+  const { name, startTime, endTime, items } = value;
+  if (!isJsonString(name) || !isJsonString(startTime) || !isJsonString(endTime)) return null;
+  if (!Array.isArray(items)) return null;
+
+  const meal: Meal = {
+    name,
+    startTime,
+    endTime,
+    items: items.map(parseMenuItem).filter((item) => item !== null),
+  };
+  // Absent and empty allergens are different: readers render the section on
+  // presence, so an absent list must stay absent.
+  const allergens = value.allergens;
+  return Array.isArray(allergens) ? { ...meal, allergens: parseStringArray(allergens) } : meal;
+}
+
+function parseDayMenu(value: JsonValue): DayMenu | null {
+  if (!isJsonObject(value) || !isJsonString(value.day) || !isJsonObject(value.meals)) return null;
+
+  const meals: DayMenu["meals"] = {};
+  for (const key of MEAL_KEYS) {
+    const meal = parseMeal(value.meals[key]);
+    if (meal !== null) meals[key] = meal;
+  }
+  return { day: value.day, meals };
+}
+
+/**
+ * Decode data crossing a trust boundary — a live API payload, a static bundle
+ * file, or a week restored from the persisted cache — into a WeekMenu.
+ *
+ * `null` means the payload is not a week at all. Callers treat that as a fault
+ * (bad payload, corrupted storage), not an absent menu, so it becomes a plain
+ * retriable error rather than EmptyWeekError.
+ */
+export function parseWeekMenu(value: JsonValue): WeekMenu | null {
+  if (!isJsonObject(value)) return null;
+  const { foodCourt, week, menu } = value;
+  if (!isJsonString(foodCourt) || !isJsonString(week) || !isJsonObject(menu)) return null;
+
+  const days: WeekMenu["menu"] = {};
+  for (const [dateKey, day] of Object.entries(menu)) {
+    const parsed = parseDayMenu(day);
+    if (parsed === null) return null;
+    days[dateKey] = parsed;
+  }
+  return { foodCourt, week, menu: days };
 }
 
 /** Thrown by the week queries so an empty payload is never cached as data. */

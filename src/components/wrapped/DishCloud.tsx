@@ -18,7 +18,7 @@ export function DishCloud({ variations, maxCount = 15, accentColor = "rose" }: D
     return "";
   };
 
-  const getTagStyle = (index: number): { bgClass: string; textClass: string } => {
+  const getTagStyle = (index: number) => {
     if (index === 0) {
       // Top item gets accent background with white text for contrast
       return {

@@ -23,7 +23,9 @@ export interface MealStats {
 export interface DayPattern {
   dayName: string;
   signature: string[];
-  frequency: Record<string, number>;
+  // Sparse: each day counts only the dishes it actually served, so a lookup for
+  // any other dish name comes back absent.
+  frequency: Record<string, number | undefined>;
 }
 
 export interface FunFact {

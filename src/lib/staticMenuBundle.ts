@@ -1,6 +1,6 @@
 import { formatDateKey, getISTNow } from "@/lib/date";
 import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
-import type { WeekMenu } from "@/lib/types";
+import type { JsonValue } from "@/lib/json";
 
 export type MenuType = "normal" | "jain";
 
@@ -106,7 +106,8 @@ export async function fetchStaticManifest(): Promise<StaticMenuManifest> {
   return manifestPromise;
 }
 
-export async function fetchStaticWeek(entry: StaticWeekEntry): Promise<WeekMenu> {
+/** Undecoded on purpose — the caller runs parseWeekMenu on the payload. */
+export async function fetchStaticWeek(entry: StaticWeekEntry): Promise<JsonValue> {
   // Week files are content-hashed (a revised menu gets a new path via the
   // manifest), so the browser's HTTP cache can hold them indefinitely.
   const res = await fetchWithTimeout(entry.path);

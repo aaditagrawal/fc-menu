@@ -82,7 +82,9 @@ async function unregisterServiceWorkers() {
 }
 
 async function clearIndexedDb() {
-  if (typeof indexedDB === "undefined" || typeof indexedDB.databases !== "function") return;
+  // Feature detection by presence: `indexedDB` is absent outside a browser, and
+  // `databases()` is absent on engines that never shipped it (Firefox < 126).
+  if (!("indexedDB" in globalThis) || !("databases" in indexedDB)) return;
 
   try {
     const databases = await indexedDB.databases();
@@ -103,7 +105,7 @@ async function clearIndexedDb() {
 
 /** Wipe every client-side store this origin can reach. Never throws. */
 export async function hardResetSiteData() {
-  if (typeof window === "undefined") return;
+  if (!("window" in globalThis)) return;
 
   expireCookies();
   clearWebStorage();
@@ -112,7 +114,7 @@ export async function hardResetSiteData() {
 
 /** Wipe client-side state, then reload onto a guaranteed-fresh document. */
 export async function hardResetAndReload() {
-  if (typeof window === "undefined") return;
+  if (!("window" in globalThis)) return;
 
   // Offline, the service worker and CacheStorage hold the only copy of the app
   // the browser can still serve — wiping them and navigating would brick the

@@ -74,8 +74,8 @@ export function useSmoothScroll() {
       const container = containerRef.current;
       if (!container) return;
 
-      const elements = container.querySelectorAll(selector);
-      const element = elements[index] as HTMLElement | undefined;
+      const element: HTMLElement | undefined =
+        container.querySelectorAll<HTMLElement>(selector)[index];
       if (element) scrollToElement(element);
     },
     [scrollToElement],

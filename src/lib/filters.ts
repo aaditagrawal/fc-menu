@@ -1,3 +1,5 @@
+import { isJsonObject, type JsonValue } from "./json";
+import { MEAL_KEYS } from "./types";
 import type { MenuItem, Meal, DayMenu, WeekMenu } from "./types";
 
 /**
@@ -22,7 +24,7 @@ const FILTER_STORAGE_KEY = "menu-dietary-filter";
  * Get the current filter state from localStorage.
  */
 export function getFilterState(): FilterState {
-  if (typeof window === "undefined") {
+  if (!("window" in globalThis)) {
     return { dietary: "all" };
   }
 
@@ -30,10 +32,9 @@ export function getFilterState(): FilterState {
     const stored = localStorage.getItem(FILTER_STORAGE_KEY);
     if (stored) {
       try {
-        const parsed: unknown = JSON.parse(stored);
-        const dietary = (parsed as Partial<FilterState> | null)?.dietary;
-        if (isValidFilter(dietary)) {
-          return { dietary };
+        const parsed: JsonValue = JSON.parse(stored);
+        if (isJsonObject(parsed) && isValidFilter(parsed.dietary)) {
+          return { dietary: parsed.dietary };
         }
       } catch {
         // Unparseable — fall through to removal below.
@@ -52,7 +53,7 @@ export function getFilterState(): FilterState {
  * Save the filter state to localStorage.
  */
 export function setFilterState(state: FilterState): void {
-  if (typeof window === "undefined") return;
+  if (!("window" in globalThis)) return;
 
   try {
     localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(state));
@@ -64,24 +65,18 @@ export function setFilterState(state: FilterState): void {
 /**
  * Check if a value is a valid dietary filter.
  */
-function isValidFilter(value: unknown): value is DietaryFilter {
+function isValidFilter(value: JsonValue): value is DietaryFilter {
   return value === "all" || value === "veg-only" || value === "non-veg-only" || value === "jain";
 }
 
 /**
  * Filter menu items based on dietary preference.
- * Handles both V1 (string) and V2 (MenuItem) formats gracefully.
+ *
+ * Legacy V1 payloads carried bare strings with no tags at all; parseWeekMenu
+ * upgrades those to tagless MenuItems, which keeps the original behaviour that
+ * an untagged item survives every filter.
  */
-export function filterMenuItems(items: MenuItem[], filter: DietaryFilter): MenuItem[];
-export function filterMenuItems(items: string[], filter: DietaryFilter): string[];
-export function filterMenuItems(
-  items: (MenuItem | string)[],
-  filter: DietaryFilter,
-): (MenuItem | string)[];
-export function filterMenuItems(
-  items: (MenuItem | string)[],
-  filter: DietaryFilter,
-): (MenuItem | string)[] {
+export function filterMenuItems(items: MenuItem[], filter: DietaryFilter): MenuItem[] {
   if (filter === "all" || filter === "jain") {
     // 'jain' filter is handled at API level, show all items from Jain endpoint
     return items;
@@ -89,20 +84,14 @@ export function filterMenuItems(
 
   if (filter === "veg-only") {
     // Remove items tagged as non-veg or non-veg-special
-    return items.filter((item) => {
-      if (typeof item === "string") return true; // V1 format, can't filter
-      const tags = item.tags ?? [];
-      return !tags.includes("non-veg") && !tags.includes("non-veg-special");
-    });
+    return items.filter(
+      (item) => !item.tags.includes("non-veg") && !item.tags.includes("non-veg-special"),
+    );
   }
 
   if (filter === "non-veg-only") {
     // Remove veg-special items, keep everything else
-    return items.filter((item) => {
-      if (typeof item === "string") return true; // V1 format, can't filter
-      const tags = item.tags ?? [];
-      return !tags.includes("veg-special");
-    });
+    return items.filter((item) => !item.tags.includes("veg-special"));
   }
 
   return items;
@@ -122,15 +111,15 @@ export function filterMeal(meal: Meal, filter: DietaryFilter): Meal {
  * Filter a day menu based on dietary preference.
  */
 export function filterDayMenu(dayMenu: DayMenu, filter: DietaryFilter): DayMenu {
-  const filteredMeals: DayMenu["meals"] = {} as DayMenu["meals"];
+  const filteredMeals: DayMenu["meals"] = {};
 
-  for (const [key, meal] of Object.entries(dayMenu.meals)) {
-    if (meal) {
-      const filtered = filterMeal(meal, filter);
-      // Only include meal if it has items after filtering
-      if (filtered.items.length > 0) {
-        filteredMeals[key as keyof DayMenu["meals"]] = filtered;
-      }
+  for (const key of MEAL_KEYS) {
+    const meal = dayMenu.meals[key];
+    if (!meal) continue;
+    const filtered = filterMeal(meal, filter);
+    // Only include meal if it has items after filtering
+    if (filtered.items.length > 0) {
+      filteredMeals[key] = filtered;
     }
   }
 
@@ -158,37 +147,28 @@ export function filterWeekMenu(weekMenu: WeekMenu, filter: DietaryFilter): WeekM
 
 /**
  * Check if a menu item is a special (veg-special, non-veg-special, or other-special).
- * Handles both V1 (string) and V2 (MenuItem) formats gracefully.
  */
-export function isSpecial(item: MenuItem | string): boolean {
-  if (typeof item === "string") return false;
-  const tags = item.tags ?? [];
+export function isSpecial(item: MenuItem): boolean {
   return (
-    tags.includes("veg-special") ||
-    tags.includes("non-veg-special") ||
-    tags.includes("other-special")
+    item.tags.includes("veg-special") ||
+    item.tags.includes("non-veg-special") ||
+    item.tags.includes("other-special")
   );
 }
 
 /**
  * Get the special type for a menu item.
- * Handles both V1 (string) and V2 (MenuItem) formats gracefully.
  */
-export function getSpecialType(item: MenuItem | string): "veg" | "non-veg" | "other" | null {
-  if (typeof item === "string") return null;
-  const tags = item.tags ?? [];
-  if (tags.includes("veg-special")) return "veg";
-  if (tags.includes("non-veg-special")) return "non-veg";
-  if (tags.includes("other-special")) return "other";
+export function getSpecialType(item: MenuItem): "veg" | "non-veg" | "other" | null {
+  if (item.tags.includes("veg-special")) return "veg";
+  if (item.tags.includes("non-veg-special")) return "non-veg";
+  if (item.tags.includes("other-special")) return "other";
   return null;
 }
 
 /**
  * Check if a menu item is non-vegetarian.
- * Handles both V1 (string) and V2 (MenuItem) formats gracefully.
  */
-export function isNonVeg(item: MenuItem | string): boolean {
-  if (typeof item === "string") return false;
-  const tags = item.tags ?? [];
-  return tags.includes("non-veg");
+export function isNonVeg(item: MenuItem): boolean {
+  return item.tags.includes("non-veg");
 }

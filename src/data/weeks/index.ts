@@ -1,4 +1,6 @@
 import type { WeekMenu, WeekMeta } from "@/lib/types";
+import type { JsonValue } from "@/lib/json";
+import { parseWeekMenu } from "@/lib/menuWeek";
 import { sortDateKeysAsc } from "@/lib/date";
 import { selectEffectiveWeek } from "@/lib/staticMenuBundle";
 import { promises as fs } from "node:fs";
@@ -47,7 +49,9 @@ async function fetchMenuFromAPI(params?: {
   if (!res.ok) {
     throw new Error(`Menu API error: ${res.status}`);
   }
-  const data = (await res.json()) as WeekMenu;
+  const payload: JsonValue = await res.json();
+  const data = parseWeekMenu(payload);
+  if (data === null) throw new Error(`Malformed week menu payload from ${url.pathname}`);
   return data;
 }
 
@@ -88,7 +92,10 @@ export async function getWeekMenu(id: WeekId): Promise<WeekMenu> {
   if (entry) {
     const filePath = path.join(process.cwd(), "public", entry.path.replace(/^\//, ""));
     const raw = await fs.readFile(filePath, "utf-8");
-    return JSON.parse(raw) as WeekMenu;
+    const parsed: JsonValue = JSON.parse(raw);
+    const week = parseWeekMenu(parsed);
+    if (week === null) throw new Error(`Malformed static week menu: ${entry.path}`);
+    return week;
   }
 
   return fetchMenuFromAPI({ weekStart: start });
@@ -134,6 +141,11 @@ function computeWeekIdFromEntry(entry: StaticWeekEntry): WeekId {
 async function readStaticManifest(): Promise<StaticMenuManifest | null> {
   try {
     const raw = await fs.readFile(STATIC_MANIFEST_PATH, "utf-8");
+    // SAFETY: this file is not external input — `scripts/build-menu-data.mjs` in
+    // this repo writes it to this fixed path during `bun run build`, so its
+    // shape ships with the code that reads it. A bundle that is absent or not
+    // valid JSON is caught here and answers null, and every caller falls back to
+    // the live API in that case.
     return JSON.parse(raw) as StaticMenuManifest;
   } catch {
     return null;
