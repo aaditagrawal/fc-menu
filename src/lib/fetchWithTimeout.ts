@@ -7,9 +7,10 @@
  */
 const FETCH_TIMEOUT_MS = 15_000;
 
-const hasSignalTimeout =
-  typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function";
-const hasSignalAny = typeof AbortSignal !== "undefined" && typeof AbortSignal.any === "function";
+// Feature detection by presence: both statics landed well after AbortSignal
+// itself, so an engine either exposes them or does not have them at all.
+const hasSignalTimeout = "AbortSignal" in globalThis && "timeout" in AbortSignal;
+const hasSignalAny = "AbortSignal" in globalThis && "any" in AbortSignal;
 
 export async function fetchWithTimeout(input: string | URL, init?: RequestInit) {
   let deadline: AbortSignal;

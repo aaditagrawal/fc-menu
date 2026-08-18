@@ -8,11 +8,7 @@ import { Coffee, UtensilsCrossed, Cookie, Moon } from "lucide-react";
 import { filterMenuItems } from "@/lib/exceptions";
 import { isNonVeg, getSpecialType } from "@/lib/filters";
 
-function getItemName(item: MenuItem | string): string {
-  return typeof item === "string" ? item : item.name;
-}
-
-function getItemClasses(item: MenuItem | string): string {
+function getItemClasses(item: MenuItem): string {
   const special = getSpecialType(item);
   const nonVeg = isNonVeg(item);
 
@@ -29,13 +25,7 @@ function getItemClasses(item: MenuItem | string): string {
   return "bg-muted border-border/30";
 }
 
-function MealItems({
-  items,
-  withBackdrop,
-}: {
-  items: Array<MenuItem | string>;
-  withBackdrop?: boolean;
-}) {
+function MealItems({ items, withBackdrop }: { items: MenuItem[]; withBackdrop?: boolean }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
       {items.map((item, idx) => (
@@ -47,7 +37,7 @@ function MealItems({
             getItemClasses(item),
           )}
         >
-          {getItemName(item)}
+          {item.name}
         </div>
       ))}
     </div>

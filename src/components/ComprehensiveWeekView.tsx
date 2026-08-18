@@ -272,7 +272,7 @@ function MobileCompactWeekGrid({ week, sortedDays }: { week: WeekMenu; sortedDay
                                   key={`${mealKey}-${dateKey}-${idx}`}
                                   className="text-[10px] leading-tight text-foreground/90"
                                 >
-                                  {typeof item === "string" ? item : item.name}
+                                  {item.name}
                                 </p>
                               ))}
                             </div>
@@ -359,7 +359,7 @@ const MealGridCard = React.memo(function MealGridCard({
                 key={idx}
                 className="text-xs rounded-md bg-muted/50 px-2 py-1 leading-tight border border-border/20"
               >
-                {typeof item === "string" ? item : item.name}
+                {item.name}
               </div>
             ))
           ) : (

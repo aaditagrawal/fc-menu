@@ -5,15 +5,17 @@ interface DayPatternsSlideProps {
   patterns: DayPattern[];
 }
 
-const DAY_EMOJIS: Record<string, string> = {
-  Monday: "📅",
-  Tuesday: "🌮",
-  Wednesday: "🐫",
-  Thursday: "🍕",
-  Friday: "🎉",
-  Saturday: "🌟",
-  Sunday: "☀️",
-};
+// A Map rather than an object: `dayName` arrives as a plain string from the
+// stats file, and a Map looks up an arbitrary key without a cast.
+const DAY_EMOJIS = new Map([
+  ["Monday", "📅"],
+  ["Tuesday", "🌮"],
+  ["Wednesday", "🐫"],
+  ["Thursday", "🍕"],
+  ["Friday", "🎉"],
+  ["Saturday", "🌟"],
+  ["Sunday", "☀️"],
+]);
 
 export function DayPatternsSlide({ patterns }: DayPatternsSlideProps) {
   return (
@@ -40,7 +42,7 @@ export function DayPatternsSlide({ patterns }: DayPatternsSlideProps) {
               }}
             >
               <div className="flex items-center justify-center gap-2 mb-3">
-                <span className="text-xl">{DAY_EMOJIS[pattern.dayName] || "📆"}</span>
+                <span className="text-xl">{DAY_EMOJIS.get(pattern.dayName) ?? "📆"}</span>
                 <span className="font-semibold">{pattern.dayName}</span>
               </div>
               <div className="space-y-1 w-full">

@@ -12,7 +12,10 @@ function useClickOutside(
   useEffect(() => {
     if (!open) return;
     function onDocClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      // A target that is not a Node cannot be inside the menu, so it closes too
+      // — same outcome the old `contains` call produced for those events.
+      const target = e.target;
+      if (ref.current && (!(target instanceof Node) || !ref.current.contains(target))) {
         onClose();
       }
     }

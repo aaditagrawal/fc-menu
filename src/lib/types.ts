@@ -1,4 +1,7 @@
-export type MealKey = "breakfast" | "lunch" | "snacks" | "dinner";
+/** The meals a day can carry, in the order they are served. */
+export const MEAL_KEYS = ["breakfast", "lunch", "snacks", "dinner"] as const;
+
+export type MealKey = (typeof MEAL_KEYS)[number];
 
 // V1 types (legacy - items as strings)
 export interface MealV1 {
@@ -24,7 +27,10 @@ export interface Meal {
 
 export interface DayMenu {
   day: string; // e.g. Monday
-  meals: Record<MealKey, Meal>;
+  // Partial on purpose: a day routinely omits meals (no snacks on a Sunday), a
+  // dietary filter can empty one out, and every reader already guards the
+  // lookup. Declaring it total only pushed that truth into non-null assertions.
+  meals: Partial<Record<MealKey, Meal>>;
 }
 
 export interface WeekMenu {

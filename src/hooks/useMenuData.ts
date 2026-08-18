@@ -13,7 +13,8 @@ import {
   type MenuType,
   type StaticMenuManifest,
 } from "@/lib/staticMenuBundle";
-import { EmptyWeekError, hasMenuDays, isValidWeekMenu } from "@/lib/menuWeek";
+import { EmptyWeekError, hasMenuDays, parseWeekMenu } from "@/lib/menuWeek";
+import type { JsonValue } from "@/lib/json";
 import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
 
 const API_BASE = process.env.NEXT_PUBLIC_MENU_API_URL ?? "https://tikm.coolstuff.work";
@@ -99,8 +100,8 @@ async function fetchWeekMenu(weekId: string | null, menuType: MenuType): Promise
     const entry = getWeeksForType(manifest, menuType).find((week) => week.startDate === startDate);
     if (entry) {
       try {
-        const staticWeek: unknown = await fetchStaticWeek(entry);
-        if (isValidWeekMenu(staticWeek) && hasMenuDays(staticWeek)) return staticWeek;
+        const staticWeek = parseWeekMenu(await fetchStaticWeek(entry));
+        if (staticWeek !== null && hasMenuDays(staticWeek)) return staticWeek;
       } catch {
         // Fall through to the live API.
       }
@@ -133,10 +134,11 @@ async function fetchWeekMenu(weekId: string | null, menuType: MenuType): Promise
   if (res.status === 404) throw new EmptyWeekError(weekId);
   if (!res.ok) throw new Error(`Failed to fetch week menu: ${weekId}`);
 
-  const week: unknown = await res.json();
+  const payload: JsonValue = await res.json();
   // A structurally wrong payload is a fault, not an absence — keep it a plain
   // error so it retries instead of reading as "no menu this week".
-  if (!isValidWeekMenu(week)) throw new Error(`Malformed week menu payload: ${weekId}`);
+  const week = parseWeekMenu(payload);
+  if (week === null) throw new Error(`Malformed week menu payload: ${weekId}`);
   // Older API builds report that same absence as a 200 with an empty menu.
   // Rejecting it here keeps the payload out of the persisted cache, so one
   // momentary backend blip can't follow the visitor around for days.
@@ -144,7 +146,7 @@ async function fetchWeekMenu(weekId: string | null, menuType: MenuType): Promise
   return week;
 }
 
-function retryWeekQuery(failureCount: number, error: unknown) {
+function retryWeekQuery(failureCount: number, error: Error) {
   // An empty week is a definite answer, not a flake — retrying just stalls the
   // UI before it can fall back.
   if (error instanceof EmptyWeekError) return false;

@@ -50,7 +50,7 @@ function LoadingState() {
 }
 
 function getPreferredFoodCourtFromCookie() {
-  if (typeof document === "undefined") {
+  if (!("document" in globalThis)) {
     return null;
   }
 
@@ -73,7 +73,7 @@ function isMenuQuery(query: { queryKey: readonly unknown[] }) {
 }
 
 async function clearPersistedMenuCaches() {
-  if (typeof window === "undefined") {
+  if (!("window" in globalThis)) {
     return;
   }
 
@@ -329,7 +329,7 @@ export function MenuViewer({
     .filter((m) => m.meal.items.length > 0);
 
   const picked = pickHighlightMealForDay(week, resolvedDateKey, now);
-  const highlightKey = (picked?.mealKey ?? meals[0]?.key ?? "breakfast") as MealKey;
+  const highlightKey = picked?.mealKey ?? meals[0]?.key ?? "breakfast";
   const isPrimaryUpcoming = Boolean(picked?.isPrimaryUpcoming);
   const isLive = Boolean(picked?.isLive);
 
