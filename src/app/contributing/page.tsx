@@ -1,9 +1,29 @@
+import * as stylex from "@stylexjs/stylex";
+
+import { sxc } from "@/lib/utils";
+
 export const dynamic = "force-static";
+
+const styles = stylex.create({
+  page: {
+    minHeight: "100vh",
+    paddingInline: {
+      default: "1rem",
+      "@media (min-width: 640px)": "1.5rem",
+      "@media (min-width: 768px)": "2rem",
+    },
+    paddingBlock: "2rem",
+  },
+  inner: {
+    marginInline: "auto",
+    maxWidth: "48rem",
+  },
+});
 
 export default function ContributingPage() {
   return (
-    <div className="min-h-screen px-4 py-8 sm:px-6 md:px-8">
-      <div className="mx-auto max-w-3xl prose prose-zinc dark:prose-invert">
+    <div {...stylex.props(styles.page)}>
+      <div {...sxc("prose prose-zinc dark:prose-invert", styles.inner)}>
         <h1>Contributing</h1>
         <p className="lead">
           Thanks for your interest in improving this menu viewer! The app now fetches data from an

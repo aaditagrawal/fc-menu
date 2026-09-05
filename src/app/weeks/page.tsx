@@ -1,32 +1,85 @@
 import Link from "next/link";
+import * as stylex from "@stylexjs/stylex";
+
 import { getAllWeeks } from "@/data/weeks";
 import { Button } from "@/components/ui/button";
 import { Grid3X3, Calendar } from "lucide-react";
 
+const styles = stylex.create({
+  page: {
+    paddingInline: {
+      default: "1rem",
+      "@media (min-width: 640px)": "1.5rem",
+      "@media (min-width: 768px)": "2rem",
+    },
+    paddingBlock: "2rem",
+  },
+  inner: {
+    marginInline: "auto",
+    maxWidth: "48rem",
+    display: "flex",
+    flexDirection: "column",
+    rowGap: "1.5rem",
+  },
+  heading: {
+    fontSize: "1.5rem",
+    lineHeight: "calc(2 / 1.5)",
+    fontWeight: 600,
+  },
+  list: {
+    display: "flex",
+    flexDirection: "column",
+    rowGap: "0.75rem",
+  },
+  listItem: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingInline: "0.75rem",
+    paddingBlock: "0.75rem",
+    borderRadius: "var(--radius)",
+    borderWidth: "1px",
+  },
+  weekLink: {
+    textDecorationLine: "underline",
+    fontWeight: 500,
+  },
+  actions: {
+    display: "flex",
+    columnGap: "0.5rem",
+    rowGap: "0.5rem",
+  },
+  icon: {
+    height: "0.75rem",
+    width: "0.75rem",
+    marginRight: "0.25rem",
+  },
+});
+
 export default async function WeeksPage() {
   const weeks = await getAllWeeks();
   return (
-    <div className="px-4 py-8 sm:px-6 md:px-8">
-      <div className="mx-auto max-w-3xl space-y-6">
-        <h1 className="text-2xl font-semibold">Past & Upcoming Weeks</h1>
-        <ul className="space-y-3">
+    <div {...stylex.props(styles.page)}>
+      <div {...stylex.props(styles.inner)}>
+        <h1 {...stylex.props(styles.heading)}>Past & Upcoming Weeks</h1>
+        <ul {...stylex.props(styles.list)}>
           {weeks.map((id) => (
-            <li key={id} className="flex items-center justify-between p-3 rounded-lg border">
+            <li key={id} {...stylex.props(styles.listItem)}>
               <div>
-                <Link href={`/week/${id}`} className="underline font-medium">
+                <Link href={`/week/${id}`} {...stylex.props(styles.weekLink)}>
                   {id}
                 </Link>
               </div>
-              <div className="flex gap-2">
+              <div {...stylex.props(styles.actions)}>
                 <Button asChild variant="outline" size="sm">
                   <Link href={`/week/${id}`} title="View daily menu">
-                    <Calendar className="h-3 w-3 mr-1" />
+                    <Calendar {...stylex.props(styles.icon)} />
                     Daily
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="sm">
                   <Link href={`/week/full?id=${id}`} title="View full week menu">
-                    <Grid3X3 className="h-3 w-3 mr-1" />
+                    <Grid3X3 {...stylex.props(styles.icon)} />
                     Full
                   </Link>
                 </Button>

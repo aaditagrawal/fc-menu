@@ -1,17 +1,33 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { cn } from "@/lib/utils";
+import * as stylex from "@stylexjs/stylex";
+import { sxc } from "@/lib/utils";
+
+const styles = stylex.create({
+  mono: {
+    fontFamily: "var(--font-mono)",
+  },
+});
 
 interface StatNumberProps {
   value: number;
   suffix?: string;
   prefix?: string;
+  /** wrapped.css classes only (e.g. "accent-rose") */
   className?: string;
+  style?: stylex.StyleXStyles;
   duration?: number;
 }
 
-export function StatNumber({ value, suffix, prefix, className, duration = 800 }: StatNumberProps) {
+export function StatNumber({
+  value,
+  suffix,
+  prefix,
+  className,
+  style,
+  duration = 800,
+}: StatNumberProps) {
   const [displayValue, setDisplayValue] = useState(0);
   const [hasAnimated, setHasAnimated] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -61,7 +77,10 @@ export function StatNumber({ value, suffix, prefix, className, duration = 800 }:
   };
 
   return (
-    <div ref={ref} className={cn("stat-number font-mono", className)}>
+    <div
+      ref={ref}
+      {...sxc(["stat-number", className].filter(Boolean).join(" "), styles.mono, style)}
+    >
       {prefix}
       {displayValue.toLocaleString()}
       {suffix}

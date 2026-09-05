@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import * as stylex from "@stylexjs/stylex";
 import type { MealKey, WeekMenu } from "@/lib/types";
 import {
   findCurrentOrUpcomingMeal,
@@ -35,6 +36,125 @@ import { JainFallbackNotice } from "@/components/JainFallbackNotice";
 import { hasMenuDays, isEmptyWeekResult } from "@/lib/menuWeek";
 import { HardResetButton } from "@/components/HardResetButton";
 import { invalidateStaticManifestCache, selectEffectiveWeek } from "@/lib/staticMenuBundle";
+import { sxc } from "@/lib/utils";
+
+const spin = stylex.keyframes({
+  from: { transform: "rotate(0deg)" },
+  to: { transform: "rotate(360deg)" },
+});
+
+const styles = stylex.create({
+  loadingWrap: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingBlock: "3rem",
+  },
+  loadingSpinner: {
+    height: "2rem",
+    width: "2rem",
+    color: "var(--muted-foreground)",
+    animationName: spin,
+    animationDuration: "1s",
+    animationTimingFunction: "linear",
+    animationIterationCount: "infinite",
+  },
+  // The old `space-y-4` container: flex column + gap renders identically for
+  // these block children. Child margins below are adjusted for the gap.
+  root: {
+    display: "flex",
+    flexDirection: "column",
+    rowGap: "1rem",
+  },
+  header: {
+    display: "flex",
+    flexDirection: "column",
+    rowGap: "0.75rem",
+  },
+  titleBlock: {
+    display: "flex",
+    flexDirection: "column",
+    rowGap: "0.375rem",
+  },
+  title: {
+    fontSize: {
+      default: "26px",
+      "@media (min-width: 640px)": "32px",
+    },
+    fontWeight: 600,
+    letterSpacing: "-0.02em",
+    lineHeight: 1.1,
+  },
+  selectsRow: {
+    display: "flex",
+    flexWrap: "wrap",
+    alignItems: "center",
+    columnGap: "1rem",
+    rowGap: "0.5rem",
+  },
+  textSm: {
+    fontSize: "0.875rem",
+    lineHeight: "calc(1.25 / 0.875)",
+  },
+  // Old spacing: `mt-6` collapsed with the previous sibling's `space-y-4`
+  // bottom margin to 1.5rem; the parent gap provides 1rem, so 0.5rem remains.
+  actionsRow: {
+    display: "flex",
+    flexDirection: {
+      default: "column",
+      "@media (min-width: 640px)": "row",
+    },
+    alignItems: {
+      default: null,
+      "@media (min-width: 640px)": "center",
+    },
+    justifyContent: "space-between",
+    rowGap: "0.75rem",
+    columnGap: "0.75rem",
+    marginTop: "0.5rem",
+  },
+  actionsGroup: {
+    display: "flex",
+    flexWrap: "wrap",
+    alignItems: "center",
+    rowGap: "0.5rem",
+    columnGap: "0.5rem",
+  },
+  buttonIcon: {
+    height: "1rem",
+    width: "1rem",
+    marginRight: "0.5rem",
+  },
+  buttonSpinner: {
+    height: "1rem",
+    width: "1rem",
+    marginRight: "0.5rem",
+    animationName: spin,
+    animationDuration: "1s",
+    animationTimingFunction: "linear",
+    animationIterationCount: "infinite",
+  },
+  desktopNav: {
+    display: {
+      default: "none",
+      "@media (min-width: 640px)": "flex",
+    },
+    alignItems: "center",
+    rowGap: "0.25rem",
+    columnGap: "0.25rem",
+  },
+  navButton: {
+    height: "2rem",
+    width: "2rem",
+  },
+  navIcon: {
+    height: "1rem",
+    width: "1rem",
+  },
+  mutedText: {
+    color: "var(--muted-foreground)",
+  },
+});
 
 export type WeekId = string;
 
@@ -43,8 +163,8 @@ const MENU_QUERY_ROOT_KEYS = new Set(["weekMenu", "weeksInfo"]);
 // Same spinner FullWeekView shows — loading must never be a blank screen.
 function LoadingState() {
   return (
-    <div className="flex items-center justify-center py-12">
-      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+    <div {...stylex.props(styles.loadingWrap)}>
+      <Loader2 {...stylex.props(styles.loadingSpinner)} />
     </div>
   );
 }
@@ -336,24 +456,24 @@ export function MenuViewer({
   const isRefreshButtonBusy = isRefreshing || activeWeekQuery.isFetching;
 
   return (
-    <div className="space-y-4 content-loaded">
+    <div {...sxc("content-loaded", styles.root)}>
       {jainWeekIsEmpty && (
         <JainFallbackNotice onShowRegular={() => handleDietaryFilterChange("all")} />
       )}
       {showStaleWeekNotice && <StaleWeekNotice weekLabel={week.week} />}
-      <header className="mb-4 space-y-3">
-        <div className="space-y-1.5">
-          <h1 className="text-[26px] sm:text-[32px] font-semibold tracking-[-0.02em] leading-[1.1]">
+      <header {...stylex.props(styles.header)}>
+        <div {...stylex.props(styles.titleBlock)}>
+          <h1 {...stylex.props(styles.title)}>
             {resolvedFoodCourt.replace(/Food Court (\d+)/, "Food Court $1")}: Menu
           </h1>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <div {...stylex.props(styles.selectsRow)}>
             {foodCourtOptions.length > 1 && (
               <InlineSelect
                 label="Mess"
                 value={resolvedFoodCourt}
                 options={foodCourtOptions}
                 onChange={(v) => handleFoodCourtChange(String(v))}
-                className="text-sm"
+                style={styles.textSm}
               />
             )}
             <InlineSelect
@@ -361,7 +481,7 @@ export function MenuViewer({
               value={resolvedDateKey}
               options={dayOptions}
               onChange={(v) => handleDayChange(String(v))}
-              className="text-sm"
+              style={styles.textSm}
             />
           </div>
         </div>
@@ -377,11 +497,11 @@ export function MenuViewer({
         isLive={isLive}
       />
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-6">
-        <div className="flex flex-wrap items-center gap-2">
+      <div {...stylex.props(styles.actionsRow)}>
+        <div {...stylex.props(styles.actionsGroup)}>
           <Button asChild variant="outline">
             <Link href={`/week/full?id=${fullWeekId}`} title="View full week menu">
-              <Grid3X3 className="h-4 w-4 mr-2" />
+              <Grid3X3 {...stylex.props(styles.buttonIcon)} />
               View Full Week Menu
             </Link>
           </Button>
@@ -395,7 +515,7 @@ export function MenuViewer({
           >
             {isRefreshButtonBusy ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 {...stylex.props(styles.buttonSpinner)} />
                 Refreshing...
               </>
             ) : (
@@ -405,31 +525,32 @@ export function MenuViewer({
         </div>
 
         {/* Desktop-only carousel navigation - far right */}
-        <div className="hidden sm:flex items-center gap-1">
+        <div {...stylex.props(styles.desktopNav)}>
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8"
+            style={styles.navButton}
             onClick={() => carouselRef.current?.goPrev()}
             aria-label="Previous meal"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft {...stylex.props(styles.navIcon)} />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8"
+            style={styles.navButton}
             onClick={() => carouselRef.current?.goNext()}
             aria-label="Next meal"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight {...stylex.props(styles.navIcon)} />
           </Button>
         </div>
       </div>
 
-      {/* Kept apart from the routine actions above: this one wipes everything. */}
-      <div className="mt-2">
-        <HardResetButton size="sm" className="text-muted-foreground" />
+      {/* Kept apart from the routine actions above: this one wipes everything.
+          Old `mt-2` collapsed into the 1rem space-y margin, now the parent gap. */}
+      <div>
+        <HardResetButton size="sm" style={styles.mutedText} />
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import * as stylex from "@stylexjs/stylex";
 import Link from "next/link";
 import { ComprehensiveWeekView } from "@/components/ComprehensiveWeekView";
 import { useWeekMenu } from "@/hooks/useMenuData";
@@ -19,6 +20,79 @@ import { useMountEffect } from "@/hooks/useMountEffect";
 import { ErrorState } from "@/components/ErrorState";
 import { JainFallbackNotice } from "@/components/JainFallbackNotice";
 import { hasMenuDays, isEmptyWeekResult } from "@/lib/menuWeek";
+
+const spin = stylex.keyframes({
+  from: { transform: "rotate(0deg)" },
+  to: { transform: "rotate(360deg)" },
+});
+
+const styles = stylex.create({
+  loadingWrap: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingBlock: "3rem",
+  },
+  loadingSpinner: {
+    height: "2rem",
+    width: "2rem",
+    color: "var(--muted-foreground)",
+    animationName: spin,
+    animationDuration: "1s",
+    animationTimingFunction: "linear",
+    animationIterationCount: "infinite",
+  },
+  // Former `space-y-2` container: flex column + gap is identical for these
+  // block children.
+  root: {
+    display: "flex",
+    flexDirection: "column",
+    rowGap: "0.5rem",
+  },
+  headerRow: {
+    display: "flex",
+    flexDirection: {
+      default: "column",
+      "@media (min-width: 640px)": "row",
+    },
+    alignItems: {
+      default: null,
+      "@media (min-width: 640px)": "center",
+    },
+    justifyContent: "space-between",
+    rowGap: "1rem",
+    columnGap: "1rem",
+  },
+  title: {
+    fontSize: {
+      default: "1.5rem",
+      "@media (min-width: 640px)": "1.875rem",
+    },
+    lineHeight: {
+      default: "calc(2 / 1.5)",
+      "@media (min-width: 640px)": "calc(2.25 / 1.875)",
+    },
+    fontWeight: 600,
+  },
+  subtitle: {
+    color: "var(--muted-foreground)",
+  },
+  headerActions: {
+    display: "flex",
+    alignItems: "center",
+    rowGap: "0.75rem",
+    columnGap: "0.75rem",
+    alignSelf: {
+      default: "flex-start",
+      "@media (min-width: 640px)": "auto",
+    },
+  },
+  buttonIcon: {
+    height: "1rem",
+    width: "1rem",
+    marginRight: "0.5rem",
+  },
+});
 
 export function FullWeekView({ weekId }: { weekId: WeekId }) {
   const [dietaryFilter, setDietaryFilter] = React.useState<DietaryFilterType>("all");
@@ -54,8 +128,8 @@ export function FullWeekView({ weekId }: { weekId: WeekId }) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div {...stylex.props(styles.loadingWrap)}>
+        <Loader2 {...stylex.props(styles.loadingSpinner)} />
       </div>
     );
   }
@@ -73,20 +147,20 @@ export function FullWeekView({ weekId }: { weekId: WeekId }) {
   }
 
   return (
-    <div className="space-y-2">
+    <div {...stylex.props(styles.root)}>
       {jainWeekIsEmpty && <JainFallbackNotice onShowRegular={() => handleFilterChange("all")} />}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div {...stylex.props(styles.headerRow)}>
         <div>
-          <h1 className="text-2xl sm:text-3xl font-semibold">Full Week Menu</h1>
-          <p className="text-muted-foreground">
+          <h1 {...stylex.props(styles.title)}>Full Week Menu</h1>
+          <p {...stylex.props(styles.subtitle)}>
             {week.week} • {week.foodCourt}
           </p>
         </div>
-        <div className="flex items-center gap-3 self-start sm:self-auto">
+        <div {...stylex.props(styles.headerActions)}>
           <DietaryFilter value={dietaryFilter} onChange={handleFilterChange} />
           <Button asChild variant="outline">
             <Link href="/" title="Back to daily view">
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft {...stylex.props(styles.buttonIcon)} />
               Daily View
             </Link>
           </Button>

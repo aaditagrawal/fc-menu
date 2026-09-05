@@ -1,8 +1,63 @@
 "use client";
 
+import * as stylex from "@stylexjs/stylex";
 import { useOfflineStatus } from "@/hooks/useMenuData";
 import { WifiOff, Wifi } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { easing } from "@/lib/tokens.stylex";
+
+const styles = stylex.create({
+  banner: {
+    position: "fixed",
+    bottom: "1rem",
+    left: "1rem",
+    right: "1rem",
+    zIndex: 50,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    columnGap: "0.5rem",
+    rowGap: "0.5rem",
+    borderRadius: "var(--radius)",
+    paddingInline: "1rem",
+    paddingBlock: "0.75rem",
+    fontSize: "0.875rem",
+    lineHeight: "calc(1.25 / 0.875)",
+    fontWeight: 500,
+    boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+    // Matches the old Tailwind `transition-[transform,opacity]`: the `translate`
+    // property is intentionally NOT in the list, so the slide position snaps
+    // while only the opacity animates.
+    transitionProperty: {
+      default: "transform, opacity",
+      "@media (prefers-reduced-motion: reduce)": "none",
+    },
+    transitionTimingFunction: easing.spring,
+  },
+  visible: {
+    translate: "0px 0px",
+    opacity: 1,
+    transitionDuration: "300ms",
+  },
+  hidden: {
+    translate: "0px calc(100% + 1.5rem)",
+    opacity: 0,
+    transitionDuration: "200ms",
+    pointerEvents: "none",
+  },
+  offline: {
+    backgroundColor: "oklch(76.9% 0.188 70.08)",
+    color: "#fff",
+  },
+  online: {
+    backgroundColor: "oklch(72.3% 0.219 149.579)",
+    color: "#fff",
+  },
+  icon: {
+    height: "1rem",
+    width: "1rem",
+  },
+});
 
 function useOfflineBannerVisibility(isOffline: boolean) {
   const wasOffline = useRef(false);
@@ -32,20 +87,20 @@ export function OfflineBanner() {
   return (
     <div
       aria-hidden={!visible}
-      className={`fixed bottom-4 left-4 right-4 z-50 flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-medium shadow-lg transition-[transform,opacity] ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none ${
-        visible
-          ? "translate-y-0 opacity-100 duration-300"
-          : "translate-y-[calc(100%+1.5rem)] opacity-0 duration-200 pointer-events-none"
-      } ${isOffline ? "bg-amber-500 text-white" : "bg-green-500 text-white"}`}
+      {...stylex.props(
+        styles.banner,
+        visible ? styles.visible : styles.hidden,
+        isOffline ? styles.offline : styles.online,
+      )}
     >
       {isOffline ? (
         <>
-          <WifiOff className="h-4 w-4" />
+          <WifiOff {...stylex.props(styles.icon)} />
           <span>You&apos;re offline. Showing cached data.</span>
         </>
       ) : (
         <>
-          <Wifi className="h-4 w-4" />
+          <Wifi {...stylex.props(styles.icon)} />
           <span>Back online! Data synced.</span>
         </>
       )}
