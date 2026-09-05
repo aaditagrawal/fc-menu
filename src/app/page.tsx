@@ -1,5 +1,26 @@
+import * as stylex from "@stylexjs/stylex";
+
 import { MenuViewer } from "@/components/MenuViewer";
 import { getEffectiveWeekMenu } from "@/data/weeks";
+import { sxc } from "@/lib/utils";
+
+const styles = stylex.create({
+  page: {
+    paddingInline: {
+      default: "1rem",
+      "@media (min-width: 640px)": "1.5rem",
+      "@media (min-width: 768px)": "2rem",
+    },
+    paddingBlock: "2rem",
+  },
+  inner: {
+    marginInline: "auto",
+    maxWidth: "56rem",
+    display: "flex",
+    flexDirection: "column",
+    rowGap: "1.5rem",
+  },
+});
 
 export const metadata = {
   title: {
@@ -16,8 +37,8 @@ export default async function Home() {
   const initialWeek = await getEffectiveWeekMenu();
 
   return (
-    <div className="px-4 py-8 sm:px-6 md:px-8 scroll-optimized">
-      <div className="mx-auto max-w-4xl space-y-6">
+    <div {...sxc("scroll-optimized", styles.page)}>
+      <div {...stylex.props(styles.inner)}>
         <MenuViewer initialWeekId={null} initialWeek={initialWeek} />
       </div>
     </div>

@@ -1,10 +1,85 @@
 "use client";
 
 import * as React from "react";
+import * as stylex from "@stylexjs/stylex";
 import type { Meal, MealKey } from "@/lib/types";
 import { MealCard } from "@/components/MealCard";
-import { cn } from "@/lib/utils";
+import { sxc } from "@/lib/utils";
 import { useMountEffect } from "@/hooks/useMountEffect";
+
+const styles = stylex.create({
+  root: {
+    position: "relative",
+    overflow: "visible",
+  },
+  scroller: {
+    display: "flex",
+    rowGap: "1rem",
+    columnGap: "1rem",
+    overflowX: "auto",
+    paddingBlock: "1rem",
+    paddingInline: {
+      default: "0.75rem",
+      "@media (min-width: 640px)": "0",
+    },
+    scrollSnapType: "x mandatory",
+    borderRadius: "1rem",
+    outlineStyle: {
+      default: null,
+      ":focus-visible": "none",
+    },
+    boxShadow: {
+      default: null,
+      ":focus-visible":
+        "0 0 0 2px var(--background), 0 0 0 4px color-mix(in oklab, var(--ring) 40%, transparent)",
+    },
+  },
+  // Highlight scale/opacity are declared here, but the transition itself is
+  // owned by the `carousel-card` global class cascade (globals.css), which
+  // swaps to a scroll-driven animation where `animation-timeline: view()` is
+  // supported.
+  item: {
+    scrollSnapAlign: "center",
+    width: {
+      default: "85%",
+      "@media (min-width: 640px)": "60%",
+      "@media (min-width: 768px)": "50%",
+      "@media (min-width: 1024px)": "38%",
+    },
+    flexShrink: 0,
+    paddingInline: "0.25rem",
+  },
+  itemHighlighted: {
+    opacity: 1,
+    scale: "1",
+  },
+  itemDimmed: {
+    opacity: 0.6,
+    // Tailwind v4 emits scale-* as the standalone `scale` property,
+    // so it must be listed explicitly — `transform` won't animate it.
+    scale: {
+      default: "0.97",
+      "@media (prefers-reduced-motion: reduce)": "1",
+    },
+  },
+  scrim: {
+    pointerEvents: "none",
+    position: "absolute",
+    insetBlock: 0,
+    width: {
+      default: "1.5rem",
+      "@media (min-width: 640px)": "3rem",
+    },
+  },
+  scrimLeft: {
+    left: 0,
+    backgroundImage: "linear-gradient(to right in oklab, var(--background), transparent)",
+  },
+  scrimRight: {
+    right: 0,
+    backgroundImage: "linear-gradient(to left in oklab, var(--background), transparent)",
+  },
+});
 
 export interface MealCarouselHandle {
   goPrev: () => void;
@@ -127,11 +202,11 @@ export const MealCarousel = React.forwardRef<
   });
 
   return (
-    <div className="relative overflow-visible">
+    <div {...stylex.props(styles.root)}>
       <div
         ref={containerRef}
         tabIndex={0}
-        className="flex gap-4 overflow-x-auto py-4 px-3 sm:px-0 snap-x snap-mandatory scrollbar-hide rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        {...sxc("scrollbar-hide", styles.scroller)}
         style={{
           scrollbarWidth: "none",
           msOverflowStyle: "none",
@@ -147,13 +222,10 @@ export const MealCarousel = React.forwardRef<
               ref={(el) => {
                 itemRefs.current[idx] = el;
               }}
-              className={cn(
-                // Tailwind v4 emits scale-* as the standalone `scale` property,
-                // so it must be listed explicitly — `transform` won't animate it.
-                "carousel-card snap-center w-[85%] sm:w-[60%] md:w-[50%] lg:w-[38%] flex-shrink-0 px-1 transition-[scale,opacity] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none",
-                isHighlighted
-                  ? "opacity-100 scale-100"
-                  : "opacity-60 scale-[0.97] motion-reduce:scale-100",
+              {...sxc(
+                "carousel-card",
+                styles.item,
+                isHighlighted ? styles.itemHighlighted : styles.itemDimmed,
               )}
             >
               <MealCard
@@ -173,14 +245,8 @@ export const MealCarousel = React.forwardRef<
       {/* Edge fades are static overlay scrims, not a mask-image on the
           scroller: masking a scroll container can knock it off composited
           scrolling (notably in Safari), while these layers never repaint. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-y-0 left-0 w-6 sm:w-12 bg-linear-to-r from-background to-transparent"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-y-0 right-0 w-6 sm:w-12 bg-linear-to-l from-background to-transparent"
-      />
+      <div aria-hidden {...stylex.props(styles.scrim, styles.scrimLeft)} />
+      <div aria-hidden {...stylex.props(styles.scrim, styles.scrimRight)} />
     </div>
   );
 });

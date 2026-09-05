@@ -1,6 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import * as stylex from "@stylexjs/stylex";
+import { sxc } from "@/lib/utils";
+
+const styles = stylex.create({
+  // Was `hidden sm:flex`. Note: like the original Tailwind utilities, this
+  // loses to the unlayered `.nav-dots { display: flex }` rule in wrapped.css.
+  navDisplay: {
+    display: {
+      default: "none",
+      "@media (min-width: 640px)": "flex",
+    },
+  },
+});
 
 interface WrappedContainerProps {
   children: React.ReactNode;
@@ -68,7 +81,7 @@ export function WrappedContainer({ children, slideCount }: WrappedContainerProps
       </div>
 
       {/* Navigation dots */}
-      <div className="nav-dots hidden sm:flex">
+      <div {...sxc("nav-dots", styles.navDisplay)}>
         {Array.from({ length: slideCount }).map((_, i) => (
           <button
             key={i}

@@ -1,10 +1,10 @@
 "use client";
 
 import * as React from "react";
+import * as stylex from "@stylexjs/stylex";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { hardResetAndReload } from "@/lib/hardReset";
-import { cn } from "@/lib/utils";
 
 /**
  * The one-tap version of clearing site data by hand, gated behind a two-tap
@@ -16,11 +16,33 @@ import { cn } from "@/lib/utils";
 const DISARM_AFTER_MS = 5000;
 const MIN_CONFIRM_DELAY_MS = 500;
 
+const spin = stylex.keyframes({
+  from: { transform: "rotate(0deg)" },
+  to: { transform: "rotate(360deg)" },
+});
+
+const styles = stylex.create({
+  // Fixed minimum width so the label swap can't shift the layout under an
+  // in-progress tap.
+  button: {
+    minWidth: "9rem",
+  },
+  spinner: {
+    height: "1rem",
+    width: "1rem",
+    marginRight: "0.5rem",
+    animationName: spin,
+    animationDuration: "1s",
+    animationTimingFunction: "linear",
+    animationIterationCount: "infinite",
+  },
+});
+
 export function HardResetButton({
-  className,
+  style,
   size,
 }: {
-  className?: string;
+  style?: stylex.StyleXStyles;
   size?: "default" | "sm";
 }) {
   const [stage, setStage] = React.useState<"idle" | "confirm" | "resetting">("idle");
@@ -69,15 +91,13 @@ export function HardResetButton({
       disabled={stage === "resetting"}
       variant={stage === "confirm" ? "destructive" : "ghost"}
       size={size}
-      // Fixed minimum width so the label swap can't shift the layout under an
-      // in-progress tap.
-      className={cn("min-w-36", className)}
+      style={[styles.button, style]}
       title="Clear all saved app data and reload"
       aria-busy={stage === "resetting"}
     >
       {stage === "resetting" ? (
         <>
-          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          <Loader2 {...stylex.props(styles.spinner)} />
           Resetting...
         </>
       ) : stage === "confirm" ? (

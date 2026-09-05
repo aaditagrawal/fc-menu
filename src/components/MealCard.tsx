@@ -1,41 +1,175 @@
 "use client";
 
 import * as React from "react";
+import * as stylex from "@stylexjs/stylex";
 import type { Meal, MealKey, MenuItem } from "@/lib/types";
 import { Card } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { sxc } from "@/lib/utils";
 import { Coffee, UtensilsCrossed, Cookie, Moon } from "lucide-react";
 import { filterMenuItems } from "@/lib/exceptions";
 import { isNonVeg, getSpecialType } from "@/lib/filters";
 
-function getItemClasses(item: MenuItem): string {
+const styles = stylex.create({
+  itemsGrid: {
+    display: "grid",
+    gridTemplateColumns: {
+      default: "repeat(1, minmax(0, 1fr))",
+      "@media (min-width: 640px)": "repeat(2, minmax(0, 1fr))",
+    },
+    rowGap: "0.5rem",
+    columnGap: "0.5rem",
+  },
+  item: {
+    borderRadius: "calc(var(--radius) - 2px)",
+    borderWidth: "1px",
+    paddingInline: "0.75rem",
+    paddingBlock: "0.5rem",
+    fontSize: "0.875rem",
+    lineHeight: "calc(1.25 / 0.875)",
+    overflowWrap: "break-word",
+  },
+  itemBackdrop: {
+    WebkitBackdropFilter: "blur(8px)",
+    backdropFilter: "blur(8px)",
+  },
+  // The badge-* custom properties flip with the `.dark` class (globals.css),
+  // replacing the old `dark:` utility variants.
+  badgeRed: {
+    backgroundColor: "var(--badge-red-bg)",
+    borderColor: "var(--badge-red-border)",
+    color: "var(--badge-red-text)",
+  },
+  badgeGreen: {
+    backgroundColor: "var(--badge-green-bg)",
+    borderColor: "var(--badge-green-border)",
+    color: "var(--badge-green-text)",
+  },
+  badgeBlue: {
+    backgroundColor: "var(--badge-blue-bg)",
+    borderColor: "var(--badge-blue-border)",
+    color: "var(--badge-blue-text)",
+  },
+  badgeNeutral: {
+    backgroundColor: "var(--muted)",
+    borderColor: "color-mix(in oklab, var(--border) 30%, transparent)",
+  },
+  headerRow: {
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    marginBottom: "1.25rem",
+  },
+  headerLeft: {
+    display: "flex",
+    alignItems: "center",
+    rowGap: "0.75rem",
+    columnGap: "0.75rem",
+  },
+  iconCircle: {
+    display: "inline-flex",
+    height: "2.25rem",
+    width: "2.25rem",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: "9999px",
+    backgroundColor: "color-mix(in oklab, var(--primary) 10%, transparent)",
+    boxShadow: "0 0 0 1px color-mix(in oklab, var(--primary) 10%, transparent)",
+  },
+  iconCircleOnGradient: {
+    WebkitBackdropFilter: "blur(8px)",
+    backdropFilter: "blur(8px)",
+    boxShadow: "0 0 0 1px color-mix(in oklab, #fff 20%, transparent)",
+  },
+  icon: {
+    height: "18px",
+    width: "18px",
+    // --meal-type-icon: var(--primary) in light, var(--foreground) in dark.
+    color: "var(--meal-type-icon)",
+  },
+  titleBlock: {
+    display: "flex",
+    flexDirection: "column",
+    rowGap: "0.125rem",
+  },
+  title: {
+    fontWeight: 600,
+    fontSize: "17px",
+    letterSpacing: "-0.01em",
+    lineHeight: 1,
+  },
+  time: {
+    fontSize: "13px",
+    color: "var(--muted-foreground)",
+    lineHeight: 1,
+  },
+  // Replicates the Card base (ui/card.tsx) — this shell stays a plain div so
+  // the `smooth-transition` / `elevated-card` global classes (which carry a
+  // `.dark` shadow variant) can be applied as class strings.
+  cardShell: {
+    borderRadius: "1rem",
+    borderWidth: "1px",
+    backgroundColor: "var(--card)",
+    color: "var(--card-foreground)",
+  },
+  cardShellHighlight: {
+    borderColor: "color-mix(in oklab, var(--border) 70%, transparent)",
+  },
+  cardShellIdle: {
+    borderColor: "color-mix(in oklab, var(--border) 40%, transparent)",
+    boxShadow: "none",
+  },
+  cardPad: {
+    position: "relative",
+    paddingBlock: "1.5rem",
+    paddingInline: "1.5rem",
+  },
+  gradientShell: {
+    borderRadius: "1rem",
+    paddingBlock: "1.5px",
+    paddingInline: "1.5px",
+    position: "relative",
+  },
+  gradientBg: (image: string) => ({
+    backgroundImage: image,
+  }),
+  gradientInner: {
+    borderRadius: "calc(1rem - 1.5px)",
+    backgroundColor: "var(--card)",
+    height: "100%",
+    width: "100%",
+  },
+  innerCard: {
+    backgroundColor: "transparent",
+    borderWidth: 0,
+    boxShadow: "none",
+    borderRadius: "inherit",
+  },
+});
+
+function getItemStyle(item: MenuItem) {
   const special = getSpecialType(item);
   const nonVeg = isNonVeg(item);
 
   if (special === "non-veg" || (nonVeg && !special)) {
-    return "bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-800/50 text-red-900 dark:text-red-100";
+    return styles.badgeRed;
   }
   if (special === "veg") {
-    return "bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800/50 text-green-900 dark:text-green-100";
+    return styles.badgeGreen;
   }
   if (special === "other") {
-    return "bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800/50 text-blue-900 dark:text-blue-100";
+    return styles.badgeBlue;
   }
 
-  return "bg-muted border-border/30";
+  return styles.badgeNeutral;
 }
 
 function MealItems({ items, withBackdrop }: { items: MenuItem[]; withBackdrop?: boolean }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+    <div {...stylex.props(styles.itemsGrid)}>
       {items.map((item, idx) => (
         <div
           key={idx}
-          className={cn(
-            "rounded-md border px-3 py-2 text-sm break-words",
-            withBackdrop && "backdrop-blur-sm",
-            getItemClasses(item),
-          )}
+          {...stylex.props(styles.item, withBackdrop && styles.itemBackdrop, getItemStyle(item))}
         >
           {item.name}
         </div>
@@ -117,24 +251,14 @@ function MealCardBase({
 
   const content = (
     <>
-      <div className="flex items-start justify-between mb-5">
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              "inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 ring-1 ring-primary/10",
-              gradient && "backdrop-blur-sm ring-white/20",
-            )}
-          >
-            <Icon
-              className="h-[18px] w-[18px] text-primary dark:text-foreground"
-              strokeWidth={1.75}
-            />
+      <div {...stylex.props(styles.headerRow)}>
+        <div {...stylex.props(styles.headerLeft)}>
+          <div {...stylex.props(styles.iconCircle, hasGradient && styles.iconCircleOnGradient)}>
+            <Icon {...stylex.props(styles.icon)} strokeWidth={1.75} />
           </div>
-          <div className="space-y-0.5">
-            <h3 className="font-semibold text-[17px] tracking-[-0.01em] leading-none">{title}</h3>
-            <p className="text-[13px] tabular-nums text-muted-foreground leading-none">
-              {timeRange}
-            </p>
+          <div {...stylex.props(styles.titleBlock)}>
+            <h3 {...stylex.props(styles.title)}>{title}</h3>
+            <p {...sxc("tabular-nums", styles.time)}>{timeRange}</p>
           </div>
         </div>
       </div>
@@ -144,26 +268,26 @@ function MealCardBase({
 
   if (!gradient) {
     return (
-      <Card
-        className={cn(
-          "smooth-transition bg-card border rounded-2xl",
-          highlight ? "border-border/70 elevated-card" : "border-border/40 shadow-none",
+      <div
+        {...sxc(
+          highlight ? "smooth-transition elevated-card" : "smooth-transition",
+          styles.cardShell,
+          highlight ? styles.cardShellHighlight : styles.cardShellIdle,
         )}
       >
-        <div className="relative p-6">{content}</div>
-      </Card>
+        <div {...stylex.props(styles.cardPad)}>{content}</div>
+      </div>
     );
   }
 
   return (
     <div
       ref={tiltRef}
-      className="rounded-2xl p-[1.5px] relative smooth-transition elevated-card"
-      style={{ background: gradient }}
+      {...sxc("smooth-transition elevated-card", styles.gradientShell, styles.gradientBg(gradient))}
     >
-      <div className="rounded-[calc(1rem-1.5px)] bg-card h-full w-full">
-        <Card className="bg-transparent border-0 shadow-none rounded-[inherit]">
-          <div className="relative p-6">{content}</div>
+      <div {...stylex.props(styles.gradientInner)}>
+        <Card style={styles.innerCard}>
+          <div {...stylex.props(styles.cardPad)}>{content}</div>
         </Card>
       </div>
     </div>

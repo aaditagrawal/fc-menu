@@ -1,8 +1,64 @@
 import Link from "next/link";
+import * as stylex from "@stylexjs/stylex";
 
 import { FullWeekView } from "@/components/FullWeekView";
 import type { WeekId } from "@/components/MenuViewer";
 import { Button } from "@/components/ui/button";
+
+const styles = stylex.create({
+  page: {
+    paddingInline: {
+      default: "1rem",
+      "@media (min-width: 640px)": "1.5rem",
+      "@media (min-width: 768px)": "2rem",
+    },
+    paddingBlock: "2rem",
+  },
+  inner: {
+    marginInline: "auto",
+    maxWidth: "100%",
+    display: "flex",
+    flexDirection: "column",
+    rowGap: "1.5rem",
+  },
+  banner: {
+    borderRadius: "var(--radius)",
+    borderWidth: "1px",
+    borderColor: "var(--border)",
+    backgroundColor: "color-mix(in oklab, var(--muted) 30%, transparent)",
+    paddingInline: "0.75rem",
+    paddingBlock: "0.5rem",
+    fontSize: "0.75rem",
+    lineHeight: "calc(1 / 0.75)",
+    color: "var(--muted-foreground)",
+    boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+  },
+  bannerRow: {
+    display: "flex",
+    flexWrap: "wrap",
+    alignItems: "center",
+    justifyContent: "space-between",
+    rowGap: "0.5rem",
+    columnGap: "0.5rem",
+  },
+  bannerText: {
+    display: "flex",
+    flexWrap: "wrap",
+    alignItems: "center",
+    rowGap: "0.25rem",
+    columnGap: "0.25rem",
+  },
+  bannerTitle: {
+    fontWeight: 600,
+    color: "var(--foreground)",
+  },
+  bannerButton: {
+    height: "1.75rem",
+    paddingInline: "0.5rem",
+    fontSize: "0.75rem",
+    lineHeight: "calc(1 / 0.75)",
+  },
+});
 
 interface PageProps {
   params: Promise<{ id: WeekId }>;
@@ -18,15 +74,15 @@ export default async function FullWeekPage({ params }: PageProps) {
   const { id } = await params;
 
   return (
-    <div className="px-4 py-8 sm:px-6 md:px-8">
-      <div className="mx-auto max-w-full space-y-6">
-        <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex flex-wrap items-center gap-1">
-              <span className="font-semibold text-foreground">You&apos;re on a week page.</span>
+    <div {...stylex.props(styles.page)}>
+      <div {...stylex.props(styles.inner)}>
+        <div {...stylex.props(styles.banner)}>
+          <div {...stylex.props(styles.bannerRow)}>
+            <div {...stylex.props(styles.bannerText)}>
+              <span {...stylex.props(styles.bannerTitle)}>You&apos;re on a week page.</span>
               <span>Want today&apos;s view instead?</span>
             </div>
-            <Button asChild variant="outline" className="h-7 px-2 text-xs">
+            <Button asChild variant="outline" style={styles.bannerButton}>
               <Link href="/" title="Go to current menu">
                 Current Menu
               </Link>

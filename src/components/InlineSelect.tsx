@@ -2,7 +2,93 @@
 
 import * as React from "react";
 import { useEffect } from "react";
-import { cn } from "@/lib/utils";
+import * as stylex from "@stylexjs/stylex";
+import { easing } from "@/lib/tokens.stylex";
+
+const menuIn = stylex.keyframes({
+  from: {
+    opacity: 0,
+    transform: "translateY(-0.25rem) scale(0.98)",
+  },
+});
+
+const styles = stylex.create({
+  wrap: {
+    position: "relative",
+    display: "inline-block",
+  },
+  trigger: {
+    textDecorationLine: "underline",
+    textDecorationStyle: "dotted",
+    textUnderlineOffset: "4px",
+    color: {
+      default: "color-mix(in oklab, var(--foreground) 90%, transparent)",
+      ":hover": "var(--foreground)",
+    },
+    paddingInline: "0.25rem",
+    paddingBlock: "0.125rem",
+    borderRadius: "0.25rem",
+    outlineStyle: {
+      default: null,
+      ":focus": "none",
+    },
+    boxShadow: {
+      default: null,
+      ":focus": "0 0 0 2px var(--ring)",
+    },
+    cursor: "pointer",
+    maxWidth: "100%",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  triggerValue: {
+    fontWeight: 500,
+  },
+  menu: {
+    position: "absolute",
+    zIndex: 50,
+    marginTop: "0.5rem",
+    minWidth: "220px",
+    borderRadius: "calc(var(--radius) + 4px)",
+    borderWidth: "1px",
+    borderColor: "color-mix(in oklab, var(--border) 70%, transparent)",
+    backgroundColor: "var(--popover)",
+    paddingInline: "0.25rem",
+    paddingBlock: "0.25rem",
+    boxShadow: "0 4px 14px -4px oklch(0 0 0/0.12),0 2px 6px -2px oklch(0 0 0/0.06)",
+    top: "100%",
+    left: 0,
+    transformOrigin: "top",
+    animationName: menuIn,
+    animationDuration: "150ms",
+    animationTimingFunction: easing.spring,
+  },
+  option: {
+    display: "block",
+    width: "100%",
+    textAlign: "left",
+    paddingInline: "0.75rem",
+    paddingBlock: "0.5rem",
+    borderRadius: "var(--radius)",
+    fontSize: "14px",
+    transitionProperty:
+      "color, background-color, border-color, outline-color, text-decoration-color, fill, stroke",
+    transitionDuration: "150ms",
+    transitionTimingFunction: easing.twDefault,
+    cursor: "pointer",
+  },
+  optionSelected: {
+    backgroundColor: "var(--muted)",
+    fontWeight: 500,
+  },
+  optionUnselected: {
+    backgroundColor: {
+      default: null,
+      ":hover": "color-mix(in oklab, var(--muted) 70%, transparent)",
+    },
+  },
+});
 
 function useClickOutside(
   ref: React.RefObject<HTMLElement | null>,
@@ -29,15 +115,13 @@ export function InlineSelect<T extends string | number>({
   value,
   options,
   onChange,
-  className,
-  menuClassName,
+  style,
 }: {
   label?: string;
   value: T;
   options: { label: string; value: T }[];
   onChange: (v: T) => void;
-  className?: string;
-  menuClassName?: string;
+  style?: stylex.StyleXStyles;
 }) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement | null>(null);
@@ -49,15 +133,11 @@ export function InlineSelect<T extends string | number>({
   const selected = options.find((o) => o.value === value);
 
   return (
-    <div ref={ref} className={cn("relative inline-block", className)}>
+    <div ref={ref} {...stylex.props(styles.wrap, style)}>
       <button
         ref={buttonRef}
         type="button"
-        className={cn(
-          "underline decoration-dotted underline-offset-4 text-foreground/90 hover:text-foreground",
-          "px-1 py-0.5 rounded focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer",
-          "max-w-full truncate",
-        )}
+        {...stylex.props(styles.trigger)}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -67,29 +147,19 @@ export function InlineSelect<T extends string | number>({
         aria-expanded={open}
       >
         {label ? `${label}: ` : null}
-        <span className="font-medium">{selected?.label ?? String(value)}</span>
+        <span {...stylex.props(styles.triggerValue)}>{selected?.label ?? String(value)}</span>
       </button>
       {open ? (
-        <div
-          role="listbox"
-          className={cn(
-            "absolute z-50 mt-2 min-w-[220px] rounded-xl border border-border/70 bg-popover p-1 shadow-[0_4px_14px_-4px_oklch(0_0_0/0.12),0_2px_6px_-2px_oklch(0_0_0/0.06)]",
-            "top-full left-0",
-            "origin-top animate-in fade-in-0 zoom-in-[0.98] slide-in-from-top-1 duration-150 ease-[cubic-bezier(0.16,1,0.3,1)]",
-            menuClassName,
-          )}
-          onClick={(e) => e.stopPropagation()}
-        >
+        <div role="listbox" {...stylex.props(styles.menu)} onClick={(e) => e.stopPropagation()}>
           {options.map((opt) => (
             <button
               type="button"
               key={String(opt.value)}
               role="option"
               aria-selected={opt.value === value}
-              className={cn(
-                "block w-full text-left px-3 py-2 rounded-lg text-[14px] transition-colors",
-                opt.value === value ? "bg-muted font-medium" : "hover:bg-muted/70",
-                "cursor-pointer",
+              {...stylex.props(
+                styles.option,
+                opt.value === value ? styles.optionSelected : styles.optionUnselected,
               )}
               onClick={(e) => {
                 e.preventDefault();

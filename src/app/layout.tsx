@@ -1,10 +1,59 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
+import * as stylex from "@stylexjs/stylex";
 import { AppChrome } from "@/components/AppChrome";
 import { ServiceWorker } from "@/components/ServiceWorker";
 import { QueryProvider } from "@/providers/QueryProvider";
+import { easing } from "@/lib/tokens.stylex";
+import { sxc } from "@/lib/utils";
 import { geistSans, geistMono } from "./fonts";
 import "./globals.css";
+
+const styles = stylex.create({
+  body: {
+    WebkitFontSmoothing: "antialiased",
+    MozOsxFontSmoothing: "grayscale",
+    minHeight: "100vh",
+    display: "flex",
+    flexDirection: "column",
+  },
+  main: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: "0%",
+  },
+  footer: {
+    paddingBlock: "1.5rem",
+    paddingInline: "1rem",
+    display: "flex",
+    justifyContent: "center",
+  },
+  footerPill: {
+    display: "inline-flex",
+    paddingInline: "1.5rem",
+    paddingBlock: "0.75rem",
+    borderRadius: "9999px",
+    backgroundColor: "color-mix(in oklab, var(--secondary) 40%, transparent)",
+    borderWidth: "1px",
+    maxWidth: "100%",
+  },
+  footerText: {
+    fontSize: "0.75rem",
+    lineHeight: "calc(1 / 0.75)",
+    color: "var(--muted-foreground)",
+    textAlign: "center",
+  },
+  footerLink: {
+    color: {
+      default: null,
+      ":hover": "var(--foreground)",
+    },
+    transitionProperty:
+      "color, background-color, border-color, outline-color, text-decoration-color, fill, stroke",
+    transitionDuration: "150ms",
+    transitionTimingFunction: easing.twDefault,
+  },
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://tikmit.com"),
@@ -63,9 +112,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://stat.sys256.com" />
         <script defer src="https://stat.sys256.com/script.js" />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col scroll-optimized`}
-      >
+      <body {...sxc(`${geistSans.variable} ${geistMono.variable} scroll-optimized`, styles.body)}>
         <QueryProvider>
           <ThemeProvider
             attribute="class"
@@ -73,16 +120,16 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <main className="flex-1">{children}</main>
-            <footer className="py-6 px-4 flex justify-center">
-              <div className="inline-flex px-6 py-3 rounded-full bg-secondary/40 border max-w-full">
-                <p className="text-xs text-muted-foreground text-center">
+            <main {...stylex.props(styles.main)}>{children}</main>
+            <footer {...stylex.props(styles.footer)}>
+              <div {...stylex.props(styles.footerPill)}>
+                <p {...stylex.props(styles.footerText)}>
                   Made by{" "}
                   <a
                     href="https://aadit.cc"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-foreground transition-colors"
+                    {...stylex.props(styles.footerLink)}
                   >
                     Aadit
                   </a>
@@ -91,7 +138,7 @@ export default function RootLayout({
                     href="https://tikm.coolstuff.work/docs/reference"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-foreground transition-colors"
+                    {...stylex.props(styles.footerLink)}
                   >
                     API Docs
                   </a>
@@ -100,7 +147,7 @@ export default function RootLayout({
                     href="https://github.com/aaditagrawal/fc-menu"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-foreground transition-colors"
+                    {...stylex.props(styles.footerLink)}
                   >
                     Open Source
                   </a>
@@ -109,7 +156,7 @@ export default function RootLayout({
                     href="https://blog.aadit.cc/posts/building-a-food-court-menu/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-foreground transition-colors"
+                    {...stylex.props(styles.footerLink)}
                   >
                     How it was made
                   </a>

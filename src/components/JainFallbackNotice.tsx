@@ -1,6 +1,52 @@
 "use client";
 
+import * as stylex from "@stylexjs/stylex";
 import { Salad } from "lucide-react";
+
+const styles = stylex.create({
+  section: {
+    borderRadius: "calc(var(--radius) + 4px)",
+    borderWidth: "1px",
+    borderColor: "color-mix(in oklab, oklch(76.9% 0.188 70.08) 35%, transparent)",
+    backgroundColor: "color-mix(in oklab, oklch(76.9% 0.188 70.08) 10%, transparent)",
+    paddingInline: { default: "1rem", "@media (min-width: 640px)": "1.25rem" },
+    paddingBlock: "0.75rem",
+  },
+  row: {
+    display: "flex",
+    alignItems: "flex-start",
+    columnGap: "0.75rem",
+  },
+  icon: {
+    marginTop: "0.125rem",
+    height: "1.25rem",
+    width: "1.25rem",
+    flexShrink: 0,
+    color: "var(--warn-accent)",
+  },
+  text: {
+    minWidth: 0,
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: "0%",
+    fontSize: "0.875rem",
+    lineHeight: 1.625,
+    color: "var(--muted-foreground)",
+  },
+  emphasis: {
+    fontWeight: 500,
+    color: "var(--foreground)",
+  },
+  link: {
+    fontWeight: 500,
+    color: {
+      default: "var(--foreground)",
+      ":hover": "var(--warn-accent)",
+    },
+    textDecorationLine: "underline",
+    textUnderlineOffset: "2px",
+  },
+});
 
 /**
  * Jain menus aren't uploaded every week. When one is missing the API answers
@@ -12,22 +58,18 @@ export function JainFallbackNotice({ onShowRegular }: { onShowRegular?: () => vo
     <section
       aria-live="polite"
       aria-label="Jain menu availability"
-      className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-4 py-3 sm:px-5"
+      {...stylex.props(styles.section)}
     >
-      <div className="flex items-start gap-3">
-        <Salad className="mt-0.5 h-5 w-5 shrink-0 text-amber-700 dark:text-amber-400" aria-hidden />
-        <p className="min-w-0 flex-1 text-sm leading-relaxed text-muted-foreground">
-          <span className="font-medium text-foreground">No Jain menu for this week yet.</span>{" "}
-          Showing the regular menu with non-veg items hidden — it is not a Jain menu, so check
-          before you eat.
+      <div {...stylex.props(styles.row)}>
+        <Salad {...stylex.props(styles.icon)} aria-hidden />
+        <p {...stylex.props(styles.text)}>
+          <span {...stylex.props(styles.emphasis)}>No Jain menu for this week yet.</span> Showing
+          the regular menu with non-veg items hidden — it is not a Jain menu, so check before you
+          eat.
           {onShowRegular && (
             <>
               {" "}
-              <button
-                type="button"
-                onClick={onShowRegular}
-                className="font-medium text-foreground underline underline-offset-2 hover:text-amber-700 dark:hover:text-amber-400"
-              >
+              <button type="button" onClick={onShowRegular} {...stylex.props(styles.link)}>
                 Turn off the Jain filter
               </button>
               .

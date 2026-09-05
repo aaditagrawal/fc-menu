@@ -1,5 +1,6 @@
 "use client";
 
+import * as stylex from "@stylexjs/stylex";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { Toaster } from "@/components/ui/sonner";
 import { OfflineBanner } from "@/components/OfflineBanner";
@@ -11,6 +12,15 @@ import { RESET_PARAM } from "@/lib/hardReset";
  * cache. Once the fresh document is up it has done its job, so drop it before
  * the user can copy or share the URL.
  */
+const styles = stylex.create({
+  themeSwitcher: {
+    position: "fixed",
+    top: "1rem",
+    right: "1rem",
+    zIndex: 50,
+  },
+});
+
 function useStripResetParam() {
   useMountEffect(() => {
     const url = new URL(window.location.href);
@@ -30,7 +40,7 @@ export function AppChrome() {
 
   return (
     <>
-      <div className="fixed top-4 right-4 z-50">
+      <div {...stylex.props(styles.themeSwitcher)}>
         <ThemeSwitcher />
       </div>
       <Toaster />

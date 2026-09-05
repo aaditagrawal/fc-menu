@@ -1,9 +1,24 @@
 "use client";
 
 import * as React from "react";
+import * as stylex from "@stylexjs/stylex";
+
 import { ErrorState } from "@/components/ErrorState";
+import { sxc } from "@/lib/utils";
 import { geistSans, geistMono } from "./fonts";
 import "./globals.css";
+
+const styles = stylex.create({
+  body: {
+    WebkitFontSmoothing: "antialiased",
+    MozOsxFontSmoothing: "grayscale",
+    minHeight: "100vh",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingInline: "1rem",
+  },
+});
 
 /**
  * This boundary replaces the root layout entirely, so nothing above it runs
@@ -34,9 +49,7 @@ export default function GlobalError({
       <head>
         <script dangerouslySetInnerHTML={THEME_INIT} />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex items-center justify-center px-4`}
-      >
+      <body {...sxc(`${geistSans.variable} ${geistMono.variable}`, styles.body)}>
         <ErrorState message="Something went wrong" onRetry={reset} />
       </body>
     </html>

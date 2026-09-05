@@ -1,13 +1,155 @@
 "use client";
 
 import * as React from "react";
-import { cn } from "@/lib/utils";
+import * as stylex from "@stylexjs/stylex";
+import { easing } from "@/lib/tokens.stylex";
 import type { DietaryFilter as DietaryFilterType } from "@/lib/filters";
+
+const styles = stylex.create({
+  wrap: {
+    display: "flex",
+    alignItems: "center",
+    columnGap: "0.5rem",
+  },
+  pillGroup: {
+    display: "flex",
+    alignItems: "center",
+    columnGap: "0.125rem",
+    paddingInline: "0.125rem",
+    paddingBlock: "0.125rem",
+    borderRadius: "9999px",
+    backgroundColor: "color-mix(in oklab, var(--muted) 60%, transparent)",
+  },
+  pill: {
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+    columnGap: "0.375rem",
+    height: "1.75rem",
+    paddingInline: "0.75rem",
+    borderRadius: "9999px",
+    fontSize: "0.75rem",
+    lineHeight: "calc(1 / 0.75)",
+    fontWeight: 500,
+    transitionProperty: {
+      default: "background-color,color,box-shadow,scale",
+      "@media (prefers-reduced-motion: reduce)": "none",
+    },
+    transitionDuration: "150ms",
+    transitionTimingFunction: easing.spring,
+    scale: {
+      default: null,
+      ":active": {
+        default: "0.96",
+        "@media (prefers-reduced-motion: reduce)": "1",
+      },
+    },
+    outlineStyle: {
+      default: null,
+      ":focus-visible": "none",
+    },
+  },
+  pillActive: {
+    backgroundColor: "var(--background)",
+    color: "var(--foreground)",
+    boxShadow: {
+      default: "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+      ":focus-visible":
+        "0 0 0 2px var(--ring), 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+    },
+  },
+  pillInactive: {
+    color: {
+      default: "var(--muted-foreground)",
+      ":hover": "var(--foreground)",
+    },
+    boxShadow: {
+      default: null,
+      ":focus-visible": "0 0 0 2px var(--ring)",
+    },
+  },
+  jainToggle: {
+    display: "flex",
+    alignItems: "center",
+    columnGap: "0.375rem",
+    borderRadius: "9999px",
+    outlineStyle: {
+      default: null,
+      ":focus-visible": "none",
+    },
+    boxShadow: {
+      default: null,
+      ":focus-visible": "0 0 0 2px var(--ring)",
+    },
+    // Replaces the old `group-active:` utilities: StyleX has no ancestor
+    // selectors, so the press stretch is driven by an inherited custom
+    // property the knob reads through `scale`.
+    "--jain-knob-scale-x": {
+      default: "1",
+      ":active": {
+        default: "1.25",
+        "@media (prefers-reduced-motion: reduce)": "1",
+      },
+    },
+  },
+  jainLabel: {
+    fontSize: "0.75rem",
+    lineHeight: "calc(1 / 0.75)",
+    fontWeight: 500,
+    transitionProperty:
+      "color, background-color, border-color, outline-color, text-decoration-color, fill, stroke",
+    transitionDuration: "150ms",
+    transitionTimingFunction: easing.twDefault,
+  },
+  jainLabelOn: {
+    color: "var(--warn-accent)",
+  },
+  jainLabelOff: {
+    color: "var(--muted-foreground)",
+  },
+  track: {
+    position: "relative",
+    width: "2rem",
+    height: "18px",
+    borderRadius: "9999px",
+    transitionProperty:
+      "color, background-color, border-color, outline-color, text-decoration-color, fill, stroke",
+    transitionDuration: "150ms",
+    transitionTimingFunction: easing.twDefault,
+  },
+  trackOn: {
+    backgroundColor: "oklch(76.9% 0.188 70.08)",
+  },
+  trackOff: {
+    backgroundColor: "color-mix(in oklab, var(--muted-foreground) 30%, transparent)",
+  },
+  knob: {
+    position: "absolute",
+    top: "2px",
+    height: "14px",
+    width: "14px",
+    borderRadius: "9999px",
+    backgroundColor: "#fff",
+    boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+    transitionProperty: "transform,translate,scale,rotate",
+    transitionDuration: "200ms",
+    transitionTimingFunction: easing.spring,
+    scale: "var(--jain-knob-scale-x) 1",
+  },
+  knobOn: {
+    translate: "16px",
+    transformOrigin: "right",
+  },
+  knobOff: {
+    translate: "2px",
+    transformOrigin: "left",
+  },
+});
 
 interface DietaryFilterProps {
   value: DietaryFilterType;
   onChange: (value: DietaryFilterType) => void;
-  className?: string;
+  style?: stylex.StyleXStyles;
 }
 
 /** FSSAI-style veg/non-veg indicator (square border with circle inside) */
@@ -37,25 +179,21 @@ const MAIN_FILTERS: { value: DietaryFilterType; label: string; icon?: "veg" | "n
   { value: "non-veg-only", label: "Non-Veg", icon: "non-veg" },
 ];
 
-export function DietaryFilter({ value, onChange, className }: DietaryFilterProps) {
+export function DietaryFilter({ value, onChange, style }: DietaryFilterProps) {
   const isJain = value === "jain";
   const mainValue = isJain ? null : value;
 
   return (
-    <div className={cn("flex items-center gap-2", className)}>
+    <div {...stylex.props(styles.wrap, style)}>
       {/* Main veg/non-veg filter pills */}
-      <div className="flex items-center gap-0.5 p-0.5 rounded-full bg-muted/60">
+      <div {...stylex.props(styles.pillGroup)}>
         {MAIN_FILTERS.map((option) => (
           <button
             key={option.value}
             onClick={() => onChange(option.value)}
-            className={cn(
-              "relative h-7 px-3 rounded-full text-xs font-medium transition-[background-color,color,box-shadow,scale] duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] flex items-center gap-1.5",
-              "active:scale-[0.96] motion-reduce:active:scale-100 motion-reduce:transition-none",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              mainValue === option.value
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
+            {...stylex.props(
+              styles.pill,
+              mainValue === option.value ? styles.pillActive : styles.pillInactive,
             )}
           >
             {option.icon && <FoodTypeIcon type={option.icon} />}
@@ -69,31 +207,17 @@ export function DietaryFilter({ value, onChange, className }: DietaryFilterProps
         role="switch"
         aria-checked={isJain}
         onClick={() => onChange(isJain ? "all" : "jain")}
-        className="group flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full"
+        {...stylex.props(styles.jainToggle)}
       >
         <span
-          className={cn(
-            "text-xs font-medium transition-colors",
-            isJain ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground",
-          )}
+          {...stylex.props(styles.jainLabel, isJain ? styles.jainLabelOn : styles.jainLabelOff)}
         >
           Jain
         </span>
-        <div
-          className={cn(
-            "relative w-8 h-[18px] rounded-full transition-colors",
-            isJain ? "bg-amber-500" : "bg-muted-foreground/30",
-          )}
-        >
+        <div {...stylex.props(styles.track, isJain ? styles.trackOn : styles.trackOff)}>
           {/* iOS switch detail: the knob stretches inward from its anchored
               side while pressed, then springs to the other side on release. */}
-          <div
-            className={cn(
-              "absolute top-[2px] h-[14px] w-[14px] rounded-full bg-white shadow-sm transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
-              "group-active:scale-x-[1.25] motion-reduce:group-active:scale-x-100",
-              isJain ? "translate-x-[16px] origin-right" : "translate-x-[2px] origin-left",
-            )}
-          />
+          <div {...stylex.props(styles.knob, isJain ? styles.knobOn : styles.knobOff)} />
         </div>
       </button>
     </div>

@@ -1,50 +1,161 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
-import { cva, type VariantProps } from "class-variance-authority";
+import * as stylex from "@stylexjs/stylex";
 
-import { cn } from "@/lib/utils";
+import { easing } from "@/lib/tokens.stylex";
 
-const buttonVariants = cva(
-  // `scale` is listed alongside `transform` because Tailwind v4 emits scale-*
-  // as the standalone property, which a `transform` transition won't animate.
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-[background-color,color,border-color,box-shadow,transform,scale] duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 motion-reduce:active:scale-100 motion-reduce:transition-none",
-  {
-    variants: {
-      variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
-      },
-      size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
+const styles = stylex.create({
+  base: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    whiteSpace: "nowrap",
+    borderRadius: "calc(var(--radius) - 2px)",
+    fontSize: "0.875rem",
+    lineHeight: "calc(1.25 / 0.875)",
+    fontWeight: 500,
+    // `scale` is listed alongside `transform` because the active press effect
+    // uses the standalone `scale` property, which a `transform` transition
+    // won't animate.
+    transitionProperty: {
+      default: "background-color,color,border-color,box-shadow,transform,scale",
+      "@media (prefers-reduced-motion: reduce)": "none",
+    },
+    transitionDuration: "150ms",
+    transitionTimingFunction: easing.spring,
+    scale: {
+      default: null,
+      ":active": {
+        default: "0.98",
+        "@media (prefers-reduced-motion: reduce)": "1",
       },
     },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
+    outlineStyle: {
+      default: null,
+      ":focus-visible": "none",
+    },
+    boxShadow: {
+      default: null,
+      ":focus-visible": "0 0 0 2px var(--background), 0 0 0 4px var(--ring)",
+    },
+    pointerEvents: {
+      default: null,
+      ":disabled": "none",
+    },
+    opacity: {
+      default: null,
+      ":disabled": 0.5,
     },
   },
-);
+  variantDefault: {
+    backgroundColor: {
+      default: "var(--primary)",
+      ":hover": "color-mix(in oklab, var(--primary) 90%, transparent)",
+    },
+    color: "var(--primary-foreground)",
+  },
+  variantDestructive: {
+    backgroundColor: {
+      default: "var(--destructive)",
+      ":hover": "color-mix(in oklab, var(--destructive) 90%, transparent)",
+    },
+  },
+  variantOutline: {
+    borderWidth: "1px",
+    borderColor: "var(--input)",
+    backgroundColor: {
+      default: "var(--background)",
+      ":hover": "var(--accent)",
+    },
+    color: {
+      default: null,
+      ":hover": "var(--accent-foreground)",
+    },
+  },
+  variantSecondary: {
+    backgroundColor: {
+      default: "var(--secondary)",
+      ":hover": "color-mix(in oklab, var(--secondary) 80%, transparent)",
+    },
+    color: "var(--secondary-foreground)",
+  },
+  variantGhost: {
+    backgroundColor: {
+      default: null,
+      ":hover": "var(--accent)",
+    },
+    color: {
+      default: null,
+      ":hover": "var(--accent-foreground)",
+    },
+  },
+  variantLink: {
+    color: "var(--primary)",
+    textUnderlineOffset: "4px",
+    textDecorationLine: {
+      default: null,
+      ":hover": "underline",
+    },
+  },
+  sizeDefault: {
+    height: "2.5rem",
+    paddingInline: "1rem",
+    paddingBlock: "0.5rem",
+  },
+  sizeSm: {
+    height: "2.25rem",
+    borderRadius: "calc(var(--radius) - 2px)",
+    paddingInline: "0.75rem",
+  },
+  sizeLg: {
+    height: "2.75rem",
+    borderRadius: "calc(var(--radius) - 2px)",
+    paddingInline: "2rem",
+  },
+  sizeIcon: {
+    height: "2.5rem",
+    width: "2.5rem",
+  },
+});
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
+const variantStyles = {
+  default: styles.variantDefault,
+  destructive: styles.variantDestructive,
+  outline: styles.variantOutline,
+  secondary: styles.variantSecondary,
+  ghost: styles.variantGhost,
+  link: styles.variantLink,
+} as const;
+
+const sizeStyles = {
+  default: styles.sizeDefault,
+  sm: styles.sizeSm,
+  lg: styles.sizeLg,
+  icon: styles.sizeIcon,
+} as const;
+
+export interface ButtonProps extends Omit<
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  "className" | "style"
+> {
+  variant?: keyof typeof variantStyles;
+  size?: keyof typeof sizeStyles;
   asChild?: boolean;
+  style?: stylex.StyleXStyles;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ variant = "default", size = "default", asChild = false, style, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
     return (
-      <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
+      <Comp
+        {...stylex.props(styles.base, variantStyles[variant], sizeStyles[size], style)}
+        ref={ref}
+        {...props}
+      />
     );
   },
 );
 Button.displayName = "Button";
 
-export { Button, buttonVariants };
+export { Button };

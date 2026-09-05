@@ -1,7 +1,24 @@
 "use client";
 
 import * as React from "react";
+import * as stylex from "@stylexjs/stylex";
+
 import { ErrorState } from "@/components/ErrorState";
+
+const styles = stylex.create({
+  page: {
+    paddingInline: {
+      default: "1rem",
+      "@media (min-width: 640px)": "1.5rem",
+      "@media (min-width: 768px)": "2rem",
+    },
+    paddingBlock: "2rem",
+  },
+  inner: {
+    marginInline: "auto",
+    maxWidth: "56rem",
+  },
+});
 
 export default function ErrorBoundary({
   error,
@@ -17,8 +34,8 @@ export default function ErrorBoundary({
   }, [error]);
 
   return (
-    <div className="px-4 py-8 sm:px-6 md:px-8">
-      <div className="mx-auto max-w-4xl">
+    <div {...stylex.props(styles.page)}>
+      <div {...stylex.props(styles.inner)}>
         <ErrorState message="Something went wrong" onRetry={reset} />
       </div>
     </div>
