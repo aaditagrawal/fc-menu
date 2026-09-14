@@ -11,6 +11,7 @@
     "oxc"
   ],
   "jsPlugins": [
+    "@shadcn/lint",
     {
       "name": "anti-slop",
       "specifier": "./tools/oxlint/anti-slop/index.ts"
@@ -70,7 +71,55 @@
     "anti-slop/no-unknown-type-aliases": "error",
     "anti-slop/no-unsafe-dictionary-type": "error",
     "anti-slop/no-widen-then-assert": "error",
-    "anti-slop/require-safety-comment-for-type-assertion": "error"
+    "anti-slop/require-safety-comment-for-type-assertion": "error",
+    "shadcn/no-restyle": [
+      "error",
+      {
+        "allow": ["layout"]
+      }
+    ],
+    "shadcn/no-raw-colors": "error",
+    "shadcn/no-arbitrary-values": "error",
+    "shadcn/no-inline-styles": "off",
+    "shadcn/no-unknown-classes": [
+      "error",
+      {
+        "allow": [
+          "wrapped-container",
+          "wrapped-slide",
+          "nav-dots",
+          "nav-dot",
+          "active",
+          "scroll-hint",
+          "stat-card",
+          "stat-label",
+          "stat-number",
+          "summary-grid",
+          "dish-cloud",
+          "dish-tag",
+          "dish-tag-lg",
+          "dish-tag-sm",
+          "pattern-dots",
+          "progress-ring",
+          "progress-ring-circle",
+          "count-up",
+          "animate-fade-in",
+          "animate-slide-up",
+          "animate-scale-in",
+          "accent-rose",
+          "accent-yellow",
+          "bg-rose",
+          "bg-rose-subtle",
+          "bg-yellow",
+          "bg-yellow-subtle",
+          "border-rose",
+          "border-yellow",
+          "lead",
+          "toaster"
+        ]
+      }
+    ],
+    "shadcn/require-static-classes": "error"
   },
   "overrides": [
     {
@@ -90,6 +139,11 @@
   "env": {
     "browser": true,
     "es2024": true
+  },
+  "settings": {
+    "shadcn": {
+      "note": "This project styles with StyleX (style={styles.*} props) plus a few plain-CSS classes; there is no Tailwind build, so Tailwind-only rules are disabled or configured with the project's real class vocabulary."
+    }
   },
   "ignorePatterns": [
     ".next/**",
