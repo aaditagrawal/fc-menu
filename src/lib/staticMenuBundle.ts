@@ -52,23 +52,21 @@ export function weeksCoverToday(
   return weeks.some((week) => week.startDate <= todayIST && todayIST <= week.endDate);
 }
 
-export function selectEffectiveWeek(
-  weeks: Array<{ startDate: string; endDate: string }>,
+export function selectEffectiveWeek<T extends { startDate: string; endDate: string }>(
+  weeks: T[],
   todayIST = formatDateKey(getISTNow()),
-) {
-  const current = weeks.find((week) => week.startDate <= todayIST && todayIST <= week.endDate);
-  if (current) return current;
-
-  const mostRecentPast = [...weeks]
-    .filter((week) => week.startDate <= todayIST)
-    .sort((a, b) => b.startDate.localeCompare(a.startDate))[0];
-  if (mostRecentPast) return mostRecentPast;
-
-  return (
-    [...weeks]
-      .filter((week) => week.startDate > todayIST)
-      .sort((a, b) => a.startDate.localeCompare(b.startDate))[0] ?? null
-  );
+): T | null {
+  let mostRecentPast: T | null = null;
+  let earliestFuture: T | null = null;
+  for (const week of weeks) {
+    if (week.startDate <= todayIST) {
+      if (todayIST <= week.endDate) return week;
+      if (!mostRecentPast || week.startDate > mostRecentPast.startDate) mostRecentPast = week;
+    } else if (!earliestFuture || week.startDate < earliestFuture.startDate) {
+      earliestFuture = week;
+    }
+  }
+  return mostRecentPast ?? earliestFuture;
 }
 
 // Several queries (weeks list, week menu, prefetches) need the manifest at the
@@ -80,10 +78,12 @@ const MANIFEST_SHARE_TTL_MS = 60 * 1000;
 
 let manifestPromise: Promise<StaticMenuManifest> | null = null;
 let manifestFetchedAt = 0;
+const pendingWeeks = new Map<string, Promise<JsonValue>>();
 
 export function invalidateStaticManifestCache() {
   manifestPromise = null;
   manifestFetchedAt = 0;
+  pendingWeeks.clear();
 }
 
 export async function fetchStaticManifest(): Promise<StaticMenuManifest> {
@@ -107,7 +107,22 @@ export async function fetchStaticManifest(): Promise<StaticMenuManifest> {
 }
 
 /** Undecoded on purpose — the caller runs parseWeekMenu on the payload. */
-export async function fetchStaticWeek(entry: StaticWeekEntry): Promise<JsonValue> {
+export function fetchStaticWeek(entry: StaticWeekEntry): Promise<JsonValue> {
+  const pending = pendingWeeks.get(entry.path);
+  if (pending) return pending;
+
+  const promise = readStaticWeek(entry);
+  pendingWeeks.set(entry.path, promise);
+  // Share only overlapping requests. Completed payloads remain governed by
+  // the HTTP cache, and a manual reset can immediately start a fresh request.
+  const cleanup = () => {
+    if (pendingWeeks.get(entry.path) === promise) pendingWeeks.delete(entry.path);
+  };
+  void promise.then(cleanup, cleanup);
+  return promise;
+}
+
+async function readStaticWeek(entry: StaticWeekEntry): Promise<JsonValue> {
   // Week files are content-hashed (a revised menu gets a new path via the
   // manifest), so the browser's HTTP cache can hold them indefinitely.
   const res = await fetchWithTimeout(entry.path);

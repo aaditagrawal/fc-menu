@@ -8,7 +8,6 @@ import {
   pickHighlightMealForDay,
   getISTNow,
   formatDateKey,
-  sortDateKeysAsc,
   getMondayDateKeyContainingIST,
 } from "@/lib/date";
 import { InlineSelect } from "@/components/InlineSelect";
@@ -223,7 +222,6 @@ export function MenuViewer({
   initialWeek?: WeekMenu | null;
 }) {
   const { data: weeksInfo, isLoading: isWeeksLoading, error: weeksError } = useWeeksInfo();
-  const [selectedWeekId, setSelectedWeekId] = React.useState<WeekId | null>(initialWeekId ?? null);
   const [foodCourt, setFoodCourt] = React.useState<string>(initialWeek?.foodCourt ?? "");
   const [dietaryFilter, setDietaryFilter] = React.useState<DietaryFilterType>("all");
   const [userDateKey, setUserDateKey] = React.useState<string | null>(null);
@@ -237,6 +235,20 @@ export function MenuViewer({
 
   const carouselRef = React.useRef<MealCarouselHandle>(null);
   const router = useRouter();
+
+  const weeks = weeksInfo?.weeks;
+  const availableFoodCourts = React.useMemo(() => {
+    if (!weeks) return [];
+    const courts = new Set(weeks.map((w) => w.foodCourt));
+    return Array.from(courts).sort();
+  }, [weeks]);
+  const resolvedFoodCourt = foodCourt || initialWeek?.foodCourt || availableFoodCourts[0] || "";
+  const selectedWeekId = React.useMemo(() => {
+    if (initialWeekId) return initialWeekId;
+    if (!weeks || !resolvedFoodCourt) return null;
+    const forCourt = weeks.filter((w) => w.foodCourt === resolvedFoodCourt);
+    return selectEffectiveWeek(forCourt, formatDateKey(now))?.startDate ?? null;
+  }, [initialWeekId, weeks, resolvedFoodCourt, now]);
 
   const menuType: MenuType = dietaryFilter === "jain" ? "jain" : "normal";
   const weekMenuQuery = useWeekMenu(selectedWeekId, menuType);
@@ -280,29 +292,10 @@ export function MenuViewer({
 
   // Derive whether user's day selection applies to the current week
   const isUserSelectedDay = userDateKey !== null && userDateWeekId === selectedWeekId;
-
-  const weeks = weeksInfo?.weeks;
-  const availableFoodCourts = React.useMemo(() => {
-    if (!weeks) return [];
-    const courts = new Set(weeks.map((w) => w.foodCourt));
-    return Array.from(courts).sort();
-  }, [weeks]);
-
-  const resolvedFoodCourt = foodCourt || initialWeek?.foodCourt || availableFoodCourts[0] || "";
-
-  // Derive the selected week ID from available data
-  const resolvedWeekId = React.useMemo(() => {
-    if (initialWeekId) return initialWeekId;
-    if (!weeks || !resolvedFoodCourt) return selectedWeekId;
-    const forCourt = weeks.filter((w) => w.foodCourt === resolvedFoodCourt);
-    return selectEffectiveWeek(forCourt, formatDateKey(now))?.startDate ?? selectedWeekId;
-  }, [initialWeekId, selectedWeekId, weeks, resolvedFoodCourt, now]);
-
-  React.useEffect(() => {
-    if (resolvedWeekId && resolvedWeekId !== selectedWeekId) {
-      setSelectedWeekId(resolvedWeekId);
-    }
-  }, [resolvedWeekId, selectedWeekId]);
+  const pointer = React.useMemo(
+    () => (week ? findCurrentOrUpcomingMeal(week, now) : null),
+    [week, now],
+  );
 
   // Derive dateKey: use user selection if it's for this week, otherwise auto-detect
   const dateKey = React.useMemo(() => {
@@ -310,11 +303,10 @@ export function MenuViewer({
       return userDateKey;
     }
     if (week) {
-      const ptr = findCurrentOrUpcomingMeal(week, now);
-      return ptr?.dateKey ?? Object.keys(week.menu)[0];
+      return pointer?.dateKey ?? Object.keys(week.menu)[0];
     }
     return null;
-  }, [isUserSelectedDay, userDateKey, week, now]);
+  }, [isUserSelectedDay, userDateKey, week, pointer]);
 
   const handleRefresh = React.useCallback(async () => {
     if (isRefreshing) {
@@ -324,7 +316,6 @@ export function MenuViewer({
     setIsRefreshing(true);
     setUserDateKey(null);
     setUserDateWeekId(null);
-    setSelectedWeekId(initialWeekId ?? null);
     setNow(getISTNow());
     setRefreshNonce((current) => current + 1);
 
@@ -341,7 +332,7 @@ export function MenuViewer({
     } finally {
       setIsRefreshing(false);
     }
-  }, [initialWeekId, isRefreshing, queryClient, router]);
+  }, [isRefreshing, queryClient, router]);
 
   const handleDietaryFilterChange = React.useCallback((filter: DietaryFilterType) => {
     setDietaryFilter(filter);
@@ -374,6 +365,30 @@ export function MenuViewer({
     [week, sortedDateKeys],
   );
 
+  const resolvedDateKey =
+    (dateKey && week?.menu[dateKey] ? dateKey : null) ??
+    (pointer?.dateKey && week?.menu[pointer.dateKey] ? pointer.dateKey : null) ??
+    sortedDateKeys[0];
+  const day = resolvedDateKey ? week?.menu[resolvedDateKey] : undefined;
+  const meals = React.useMemo(() => {
+    const order: MealKey[] = ["breakfast", "lunch", "snacks", "dinner"];
+    return order.flatMap((key) => {
+      const original = day?.meals?.[key];
+      if (!original) return [];
+      const meal = filterMeal(original, effectiveDietaryFilter);
+      return meal.items.length > 0
+        ? [
+            {
+              key,
+              meal,
+              timeRange: `${meal.startTime} – ${meal.endTime} IST`,
+              title: key[0].toUpperCase() + key.slice(1),
+            },
+          ]
+        : [];
+    });
+  }, [day, effectiveDietaryFilter]);
+
   if (weeksError && !bakedWeek) {
     return <ErrorState message="Failed to load menu data" />;
   }
@@ -386,11 +401,7 @@ export function MenuViewer({
   }
 
   if (!week) {
-    if (
-      isWeeksLoading ||
-      activeWeekQuery.isLoading ||
-      (resolvedWeekId !== null && resolvedWeekId !== selectedWeekId)
-    ) {
+    if (isWeeksLoading || activeWeekQuery.isLoading) {
       return <LoadingState />;
     }
     // An empty week is a different situation from a failed request, and saying
@@ -406,28 +417,18 @@ export function MenuViewer({
     return <ErrorState message="Couldn't load the menu" />;
   }
 
-  const pointer = findCurrentOrUpcomingMeal(week, now);
-  const fallbackDateKey = sortedDateKeys[0];
-
   // Compute the full week ID (e.g. "2026-02-02_to_2026-02-08") matching generateStaticParams format
-  const ascDateKeys = sortDateKeysAsc(Object.keys(week.menu));
   const thisWeekMondayKey = getMondayDateKeyContainingIST(now);
-  const displayedWeekMondayKey = ascDateKeys[0] ?? "";
+  const displayedWeekMondayKey = sortedDateKeys[0] ?? "";
   const showStaleWeekNotice =
     (initialWeekId == null || initialWeekId === "") &&
     displayedWeekMondayKey !== "" &&
     displayedWeekMondayKey < thisWeekMondayKey;
-  const fullWeekId = `${ascDateKeys[0]}_to_${ascDateKeys[ascDateKeys.length - 1]}`;
-  const resolvedDateKey =
-    (dateKey && week.menu[dateKey] ? dateKey : null) ??
-    (pointer?.dateKey && week.menu[pointer.dateKey] ? pointer.dateKey : null) ??
-    fallbackDateKey;
+  const fullWeekId = `${sortedDateKeys[0]}_to_${sortedDateKeys[sortedDateKeys.length - 1]}`;
 
   if (!resolvedDateKey) {
     return <ErrorState message="No menu days available" />;
   }
-
-  const day = week.menu[resolvedDateKey];
 
   if (!day) {
     return <ErrorState message="No menu data for selected day" />;
@@ -436,17 +437,6 @@ export function MenuViewer({
   if (!day.meals) {
     return <ErrorState message="No meals data for selected day" />;
   }
-
-  const order: MealKey[] = ["breakfast", "lunch", "snacks", "dinner"];
-  const meals = order
-    .filter((k) => day.meals[k])
-    .map((k) => ({
-      key: k,
-      meal: filterMeal(day.meals[k]!, effectiveDietaryFilter),
-      timeRange: `${day.meals[k]!.startTime} – ${day.meals[k]!.endTime} IST`,
-      title: k[0].toUpperCase() + k.slice(1),
-    }))
-    .filter((m) => m.meal.items.length > 0);
 
   const picked = pickHighlightMealForDay(week, resolvedDateKey, now);
   const highlightKey = picked?.mealKey ?? meals[0]?.key ?? "breakfast";
@@ -489,7 +479,7 @@ export function MenuViewer({
       </header>
 
       <MealCarousel
-        key={`${resolvedWeekId}:${resolvedDateKey}:${effectiveMenuType}:${refreshNonce}`}
+        key={`${selectedWeekId}:${resolvedDateKey}:${effectiveMenuType}:${refreshNonce}`}
         ref={carouselRef}
         meals={meals}
         highlightKey={highlightKey}
