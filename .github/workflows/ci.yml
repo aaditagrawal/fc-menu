@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   lint:
-    name: Lint
+    name: Lint and tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,6 +28,7 @@ jobs:
             ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
       - run: bun run lint
+      - run: bun run test
 
   format:
     name: Format
