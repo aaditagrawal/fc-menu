@@ -160,6 +160,15 @@ export default function RootLayout({
                   >
                     How it was made
                   </a>
+                  {" • "}
+                  <a
+                    href="https://theindiankitchenmanipal.com/mit-food-court-2/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    {...stylex.props(styles.footerLink)}
+                  >
+                    Alakarte custom order menu
+                  </a>
                 </p>
               </div>
             </footer>
