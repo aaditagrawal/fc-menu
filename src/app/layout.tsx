@@ -27,6 +27,28 @@ const styles = stylex.create({
     paddingInline: "1rem",
     display: "flex",
     justifyContent: "center",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "0.75rem",
+  },
+  menuButton: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: "2.75rem",
+    paddingInline: "1.25rem",
+    paddingBlock: "0.5rem",
+    borderRadius: "9999px",
+    backgroundColor: {
+      default: "var(--primary)",
+      ":hover": "color-mix(in oklab, var(--primary) 90%, transparent)",
+    },
+    color: "var(--primary-foreground)",
+    fontSize: "0.875rem",
+    fontWeight: 500,
+    textAlign: "center",
+    outlineOffset: "4px",
+    outlineColor: "var(--ring)",
   },
   footerPill: {
     display: "inline-flex",
@@ -122,6 +144,14 @@ export default function RootLayout({
           >
             <main {...stylex.props(styles.main)}>{children}</main>
             <footer {...stylex.props(styles.footer)}>
+              <a
+                href="https://theindiankitchenmanipal.com/mit-food-court-2/"
+                target="_blank"
+                rel="noopener noreferrer"
+                {...stylex.props(styles.menuButton)}
+              >
+                À la carte custom order menu
+              </a>
               <div {...stylex.props(styles.footerPill)}>
                 <p {...stylex.props(styles.footerText)}>
                   Made by{" "}
