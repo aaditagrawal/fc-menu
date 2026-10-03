@@ -31,10 +31,9 @@ bun run dev
 ```
 Visit `http://localhost:3000`.
 
-Production build & start:
+Production static export:
 ```bash
 bun run build
-bun run start
 ```
 
 Lint:
@@ -66,5 +65,5 @@ MENU_API_URL=https://tikm.coolstuff.work
 ---
 
 ## Deployment
-Any Node-compatible host will work. Build with `bun run build` and serve with `bun run start`.
+Build with `bun run build`, then publish the `out/` directory to a static host such as Cloudflare Pages. The site uses Next.js static export and has no production Next server.
 

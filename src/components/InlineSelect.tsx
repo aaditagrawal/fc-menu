@@ -125,7 +125,6 @@ export function InlineSelect<T extends string | number>({
 }) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement | null>(null);
-  const buttonRef = React.useRef<HTMLButtonElement | null>(null);
 
   const closeMenu = React.useCallback(() => setOpen(false), []);
   useClickOutside(ref, open, closeMenu);
@@ -135,7 +134,6 @@ export function InlineSelect<T extends string | number>({
   return (
     <div ref={ref} {...stylex.props(styles.wrap, style)}>
       <button
-        ref={buttonRef}
         type="button"
         {...stylex.props(styles.trigger)}
         onClick={(e) => {

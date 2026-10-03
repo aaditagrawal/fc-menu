@@ -35,10 +35,6 @@ export function normalizeWeekIdToStartDate(weekId: string | null | undefined) {
   return weekId.split("_to_")[0]?.split("_")[0] ?? "";
 }
 
-export function getWeekId(entry: StaticWeekEntry) {
-  return `${entry.startDate}_to_${entry.endDate}`;
-}
-
 /**
  * The bundle is baked at deploy time, so it can only be as fresh as the last
  * build. When no baked week covers today, the bundle is behind the live API

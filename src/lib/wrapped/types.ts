@@ -1,5 +1,3 @@
-import type {} from "@/lib/types";
-
 export interface DishVariation {
   name: string;
   count: number;
@@ -61,23 +59,4 @@ export interface WrappedStats {
     start: string;
     end: string;
   };
-}
-
-export interface HistoryWeek {
-  week: string;
-  foodCourt: string;
-  startDate: string;
-  endDate: string;
-  numDays: number;
-  weekMonday: string;
-  lastModified: string;
-}
-
-export interface HistoryListResponse {
-  weeks: HistoryWeek[];
-}
-
-export interface SlideProps {
-  stats: WrappedStats;
-  isActive?: boolean;
 }
