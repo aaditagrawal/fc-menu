@@ -20,7 +20,6 @@
     "dev:portless": "portless run",
     "build:menu-data": "bun scripts/build-menu-data.mjs",
     "build": "bun scripts/build-menu-data.mjs && next build && bun run typecheck",
-    "start": "next start",
     "lint": "oxlint .",
     "lint:fix": "oxlint . --fix",
     "format": "oxfmt --write \"**/*.{js,mjs,cjs,ts,tsx,jsx}\" \"!tools/oxlint/anti-slop/**\" --ignore-path .gitignore --no-error-on-unmatched-pattern",

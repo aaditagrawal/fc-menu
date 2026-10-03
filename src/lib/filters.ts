@@ -146,17 +146,6 @@ export function filterWeekMenu(weekMenu: WeekMenu, filter: DietaryFilter): WeekM
 }
 
 /**
- * Check if a menu item is a special (veg-special, non-veg-special, or other-special).
- */
-export function isSpecial(item: MenuItem): boolean {
-  return (
-    item.tags.includes("veg-special") ||
-    item.tags.includes("non-veg-special") ||
-    item.tags.includes("other-special")
-  );
-}
-
-/**
  * Get the special type for a menu item.
  */
 export function getSpecialType(item: MenuItem): "veg" | "non-veg" | "other" | null {
