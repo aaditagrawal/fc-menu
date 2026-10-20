@@ -24,56 +24,15 @@ bun run lint
 bun run typecheck
 ```
 
-### TypeScript 7
+### Type checking
 
-This project typechecks with **TypeScript 7** — the native Go compiler, roughly
-6x faster than 5.x (~0.15s vs ~0.9s on this codebase).
+Run `bun run typecheck` to check the project with [tsrs](https://github.com/oxc-project/tsrs).
+The build runs this command after Next generates `.next/types`, so route types
+are included. Keep this check in the build script.
 
-Two things about the setup are deliberately unusual, so please read before
-changing them.
-
-**1. The dependency is an alias.**
-
-```json
-"@typescript/native-preview": "npm:typescript@^7.0.2"
-```
-
-That installs `typescript@7.0.2` (GA) under the name `@typescript/native-preview`.
-Next.js only accepts a native compiler if that exact package name resolves, and
-the real `@typescript/native-preview` package is a stale `7.0.0-dev` build — so
-the alias is how we get GA rather than a dev snapshot. There is no `typescript`
-package installed at all; that is required, because Next uses the standard
-package whenever it is present.
-
-**2. `bun run typecheck` is the type-safety gate, not Next.**
-
-TypeScript 7 ships no programmatic JS API until 7.1, and Next needs that API to
-type-check during a build. So Next detects the native compiler and skips type
-checking, logging:
-
-> Detected `@typescript/native-preview` as TypeScript compiler. Some Next.js
-> TypeScript features (like type checking during build) require the standard
-> `typescript` package.
-
-Which means `next build` alone will happily build code that does not typecheck.
-The `&& bun run typecheck` on the end of the `build` script is what catches
-that. **Do not remove it**, and keep it *after* `next build` so the generated
-`.next/types` route definitions are included in the check.
-
-Deployments are covered because both Vercel and Cloudflare run `bun run build`.
-
-**Editors** fall back to their bundled TypeScript, since 7 ships no language
-server yet.
-
-#### Reverting this once 7.1 lands
-
-When TypeScript 7.1 ships the programmatic API and Next.js supports it, all of
-this collapses into a normal dependency:
-
-1. Replace the alias with a plain `"typescript": "^7.1.x"` devDependency.
-2. Point `typecheck` at `node_modules/typescript/bin/tsc --noEmit`.
-3. Drop `&& bun run typecheck` from `build` — Next will type-check natively again.
-4. Delete this section and the `//typescript` note in `package.json`.
+The standard `typescript` package remains installed because Next manages its
+own framework checks and configuration. It is not an alias for tsrs. Explicit
+project checks use the local `tsrs --noEmit` executable.
 
 ---
 

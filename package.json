@@ -2,19 +2,6 @@
   "name": "fc2-menus",
   "version": "0.1.0",
   "private": true,
-  "//typescript": [
-    "TypeScript 7 (native Go compiler). See CONTRIBUTING.md -> 'TypeScript 7' for the full story.",
-    "The `@typescript/native-preview` entry is an ALIAS for typescript@7 GA -- Next only accepts a",
-    "native compiler if that exact package name resolves, and the real native-preview package is a",
-    "stale 7.0.0-dev build. TS 7 ships no programmatic JS API until 7.1, so Next CANNOT type-check",
-    "the build itself; it detects the native compiler and skips type checking with a log line.",
-    "THEREFORE: the `&& bun run typecheck` at the end of `build` IS the type-safety gate. Removing",
-    "it means type errors ship silently. It must stay AFTER `next build` so .next/types route",
-    "definitions exist and get checked.",
-    "WHEN TS 7.1 SHIPS AND NEXT SUPPORTS IT: replace the alias with a plain \"typescript\": \"^7.x\"",
-    "devDependency, point `typecheck` at node_modules/typescript/bin/tsc, and drop the",
-    "`&& bun run typecheck` from `build` since Next will type-check natively again."
-  ],
   "scripts": {
     "dev": "next dev --turbopack",
     "dev:portless": "portless run",
@@ -26,36 +13,36 @@
     "lint:fix": "oxlint . --fix",
     "format": "oxfmt --write \"**/*.{js,mjs,cjs,ts,tsx,jsx}\" \"!tools/oxlint/anti-slop/**\" --ignore-path .gitignore --no-error-on-unmatched-pattern",
     "format:check": "oxfmt --check \"**/*.{js,mjs,cjs,ts,tsx,jsx}\" \"!tools/oxlint/anti-slop/**\" --ignore-path .gitignore --no-error-on-unmatched-pattern",
-    "typecheck": "node_modules/@typescript/native-preview/bin/tsc --noEmit"
+    "typecheck": "bunx --bun tsrs --noEmit"
   },
   "dependencies": {
-    "@radix-ui/react-slot": "^1.3.3",
-    "@stylexjs/stylex": "^0.19.0",
-    "@tanstack/query-sync-storage-persister": "^5.101.4",
-    "@tanstack/react-query": "^5.101.4",
-    "@tanstack/react-query-persist-client": "^5.101.4",
-    "lucide-react": "^1.30.0",
-    "next": "^16.3.0",
+    "@radix-ui/react-slot": "^1.5.0",
+    "@stylexjs/stylex": "^0.19.1",
+    "@tanstack/query-sync-storage-persister": "^5.104.5",
+    "@tanstack/react-query": "^5.104.5",
+    "@tanstack/react-query-persist-client": "^5.104.5",
+    "lucide-react": "^1.60.0",
+    "next": "^16.4.2",
     "next-themes": "^0.4.6",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
-    "sonner": "^2.0.7"
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "sonner": "^2.0.8"
   },
   "devDependencies": {
-    "@oxlint/plugins": "1.78.0",
-    "@stylexjs/babel-plugin": "^0.19.0",
-    "@stylexjs/postcss-plugin": "^0.19.0",
-    "@types/node": "^26.2.0",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.4",
-    "@typescript/native-preview": "npm:typescript@^7.0.2",
-    "autoprefixer": "^10.5.5",
-    "oxfmt": "^0.62.0",
-    "oxlint": "1.78.0",
+    "@oxlint/plugins": "^1.89.0",
+    "@stylexjs/babel-plugin": "^0.19.1",
+    "@stylexjs/postcss-plugin": "^0.19.1",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "autoprefixer": "^10.6.1",
+    "oxfmt": "^0.74.0",
+    "oxlint": "^1.89.0",
+    "tsrs": "0.18.0-ts7.1.0-dev.20260929",
     "typescript": "7.0.2"
   },
+  "packageManager": "bun@1.4.2",
   "trustedDependencies": [
     "unrs-resolver"
-  ],
-  "packageManager": "bun@1.4.2"
+  ]
 }
