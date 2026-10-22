@@ -16,6 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
+      - name: Set up Node.js
+        uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: .node-version
       - uses: oven-sh/setup-bun@v2.2.0
         with:
           bun-version: latest
@@ -35,6 +39,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
+      - name: Set up Node.js
+        uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: .node-version
       - uses: oven-sh/setup-bun@v2.2.0
         with:
           bun-version: latest
@@ -53,6 +61,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
+      - name: Set up Node.js
+        uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: .node-version
       - uses: oven-sh/setup-bun@v2.2.0
         with:
           bun-version: latest
@@ -73,6 +85,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
+      - name: Set up Node.js
+        uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: .node-version
       - uses: oven-sh/setup-bun@v2.2.0
         with:
           bun-version: latest
