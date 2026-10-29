@@ -298,11 +298,9 @@ export function MenuViewer({
     return selectEffectiveWeek(forCourt, formatDateKey(now))?.startDate ?? selectedWeekId;
   }, [initialWeekId, selectedWeekId, weeks, resolvedFoodCourt, now]);
 
-  React.useEffect(() => {
-    if (resolvedWeekId && resolvedWeekId !== selectedWeekId) {
-      setSelectedWeekId(resolvedWeekId);
-    }
-  }, [resolvedWeekId, selectedWeekId]);
+  if (resolvedWeekId && resolvedWeekId !== selectedWeekId) {
+    setSelectedWeekId(resolvedWeekId);
+  }
 
   // Derive dateKey: use user selection if it's for this week, otherwise auto-detect
   const dateKey = React.useMemo(() => {
