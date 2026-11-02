@@ -34,10 +34,11 @@ function hashContent(value) {
 const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 function assertDateKey(value, label) {
-  if (typeof value !== "string" || !DATE_KEY_PATTERN.test(value)) {
+  const key = String(value);
+  if (!DATE_KEY_PATTERN.test(key)) {
     throw new Error(`Invalid ${label} from API: expected YYYY-MM-DD, got ${JSON.stringify(value)}`);
   }
-  return value;
+  return key;
 }
 
 function sleep(ms) {
