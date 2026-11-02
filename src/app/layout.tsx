@@ -6,7 +6,7 @@ import { ServiceWorker } from "@/components/ServiceWorker";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { easing } from "@/lib/tokens.stylex";
 import { sxc } from "@/lib/utils";
-import { geistSans, geistMono } from "./fonts";
+import { geistSans } from "./fonts";
 import "./globals.css";
 
 const styles = stylex.create({
@@ -123,18 +123,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    // The font variable must sit on <html>: globals.css resolves --font-sans on
+    // :root, and a variable only defined further down leaves it invalid there.
+    <html lang="en" className={geistSans.variable} suppressHydrationWarning>
       <head>
-        <link
-          rel="preload"
-          href="/data/menu-bundle/manifest.json"
-          as="fetch"
-          crossOrigin="anonymous"
-        />
         <link rel="preconnect" href="https://stat.sys256.com" />
         <script defer src="https://stat.sys256.com/script.js" />
       </head>
-      <body {...sxc(`${geistSans.variable} ${geistMono.variable} scroll-optimized`, styles.body)}>
+      <body {...sxc("scroll-optimized", styles.body)}>
         <QueryProvider>
           <ThemeProvider
             attribute="class"

@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { preload } from "react-dom";
 import * as stylex from "@stylexjs/stylex";
 
 import { FullWeekView } from "@/components/FullWeekView";
 import type { WeekId } from "@/components/MenuViewer";
 import { Button } from "@/components/ui/button";
+import { STATIC_MENU_MANIFEST_PATH } from "@/lib/staticMenuBundle";
 
 const styles = stylex.create({
   page: {
@@ -72,6 +74,7 @@ export async function generateStaticParams() {
 
 export default async function FullWeekPage({ params }: PageProps) {
   const { id } = await params;
+  preload(STATIC_MENU_MANIFEST_PATH, { as: "fetch", crossOrigin: "anonymous" });
 
   return (
     <div {...stylex.props(styles.page)}>

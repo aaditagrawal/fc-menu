@@ -134,17 +134,24 @@ function retryWeekQuery(failureCount: number, error: Error) {
   return failureCount < 1;
 }
 
-export function useWeekMenu(weekId: string | null, menuType: MenuType = "normal") {
+export function useWeekMenu(
+  weekId: string | null,
+  menuType: MenuType = "normal",
+  initialData?: WeekMenu,
+) {
   const isMonday = isTodayMonday();
 
   return useQuery({
-    queryKey: ["weekMenu", weekId, menuType],
+    // Normalized so "2026-08-03" and "2026-08-03_to_2026-08-09" share one entry.
+    queryKey: ["weekMenu", normalizeWeekIdToStartDate(weekId), menuType],
     queryFn: () => fetchWeekMenu(weekId, menuType),
-    staleTime: 0,
+    // Short, never Infinity: a menu revision keeps this key but moves to a new
+    // content-hashed file via the manifest, so remounts must still revalidate.
+    staleTime: 60_000,
     gcTime: isMonday ? 15 * 60 * 1000 : 60 * 60 * 1000,
     enabled: !!weekId,
     retry: retryWeekQuery,
-    refetchOnMount: "always",
+    initialData,
     refetchOnWindowFocus: false,
   });
 }

@@ -4,8 +4,7 @@ import * as React from "react";
 import * as stylex from "@stylexjs/stylex";
 
 import { ErrorState } from "@/components/ErrorState";
-import { sxc } from "@/lib/utils";
-import { geistSans, geistMono } from "./fonts";
+import { geistSans } from "./fonts";
 import "./globals.css";
 
 const styles = stylex.create({
@@ -45,11 +44,11 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={geistSans.variable} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={THEME_INIT} />
       </head>
-      <body {...sxc(`${geistSans.variable} ${geistMono.variable}`, styles.body)}>
+      <body {...stylex.props(styles.body)}>
         <ErrorState message="Something went wrong" onRetry={reset} />
       </body>
     </html>

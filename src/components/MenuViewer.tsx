@@ -35,7 +35,11 @@ import { ErrorState } from "@/components/ErrorState";
 import { JainFallbackNotice } from "@/components/JainFallbackNotice";
 import { hasMenuDays, isEmptyWeekResult } from "@/lib/menuWeek";
 import { HardResetButton } from "@/components/HardResetButton";
-import { invalidateStaticManifestCache, selectEffectiveWeek } from "@/lib/staticMenuBundle";
+import {
+  invalidateStaticManifestCache,
+  normalizeWeekIdToStartDate,
+  selectEffectiveWeek,
+} from "@/lib/staticMenuBundle";
 import { sxc } from "@/lib/utils";
 
 const spin = stylex.keyframes({
@@ -159,12 +163,13 @@ const styles = stylex.create({
 export type WeekId = string;
 
 const MENU_QUERY_ROOT_KEYS = new Set(["weekMenu", "weeksInfo"]);
+const MEAL_ORDER: MealKey[] = ["breakfast", "lunch", "snacks", "dinner"];
 
 // Same spinner FullWeekView shows — loading must never be a blank screen.
 function LoadingState() {
   return (
     <div {...stylex.props(styles.loadingWrap)}>
-      <Loader2 {...stylex.props(styles.loadingSpinner)} />
+      <Loader2 {...sxc("animate-spin", styles.loadingSpinner)} />
     </div>
   );
 }
@@ -184,7 +189,7 @@ function getPreferredFoodCourtFromCookie() {
 
 function persistFoodCourtCookie(foodCourt: string) {
   try {
-    document.cookie = `preferredFoodCourt=${encodeURIComponent(foodCourt)}; path=/; max-age=${60 * 60 * 24 * 365}`;
+    document.cookie = `preferredFoodCourt=${encodeURIComponent(foodCourt)}; path=/; max-age=${60 * 60 * 24 * 365}; Secure; SameSite=Lax`;
   } catch {}
 }
 
@@ -228,33 +233,52 @@ export function MenuViewer({
   const [dietaryFilter, setDietaryFilter] = React.useState<DietaryFilterType>("all");
   const [userDateKey, setUserDateKey] = React.useState<string | null>(null);
   const [userDateWeekId, setUserDateWeekId] = React.useState<WeekId | null>(null);
-  const [now, setNow] = React.useState(() => getISTNow());
+  // The static HTML is built once and served to every visitor, so the first
+  // render (SSR and hydration alike) must not read the clock: `now` stays null
+  // until mount, and every consumer below treats null as "no clock yet" — first
+  // day, first meal, nothing live, no stale-week notice.
+  const [now, setNow] = React.useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [refreshNonce, setRefreshNonce] = React.useState(0);
-  // Baked build-time data must never render during SSR/hydration: day and meal
-  // highlighting depend on the user's clock, not the build's.
-  const [isHydrated, setIsHydrated] = React.useState(false);
 
   const carouselRef = React.useRef<MealCarouselHandle>(null);
   const router = useRouter();
 
+  const bakedStartDate = React.useMemo(
+    () => (hasMenuDays(initialWeek) ? sortDateKeysAsc(Object.keys(initialWeek.menu))[0] : null),
+    [initialWeek],
+  );
+  // Seeding the query with the baked week only makes sense when it is the very
+  // week being asked for; any other week would be cached under the wrong key.
+  const bakedInitialData =
+    hasMenuDays(initialWeek) && normalizeWeekIdToStartDate(selectedWeekId) === bakedStartDate
+      ? initialWeek
+      : undefined;
+
   const menuType: MenuType = dietaryFilter === "jain" ? "jain" : "normal";
-  const weekMenuQuery = useWeekMenu(selectedWeekId, menuType);
+  const weekMenuQuery = useWeekMenu(
+    selectedWeekId,
+    menuType,
+    menuType === "normal" ? bakedInitialData : undefined,
+  );
 
   // An empty week means either a backend blip (both menu endpoints answer 200
   // with `{ menu: {} }` when their own lookup fails) or a week with no Jain
   // upload. For Jain, the regular week is a useful fallback; for everyone else
   // the baked bundle below is. Either way an empty week is never rendered.
   const jainWeekIsEmpty = menuType === "jain" && isEmptyWeekResult(weekMenuQuery);
-  const normalFallbackQuery = useWeekMenu(jainWeekIsEmpty ? selectedWeekId : null, "normal");
+  const normalFallbackQuery = useWeekMenu(
+    jainWeekIsEmpty ? selectedWeekId : null,
+    "normal",
+    jainWeekIsEmpty ? bakedInitialData : undefined,
+  );
 
   const activeWeekQuery = jainWeekIsEmpty ? normalFallbackQuery : weekMenuQuery;
   const effectiveMenuType: MenuType = jainWeekIsEmpty ? "normal" : menuType;
   // The regular menu carries egg and meat, which is the last thing to hand
   // someone who asked for Jain. Fall back to it vegetarian-only.
   const effectiveDietaryFilter: DietaryFilterType = jainWeekIsEmpty ? "veg-only" : dietaryFilter;
-  const bakedWeek =
-    isHydrated && effectiveMenuType === "normal" && hasMenuDays(initialWeek) ? initialWeek : null;
+  const bakedWeek = effectiveMenuType === "normal" && hasMenuDays(initialWeek) ? initialWeek : null;
   // hasMenuDays also screens out empty weeks restored from a persisted cache
   // written before those payloads were rejected.
   const week = (hasMenuDays(activeWeekQuery.data) ? activeWeekQuery.data : null) ?? bakedWeek;
@@ -262,7 +286,6 @@ export function MenuViewer({
 
   // Mount: read persisted state + start clock
   useMountEffect(() => {
-    setIsHydrated(true);
     const saved = getFilterState();
     const preferredFoodCourt = getPreferredFoodCourtFromCookie();
 
@@ -271,11 +294,34 @@ export function MenuViewer({
       setFoodCourt((current) => current || preferredFoodCourt);
     }
 
-    const interval = setInterval(() => {
-      setNow(getISTNow());
-    }, 60 * 1000);
+    const tick = () => setNow(getISTNow());
+    let interval: number | null = null;
+    const startClock = () => {
+      if (interval === null) interval = window.setInterval(tick, 60 * 1000);
+    };
+    const stopClock = () => {
+      if (interval !== null) window.clearInterval(interval);
+      interval = null;
+    };
+    // A hidden tab has nobody to show the minute to; pausing saves a full
+    // re-render per minute, and catching up on return keeps highlights honest.
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopClock();
+        return;
+      }
+      tick();
+      startClock();
+    };
 
-    return () => clearInterval(interval);
+    tick();
+    if (!document.hidden) startClock();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      stopClock();
+    };
   });
 
   // Derive whether user's day selection applies to the current week
@@ -293,7 +339,7 @@ export function MenuViewer({
   // Derive the selected week ID from available data
   const resolvedWeekId = React.useMemo(() => {
     if (initialWeekId) return initialWeekId;
-    if (!weeks || !resolvedFoodCourt) return selectedWeekId;
+    if (!weeks || !resolvedFoodCourt || now === null) return selectedWeekId;
     const forCourt = weeks.filter((w) => w.foodCourt === resolvedFoodCourt);
     return selectEffectiveWeek(forCourt, formatDateKey(now))?.startDate ?? selectedWeekId;
   }, [initialWeekId, selectedWeekId, weeks, resolvedFoodCourt, now]);
@@ -302,17 +348,45 @@ export function MenuViewer({
     setSelectedWeekId(resolvedWeekId);
   }
 
-  // Derive dateKey: use user selection if it's for this week, otherwise auto-detect
-  const dateKey = React.useMemo(() => {
-    if (isUserSelectedDay && userDateKey && week?.menu[userDateKey]) {
-      return userDateKey;
-    }
-    if (week) {
-      const ptr = findCurrentOrUpcomingMeal(week, now);
-      return ptr?.dateKey ?? Object.keys(week.menu)[0];
-    }
-    return null;
-  }, [isUserSelectedDay, userDateKey, week, now]);
+  const sortedDateKeys = React.useMemo(
+    () => (week ? sortDateKeysAsc(Object.keys(week.menu)) : []),
+    [week],
+  );
+
+  const pointer = React.useMemo(
+    () => (week && now !== null ? findCurrentOrUpcomingMeal(week, now) : null),
+    [week, now],
+  );
+
+  // User selection if it's for this week, else the clock's day, else the first day.
+  const resolvedDateKey = React.useMemo(() => {
+    if (!week) return null;
+    if (isUserSelectedDay && userDateKey && week.menu[userDateKey]) return userDateKey;
+    if (pointer?.dateKey && week.menu[pointer.dateKey]) return pointer.dateKey;
+    return sortedDateKeys[0] ?? null;
+  }, [isUserSelectedDay, userDateKey, week, pointer, sortedDateKeys]);
+
+  const day = week && resolvedDateKey ? week.menu[resolvedDateKey] : undefined;
+
+  // filterMeal returns fresh identities, so without this every clock tick
+  // would re-render the memoized meal cards.
+  const meals = React.useMemo(() => {
+    if (!day?.meals) return [];
+    return MEAL_ORDER.flatMap((key) => {
+      const source = day.meals[key];
+      if (!source) return [];
+      const meal = filterMeal(source, effectiveDietaryFilter);
+      if (meal.items.length === 0) return [];
+      return [
+        {
+          key,
+          meal,
+          timeRange: `${source.startTime} – ${source.endTime} IST`,
+          title: key[0].toUpperCase() + key.slice(1),
+        },
+      ];
+    });
+  }, [day, effectiveDietaryFilter]);
 
   const handleRefresh = React.useCallback(async () => {
     if (isRefreshing) {
@@ -364,8 +438,6 @@ export function MenuViewer({
     [availableFoodCourts],
   );
 
-  const sortedDateKeys = React.useMemo(() => (week ? Object.keys(week.menu).sort() : []), [week]);
-
   const dayOptions = React.useMemo(
     () =>
       week ? sortedDateKeys.map((k) => ({ label: `${week.menu[k].day} • ${k}`, value: k })) : [],
@@ -404,28 +476,18 @@ export function MenuViewer({
     return <ErrorState message="Couldn't load the menu" />;
   }
 
-  const pointer = findCurrentOrUpcomingMeal(week, now);
-  const fallbackDateKey = sortedDateKeys[0];
-
   // Compute the full week ID (e.g. "2026-02-02_to_2026-02-08") matching generateStaticParams format
-  const ascDateKeys = sortDateKeysAsc(Object.keys(week.menu));
-  const thisWeekMondayKey = getMondayDateKeyContainingIST(now);
-  const displayedWeekMondayKey = ascDateKeys[0] ?? "";
+  const displayedWeekMondayKey = sortedDateKeys[0] ?? "";
   const showStaleWeekNotice =
+    now !== null &&
     (initialWeekId == null || initialWeekId === "") &&
     displayedWeekMondayKey !== "" &&
-    displayedWeekMondayKey < thisWeekMondayKey;
-  const fullWeekId = `${ascDateKeys[0]}_to_${ascDateKeys[ascDateKeys.length - 1]}`;
-  const resolvedDateKey =
-    (dateKey && week.menu[dateKey] ? dateKey : null) ??
-    (pointer?.dateKey && week.menu[pointer.dateKey] ? pointer.dateKey : null) ??
-    fallbackDateKey;
+    displayedWeekMondayKey < getMondayDateKeyContainingIST(now);
+  const fullWeekId = `${sortedDateKeys[0]}_to_${sortedDateKeys[sortedDateKeys.length - 1]}`;
 
   if (!resolvedDateKey) {
     return <ErrorState message="No menu days available" />;
   }
-
-  const day = week.menu[resolvedDateKey];
 
   if (!day) {
     return <ErrorState message="No menu data for selected day" />;
@@ -435,18 +497,7 @@ export function MenuViewer({
     return <ErrorState message="No meals data for selected day" />;
   }
 
-  const order: MealKey[] = ["breakfast", "lunch", "snacks", "dinner"];
-  const meals = order
-    .filter((k) => day.meals[k])
-    .map((k) => ({
-      key: k,
-      meal: filterMeal(day.meals[k]!, effectiveDietaryFilter),
-      timeRange: `${day.meals[k]!.startTime} – ${day.meals[k]!.endTime} IST`,
-      title: k[0].toUpperCase() + k.slice(1),
-    }))
-    .filter((m) => m.meal.items.length > 0);
-
-  const picked = pickHighlightMealForDay(week, resolvedDateKey, now);
+  const picked = now !== null ? pickHighlightMealForDay(week, resolvedDateKey, now) : null;
   const highlightKey = picked?.mealKey ?? meals[0]?.key ?? "breakfast";
   const isPrimaryUpcoming = Boolean(picked?.isPrimaryUpcoming);
   const isLive = Boolean(picked?.isLive);
@@ -461,9 +512,7 @@ export function MenuViewer({
       {showStaleWeekNotice && <StaleWeekNotice weekLabel={week.week} />}
       <header {...stylex.props(styles.header)}>
         <div {...stylex.props(styles.titleBlock)}>
-          <h1 {...stylex.props(styles.title)}>
-            {resolvedFoodCourt.replace(/Food Court (\d+)/, "Food Court $1")}: Menu
-          </h1>
+          <h1 {...stylex.props(styles.title)}>{resolvedFoodCourt}: Menu</h1>
           <div {...stylex.props(styles.selectsRow)}>
             {foodCourtOptions.length > 1 && (
               <InlineSelect
@@ -513,7 +562,7 @@ export function MenuViewer({
           >
             {isRefreshButtonBusy ? (
               <>
-                <Loader2 {...stylex.props(styles.buttonSpinner)} />
+                <Loader2 {...sxc("animate-spin", styles.buttonSpinner)} />
                 Refreshing...
               </>
             ) : (

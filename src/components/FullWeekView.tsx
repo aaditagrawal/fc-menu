@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import * as stylex from "@stylexjs/stylex";
+import { sxc } from "@/lib/utils";
 import Link from "next/link";
 import { ComprehensiveWeekView } from "@/components/ComprehensiveWeekView";
 import { useWeekMenu } from "@/hooks/useMenuData";
@@ -129,7 +130,7 @@ export function FullWeekView({ weekId }: { weekId: WeekId }) {
   if (isLoading) {
     return (
       <div {...stylex.props(styles.loadingWrap)}>
-        <Loader2 {...stylex.props(styles.loadingSpinner)} />
+        <Loader2 {...sxc("animate-spin", styles.loadingSpinner)} />
       </div>
     );
   }

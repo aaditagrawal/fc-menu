@@ -1,8 +1,10 @@
+import { preload } from "react-dom";
 import * as stylex from "@stylexjs/stylex";
 
 import { MenuViewer } from "@/components/MenuViewer";
 import { getEffectiveWeekMenu } from "@/data/weeks";
 import { sxc } from "@/lib/utils";
+import { STATIC_MENU_MANIFEST_PATH } from "@/lib/staticMenuBundle";
 
 const styles = stylex.create({
   page: {
@@ -34,6 +36,7 @@ export const metadata = {
 };
 
 export default async function Home() {
+  preload(STATIC_MENU_MANIFEST_PATH, { as: "fetch", crossOrigin: "anonymous" });
   const initialWeek = await getEffectiveWeekMenu();
 
   return (
