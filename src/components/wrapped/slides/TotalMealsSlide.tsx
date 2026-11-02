@@ -86,57 +86,32 @@ export function TotalMealsSlide() {
 
         <StatNumber value={STATIC_TOTAL_MEALS} className="accent-rose" />
 
-        <p
-          {...sxc("animate-slide-up delay-200", styles.services)}
-          style={{ opacity: 0, animationFillMode: "forwards" }}
-        >
-          meal services
-        </p>
+        <p {...sxc("animate-slide-up stagger-2", styles.services)}>meal services</p>
 
-        <p
-          {...sxc("animate-slide-up delay-300", styles.days)}
-          style={{ opacity: 0, animationFillMode: "forwards" }}
-        >
+        <p {...sxc("animate-slide-up stagger-3", styles.days)}>
           across <span {...stylex.props(styles.monoBold)}>{STATIC_TOTAL_DAYS}</span> days
         </p>
 
         <div {...stylex.props(styles.grid)}>
-          <div
-            className="stat-card animate-slide-up delay-400"
-            style={{ opacity: 0, animationFillMode: "forwards" }}
-          >
+          <div className="stat-card animate-slide-up stagger-4">
             <div {...stylex.props(styles.cardNum)}>{STATIC_MEAL_COUNTS.breakfast}</div>
             <div {...stylex.props(styles.cardLabel)}>Breakfasts</div>
           </div>
-          <div
-            className="stat-card animate-slide-up delay-500"
-            style={{ opacity: 0, animationFillMode: "forwards" }}
-          >
+          <div className="stat-card animate-slide-up stagger-5">
             <div {...stylex.props(styles.cardNum)}>{STATIC_MEAL_COUNTS.lunch}</div>
             <div {...stylex.props(styles.cardLabel)}>Lunches</div>
           </div>
-          <div
-            className="stat-card animate-slide-up delay-600"
-            style={{ opacity: 0, animationFillMode: "forwards" }}
-          >
+          <div className="stat-card animate-slide-up stagger-6">
             <div {...stylex.props(styles.cardNum)}>{STATIC_MEAL_COUNTS.snacks}</div>
             <div {...stylex.props(styles.cardLabel)}>Snacks</div>
           </div>
-          <div
-            className="stat-card animate-slide-up delay-700"
-            style={{ opacity: 0, animationFillMode: "forwards" }}
-          >
+          <div className="stat-card animate-slide-up stagger-7">
             <div {...stylex.props(styles.cardNum)}>{STATIC_MEAL_COUNTS.dinner}</div>
             <div {...stylex.props(styles.cardLabel)}>Dinners</div>
           </div>
         </div>
 
-        <p
-          {...sxc("animate-fade-in delay-800", styles.foot)}
-          style={{ opacity: 0, animationFillMode: "forwards" }}
-        >
-          That&apos;s a lot of rice 🍚
-        </p>
+        <p {...sxc("animate-fade-in stagger-8", styles.foot)}>That&apos;s a lot of rice 🍚</p>
       </div>
     </Slide>
   );

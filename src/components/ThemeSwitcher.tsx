@@ -7,8 +7,22 @@ import { useTheme } from "next-themes";
 
 import { Button } from "@/components/ui/button";
 import { useMountEffect } from "@/hooks/useMountEffect";
+import { easing } from "@/lib/tokens.stylex";
+
+const iconIn = stylex.keyframes({
+  from: { opacity: 0, transform: "scale(0.85)" },
+  to: { opacity: 1, transform: "scale(1)" },
+});
 
 const styles = stylex.create({
+  iconSlot: {
+    display: "inline-flex",
+  },
+  iconSwap: {
+    animationName: iconIn,
+    animationDuration: "150ms",
+    animationTimingFunction: easing.spring,
+  },
   icon: {
     height: "1.2rem",
     width: "1.2rem",
@@ -35,6 +49,9 @@ const styles = stylex.create({
 export function ThemeSwitcher() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
+  // Only crossfade on user-initiated changes, not when the placeholder icon
+  // is swapped for the resolved one after mount.
+  const [hasCycled, setHasCycled] = React.useState(false);
 
   useMountEffect(() => {
     setMounted(true);
@@ -50,6 +67,7 @@ export function ThemeSwitcher() {
   }
 
   const cycleTheme = () => {
+    setHasCycled(true);
     if (theme === "light") {
       setTheme("dark");
     } else if (theme === "dark") {
@@ -83,7 +101,9 @@ export function ThemeSwitcher() {
 
   return (
     <Button variant="outline" size="icon" onClick={cycleTheme}>
-      {getIcon()}
+      <span key={theme} {...stylex.props(styles.iconSlot, hasCycled && styles.iconSwap)}>
+        {getIcon()}
+      </span>
       <span {...stylex.props(styles.srOnly)}>{getLabel()}</span>
     </Button>
   );

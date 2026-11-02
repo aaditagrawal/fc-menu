@@ -13,6 +13,7 @@
   scroll-snap-align: start;
   scroll-snap-stop: always;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -30,10 +31,6 @@
   background-color: oklch(0.65 0.25 350);
 }
 
-.bg-rose-subtle {
-  background-color: oklch(0.65 0.25 350 / 10%);
-}
-
 .border-rose {
   border-color: oklch(0.65 0.25 350);
 }
@@ -47,14 +44,6 @@
   background-color: oklch(0.85 0.2 90);
 }
 
-.bg-yellow-subtle {
-  background-color: oklch(0.85 0.2 90 / 10%);
-}
-
-.border-yellow {
-  border-color: oklch(0.85 0.2 90);
-}
-
 /* Dark mode adjustments */
 .dark .accent-rose {
   color: oklch(0.7 0.22 350);
@@ -62,10 +51,6 @@
 
 .dark .bg-rose {
   background-color: oklch(0.6 0.22 350);
-}
-
-.dark .bg-rose-subtle {
-  background-color: oklch(0.6 0.22 350 / 15%);
 }
 
 .dark .accent-yellow {
@@ -76,47 +61,18 @@
   background-color: oklch(0.75 0.18 90);
 }
 
-.dark .bg-yellow-subtle {
-  background-color: oklch(0.75 0.18 90 / 15%);
-}
-
-/* Number counter animation */
-@keyframes countUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.count-up {
-  animation: countUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* Slide entrance animations */
+/* Slide entrance keyframes. No `to` frame: each animates to the element's
+   own computed style, so e.g. .dish-tag-sm settles at its 0.8 opacity. */
 @keyframes slideUp {
   from {
     opacity: 0;
     transform: translateY(14px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-  }
-
-  to {
-    opacity: 1;
   }
 }
 
@@ -125,55 +81,84 @@
     opacity: 0;
     transform: scale(0.96);
   }
-
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
 }
 
-.animate-slide-up {
-  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* All slides mount at once, so mount-time entrances would finish before the
+   user scrolls to them. They are gated on the latched .is-visible class that
+   Slide adds via IntersectionObserver. The .wrapped-anim gate is only added by
+   JS when IntersectionObserver exists, so without it nothing is hidden. The
+   first slide is on screen at first paint, so it plays ungated straight from
+   the server HTML and is not hidden again at hydration. `backwards` fill
+   applies the from-state during each element's stagger delay. Longhands, not
+   the `animation` shorthand: these selectors outrank .stagger-*, and the
+   shorthand would reset animation-delay. */
+.wrapped-anim
+  .wrapped-slide:not(:first-child, .is-visible)
+  :is(.animate-slide-up, .animate-fade-in, .animate-scale-in, .dish-tag) {
+  opacity: 0;
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out forwards;
+.wrapped-slide:first-child .animate-slide-up,
+.wrapped-anim .wrapped-slide.is-visible .animate-slide-up {
+  animation-name: slideUp;
+  animation-duration: 0.35s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: backwards;
 }
 
-.animate-scale-in {
-  animation: scaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.wrapped-slide:first-child .animate-fade-in,
+.wrapped-anim .wrapped-slide.is-visible .animate-fade-in {
+  animation-name: fadeIn;
+  animation-duration: 0.3s;
+  animation-timing-function: ease-out;
+  animation-fill-mode: backwards;
+}
+
+.wrapped-slide:first-child .animate-scale-in,
+.wrapped-anim .wrapped-slide.is-visible .animate-scale-in {
+  animation-name: scaleIn;
+  animation-duration: 0.35s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: backwards;
+}
+
+.wrapped-anim .wrapped-slide.is-visible .dish-tag {
+  animation-name: scaleIn;
+  animation-duration: 0.3s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: backwards;
 }
 
 /* Staggered delays — 40ms cascade steps, capped well under a beat */
-.delay-100 {
+.stagger-1 {
   animation-delay: 40ms;
 }
 
-.delay-200 {
+.stagger-2 {
   animation-delay: 80ms;
 }
 
-.delay-300 {
+.stagger-3 {
   animation-delay: 120ms;
 }
 
-.delay-400 {
+.stagger-4 {
   animation-delay: 160ms;
 }
 
-.delay-500 {
+.stagger-5 {
   animation-delay: 200ms;
 }
 
-.delay-600 {
+.stagger-6 {
   animation-delay: 240ms;
 }
 
-.delay-700 {
+.stagger-7 {
   animation-delay: 280ms;
 }
 
-.delay-800 {
+.stagger-8 {
   animation-delay: 320ms;
 }
 
@@ -183,12 +168,6 @@
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.02em;
-}
-
-.stat-label {
-  font-size: clamp(1rem, 3vw, 1.5rem);
-  opacity: 0.7;
-  margin-top: 0.5rem;
 }
 
 /* Dish cloud */
@@ -227,15 +206,6 @@
   opacity: 0.8;
 }
 
-/* Progress ring */
-.progress-ring {
-  transform: rotate(-90deg);
-}
-
-.progress-ring-circle {
-  transition: stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
 /* Navigation dots */
 .nav-dots {
   position: fixed;
@@ -253,7 +223,9 @@
   height: 8px;
   border-radius: 9999px;
   background-color: oklch(0.5 0 0 / 30%);
-  transition: background-color 150ms ease, height 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    background-color 150ms ease,
+    height 200ms cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
 }
 
@@ -289,11 +261,15 @@
   align-items: center;
   gap: 0.5rem;
   opacity: 0.6;
-  animation: bounce 2s infinite;
+  animation: scrollHintBounce 2s infinite;
 }
 
-@keyframes bounce {
+/* No point bouncing while the intro slide is scrolled away */
+.wrapped-container[data-hint-paused] .scroll-hint {
+  animation-play-state: paused;
+}
 
+@keyframes scrollHintBounce {
   0%,
   20%,
   50%,
@@ -318,21 +294,6 @@
   border-radius: 1rem;
   padding: 1.5rem;
   text-align: center;
-}
-
-/* Grid for summary */
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  max-width: 400px;
-}
-
-@media (min-width: 640px) {
-  .summary-grid {
-    grid-template-columns: repeat(4, 1fr);
-    max-width: 600px;
-  }
 }
 
 /* Hide scrollbar but keep functionality */

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef } from "react";
 import * as stylex from "@stylexjs/stylex";
 import { sxc } from "@/lib/utils";
 
@@ -9,6 +9,10 @@ const styles = stylex.create({
     fontFamily: "var(--font-mono)",
   },
 });
+
+// A fixed locale: the final value is server-rendered, and a runtime-locale
+// toLocaleString() would format differently on the server and client.
+const numberFormat = new Intl.NumberFormat("en-US");
 
 interface StatNumberProps {
   value: number;
@@ -28,53 +32,54 @@ export function StatNumber({
   style,
   duration = 800,
 }: StatNumberProps) {
-  const [displayValue, setDisplayValue] = useState(0);
-  const [hasAnimated, setHasAnimated] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const numberRef = useRef<HTMLSpanElement>(null);
 
-  useEffect(() => {
+  // React always renders the final value (correct without JS, for SSR and for
+  // assistive tech). The count-up overrides the text imperatively, so it costs
+  // one text write per frame instead of a React render per frame, and every
+  // exit path restores the text React rendered.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const numberEl = numberRef.current;
+    if (!el || !numberEl) return;
+    if (!("IntersectionObserver" in window)) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const finalText = numberFormat.format(value);
+    let rafId: number | null = null;
+    let shown = 0;
+    numberEl.textContent = numberFormat.format(shown);
+
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && !hasAnimated) {
-            setHasAnimated(true);
-            animateValue();
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer.disconnect();
+
+        const startTime = performance.now();
+        const animate = (currentTime: number) => {
+          const progress = Math.min((currentTime - startTime) / duration, 1);
+          // Easing function: easeOutExpo
+          const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+          const next = Math.floor(value * easeProgress);
+          if (next !== shown) {
+            shown = next;
+            numberEl.textContent = numberFormat.format(next);
           }
-        });
+          rafId = progress < 1 ? requestAnimationFrame(animate) : null;
+        };
+        rafId = requestAnimationFrame(animate);
       },
       { threshold: 0.5 },
     );
+    observer.observe(el);
 
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
-
-    return () => observer.disconnect();
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasAnimated]);
-
-  const animateValue = () => {
-    const startTime = performance.now();
-    const startValue = 0;
-    const endValue = value;
-
-    const animate = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-
-      // Easing function: easeOutExpo
-      const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
-      const currentValue = Math.floor(startValue + (endValue - startValue) * easeProgress);
-
-      setDisplayValue(currentValue);
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
+    return () => {
+      observer.disconnect();
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      numberEl.textContent = finalText;
     };
-
-    requestAnimationFrame(animate);
-  };
+  }, [value, duration]);
 
   return (
     <div
@@ -82,7 +87,7 @@ export function StatNumber({
       {...sxc(["stat-number", className].filter(Boolean).join(" "), styles.mono, style)}
     >
       {prefix}
-      {displayValue.toLocaleString()}
+      <span ref={numberRef}>{numberFormat.format(value)}</span>
       {suffix}
     </div>
   );

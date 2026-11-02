@@ -34,7 +34,7 @@ const styles = stylex.create({
         "0 0 0 2px var(--background), 0 0 0 4px color-mix(in oklab, var(--ring) 40%, transparent)",
     },
   },
-  // Highlight scale/opacity are declared here, but the transition itself is
+  // Focus scale/opacity are declared here, but the transition itself is
   // owned by the `carousel-card` global class cascade (globals.css), which
   // swaps to a scroll-driven animation where `animation-timeline: view()` is
   // supported.
@@ -84,6 +84,10 @@ const styles = stylex.create({
 export interface MealCarouselHandle {
   goPrev: () => void;
   goNext: () => void;
+}
+
+function scrollBehavior(): ScrollBehavior {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth";
 }
 
 export const MealCarousel = React.forwardRef<
@@ -160,6 +164,15 @@ export const MealCarousel = React.forwardRef<
     );
   }, []);
 
+  // Page by exactly one card (+ gap). Any other distance lands between snap
+  // points, and mandatory snapping then yanks the rail to the nearest card.
+  const getCardStep = React.useCallback((container: HTMLDivElement) => {
+    const firstCard = itemRefs.current[0];
+    if (!firstCard) return container.clientWidth;
+    const gap = Number.parseFloat(getComputedStyle(container).columnGap);
+    return firstCard.offsetWidth + (Number.isNaN(gap) ? 16 : gap);
+  }, []);
+
   const goPrev = React.useCallback(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -167,9 +180,8 @@ export const MealCarousel = React.forwardRef<
       bounceEdge("start");
       return;
     }
-    const scrollAmount = container.clientWidth * 0.6;
-    container.scrollBy({ left: -scrollAmount, behavior: "smooth" });
-  }, [bounceEdge]);
+    container.scrollBy({ left: -getCardStep(container), behavior: scrollBehavior() });
+  }, [bounceEdge, getCardStep]);
 
   const goNext = React.useCallback(() => {
     const container = containerRef.current;
@@ -179,9 +191,8 @@ export const MealCarousel = React.forwardRef<
       bounceEdge("end");
       return;
     }
-    const scrollAmount = container.clientWidth * 0.6;
-    container.scrollBy({ left: scrollAmount, behavior: "smooth" });
-  }, [bounceEdge]);
+    container.scrollBy({ left: getCardStep(container), behavior: scrollBehavior() });
+  }, [bounceEdge, getCardStep]);
 
   React.useImperativeHandle(ref, () => ({ goPrev, goNext }), [goPrev, goNext]);
 
@@ -203,6 +214,35 @@ export const MealCarousel = React.forwardRef<
     return () => container.removeEventListener("keydown", handleKeyDown);
   });
 
+  // Where scroll-driven animations are unsupported (Firefox), the
+  // carousel-focus animation never runs, so dim/scale would only ever follow
+  // the time-derived highlight. Track the card under the rail's center line
+  // instead. The band is 1% wide so it can't straddle two cards across a gap.
+  const [centeredIndex, setCenteredIndex] = React.useState<number | null>(null);
+  const mealCount = meals.length;
+  React.useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !("IntersectionObserver" in window)) return;
+    if (CSS.supports("animation-timeline", "view(inline)")) return;
+
+    const cards = itemRefs.current
+      .slice(0, mealCount)
+      .filter((card): card is HTMLDivElement => card !== null);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const index = cards.findIndex((card) => card === entry.target);
+          if (index !== -1) setCenteredIndex(index);
+        }
+      },
+      { root: container, rootMargin: "0px -49.5% 0px -49.5%" },
+    );
+    for (const card of cards) observer.observe(card);
+    return () => observer.disconnect();
+  }, [mealCount]);
+  const focusedIndex = centeredIndex ?? highlightIndex;
+
   return (
     <div {...stylex.props(styles.root)}>
       <div
@@ -218,6 +258,7 @@ export const MealCarousel = React.forwardRef<
       >
         {meals.map(({ key, meal, timeRange, title }, idx) => {
           const isHighlighted = key === highlightKey;
+          const isFocused = idx === focusedIndex;
           return (
             <div
               key={key}
@@ -227,7 +268,7 @@ export const MealCarousel = React.forwardRef<
               {...sxc(
                 "carousel-card",
                 styles.item,
-                isHighlighted ? styles.itemHighlighted : styles.itemDimmed,
+                isFocused ? styles.itemHighlighted : styles.itemDimmed,
               )}
             >
               <MealCard

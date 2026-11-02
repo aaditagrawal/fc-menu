@@ -151,18 +151,10 @@ export function SummarySlide() {
         <div {...sxc("animate-scale-in", styles.emoji)}>✨</div>
 
         <div {...stylex.props(styles.headingStack)}>
-          <h2
-            {...sxc("animate-slide-up delay-100", styles.heading)}
-            style={{ opacity: 0, animationFillMode: "forwards" }}
-          >
-            That&apos;s a Wrap!
-          </h2>
+          <h2 {...sxc("animate-slide-up stagger-1", styles.heading)}>That&apos;s a Wrap!</h2>
         </div>
 
-        <div
-          {...sxc("animate-slide-up delay-300", styles.factBlock)}
-          style={{ opacity: 0, animationFillMode: "forwards" }}
-        >
+        <div {...sxc("animate-slide-up stagger-3", styles.factBlock)}>
           <p {...stylex.props(styles.fact)}>
             Around <span {...sxc("accent-rose", styles.bold)}>4,000</span> people eat at
             <br />
@@ -173,10 +165,7 @@ export function SummarySlide() {
           </p>
         </div>
 
-        <div
-          {...sxc("animate-fade-in delay-500", styles.linkStack)}
-          style={{ opacity: 0, animationFillMode: "forwards" }}
-        >
+        <div {...sxc("animate-fade-in stagger-5", styles.linkStack)}>
           <Link href="/" {...stylex.props(styles.link)}>
             <MoveLeft {...stylex.props(styles.backIcon)} />
             Back to Home
