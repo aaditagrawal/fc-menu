@@ -12,7 +12,13 @@
   "categories": {
     "paneer": {
       "name": "Paneer",
-      "keywords": ["paneer", "panir", "panner", "cottage cheese", "paneera"],
+      "keywords": [
+        "paneer",
+        "panir",
+        "panner",
+        "cottage cheese",
+        "paneera"
+      ],
       "emoji": "🧀",
       "variations": [
         {
@@ -100,7 +106,15 @@
     },
     "chicken": {
       "name": "Chicken",
-      "keywords": ["chicken", "chiken", "chikken", "murgh", "murg", "chickn", "chkn"],
+      "keywords": [
+        "chicken",
+        "chiken",
+        "chikken",
+        "murgh",
+        "murg",
+        "chickn",
+        "chkn"
+      ],
       "emoji": "🍗",
       "variations": [
         {
@@ -188,7 +202,16 @@
     },
     "fish": {
       "name": "Fish",
-      "keywords": ["fish", "machhi", "macchi", "machli", "prawns", "shrimp", "basa", "pomfret"],
+      "keywords": [
+        "fish",
+        "machhi",
+        "macchi",
+        "machli",
+        "prawns",
+        "shrimp",
+        "basa",
+        "pomfret"
+      ],
       "emoji": "🐟",
       "variations": [
         {
@@ -629,7 +652,13 @@
     },
     {
       "dayName": "Wednesday",
-      "signature": ["papad", "aloo sukka bhaji", "poori", "bread masala veg", "paneer kolhapuri"],
+      "signature": [
+        "papad",
+        "aloo sukka bhaji",
+        "poori",
+        "bread masala veg",
+        "paneer kolhapuri"
+      ],
       "frequency": {
         "papad": 5,
         "aloo sukka bhaji": 3,
