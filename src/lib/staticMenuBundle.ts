@@ -105,7 +105,11 @@ export async function fetchStaticManifest(): Promise<StaticMenuManifest> {
 /** Undecoded on purpose — the caller runs parseWeekMenu on the payload. */
 export async function fetchStaticWeek(entry: StaticWeekEntry): Promise<JsonValue> {
   // Week files are content-hashed (a revised menu gets a new path via the
-  // manifest), so the browser's HTTP cache can hold them indefinitely.
+  // manifest), so the browser's HTTP cache can hold them indefinitely. The
+  // path comes from the fetched manifest, so confine it to the bundle prefix.
+  if (!entry.path.startsWith("/data/menu-bundle/")) {
+    throw new Error("Unexpected menu bundle path");
+  }
   const res = await fetchWithTimeout(entry.path);
   if (!res.ok) throw new Error(`Failed to fetch static menu week: ${entry.startDate}`);
   return res.json();

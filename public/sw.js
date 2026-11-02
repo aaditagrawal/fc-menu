@@ -34,17 +34,17 @@ function isCacheableAsset(request, url) {
 }
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS)));
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))),
+      ),
   );
   self.clients.claim();
 });
@@ -104,7 +104,7 @@ function cacheFirst(request, event) {
           putInCache(request, response, event);
         }
         return response;
-      })
+      }),
   );
 }
 
@@ -126,15 +126,17 @@ self.addEventListener("fetch", (event) => {
   if (request.mode === "navigate") {
     event.respondWith(
       !isPlainUrl || url.search
-        ? fetch(request).catch(() =>
-            caches.match("/").then((cached) => cached || Response.error())
-          )
-        : networkFirst(request, "/", event)
+        ? fetch(request).catch(() => caches.match("/").then((cached) => cached || Response.error()))
+        : networkFirst(request, "/", event),
     );
     return;
   }
 
-  if (isPlainUrl && url.origin === self.location.origin && url.pathname.startsWith(MENU_DATA_PREFIX)) {
+  if (
+    isPlainUrl &&
+    url.origin === self.location.origin &&
+    url.pathname.startsWith(MENU_DATA_PREFIX)
+  ) {
     // The manifest is the freshness gate for menu data: network-first, cached
     // only as an offline fallback.
     if (url.pathname === MENU_MANIFEST_PATH) {
@@ -164,7 +166,7 @@ self.addEventListener("fetch", (event) => {
             }
             return response;
           })
-          .catch(() => caches.match(request))
+          .catch(() => caches.match(request)),
       );
     }
     return;
@@ -193,9 +195,9 @@ self.addEventListener("fetch", (event) => {
           .then((response) => {
             if (response.ok) return putInCache(request, response);
           })
-          .catch(() => {})
+          .catch(() => {}),
       );
       return cached || network;
-    })
+    }),
   );
 });
