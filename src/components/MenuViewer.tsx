@@ -15,9 +15,8 @@ import { MealCarousel, type MealCarouselHandle } from "@/components/MealCarousel
 import { useWeeksInfo, useWeekMenu } from "@/hooks/useMenuData";
 import type { MenuType } from "@/hooks/useMenuData";
 import { useQueryClient } from "@tanstack/react-query";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { Grid3X3, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { DietaryFilter } from "@/components/DietaryFilter";
 import {
@@ -28,7 +27,7 @@ import {
 } from "@/lib/filters";
 import { QUERY_PERSIST_STORAGE_KEY } from "@/lib/queryPersistence";
 import { useMountEffect } from "@/hooks/useMountEffect";
-import { toast } from "sonner";
+import { toast } from "@/lib/notifications";
 import { StaleWeekNotice } from "@/components/StaleWeekNotice";
 import { ErrorState } from "@/components/ErrorState";
 import { JainFallbackNotice } from "@/components/JainFallbackNotice";
@@ -489,12 +488,14 @@ export function MenuViewer({
 
       <div {...stylex.props(styles.actionsRow)}>
         <div {...stylex.props(styles.actionsGroup)}>
-          <Button asChild variant="outline">
-            <Link href={`/week/full?id=${fullWeekId}`} title="View full week menu">
-              <Grid3X3 {...stylex.props(styles.buttonIcon)} />
-              View Full Week Menu
-            </Link>
-          </Button>
+          <ButtonLink
+            variant="outline"
+            href={`/week/full?id=${fullWeekId}`}
+            title="View full week menu"
+          >
+            <Grid3X3 {...stylex.props(styles.buttonIcon)} />
+            View Full Week Menu
+          </ButtonLink>
 
           <Button
             onClick={handleRefresh}

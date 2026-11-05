@@ -2,12 +2,11 @@
 
 import * as React from "react";
 import * as stylex from "@stylexjs/stylex";
-import Link from "next/link";
 import { ComprehensiveWeekView } from "@/components/ComprehensiveWeekView";
 import { useWeekMenu } from "@/hooks/useMenuData";
 import type { MenuType } from "@/hooks/useMenuData";
 import type { WeekId } from "@/components/MenuViewer";
-import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { DietaryFilter } from "@/components/DietaryFilter";
 import {
@@ -158,12 +157,10 @@ export function FullWeekView({ weekId }: { weekId: WeekId }) {
         </div>
         <div {...stylex.props(styles.headerActions)}>
           <DietaryFilter value={dietaryFilter} onChange={handleFilterChange} />
-          <Button asChild variant="outline">
-            <Link href="/" title="Back to daily view">
-              <ArrowLeft {...stylex.props(styles.buttonIcon)} />
-              Daily View
-            </Link>
-          </Button>
+          <ButtonLink variant="outline" href="/" title="Back to daily view">
+            <ArrowLeft {...stylex.props(styles.buttonIcon)} />
+            Daily View
+          </ButtonLink>
         </div>
       </div>
       <ComprehensiveWeekView week={week} />

@@ -4,6 +4,7 @@ import * as React from "react";
 import * as stylex from "@stylexjs/stylex";
 
 import { ErrorState } from "@/components/ErrorState";
+import { THEME_INIT } from "@/lib/theme";
 import { sxc } from "@/lib/utils";
 import { geistSans, geistMono } from "./fonts";
 import "./globals.css";
@@ -19,17 +20,6 @@ const styles = stylex.create({
     paddingInline: "1rem",
   },
 });
-
-/**
- * This boundary replaces the root layout entirely, so nothing above it runs
- * next-themes. Apply the same stored preference in a blocking script so the
- * class is on <html> before first paint — an effect would run after it and
- * flash dark-mode users to light.
- */
-const THEME_INIT = {
-  __html:
-    'try{var t=localStorage.getItem("theme");if(t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}',
-};
 
 export default function GlobalError({
   error,

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ThemeProvider } from "next-themes";
+import { THEME_INIT } from "@/lib/theme";
 import * as stylex from "@stylexjs/stylex";
 import { AppChrome } from "@/components/AppChrome";
 import { ServiceWorker } from "@/components/ServiceWorker";
@@ -103,6 +103,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={THEME_INIT} />
         <link
           rel="preload"
           href="/data/menu-bundle/manifest.json"
@@ -114,58 +115,51 @@ export default function RootLayout({
       </head>
       <body {...sxc(`${geistSans.variable} ${geistMono.variable} scroll-optimized`, styles.body)}>
         <QueryProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <main {...stylex.props(styles.main)}>{children}</main>
-            <footer {...stylex.props(styles.footer)}>
-              <div {...stylex.props(styles.footerPill)}>
-                <p {...stylex.props(styles.footerText)}>
-                  Made by{" "}
-                  <a
-                    href="https://aadit.cc"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    {...stylex.props(styles.footerLink)}
-                  >
-                    Aadit
-                  </a>
-                  {" • "}
-                  <a
-                    href="https://tikm.coolstuff.work/docs/reference"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    {...stylex.props(styles.footerLink)}
-                  >
-                    API Docs
-                  </a>
-                  {" • "}
-                  <a
-                    href="https://github.com/aaditagrawal/fc-menu"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    {...stylex.props(styles.footerLink)}
-                  >
-                    Open Source
-                  </a>
-                  {" • "}
-                  <a
-                    href="https://blog.aadit.cc/posts/building-a-food-court-menu/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    {...stylex.props(styles.footerLink)}
-                  >
-                    How it was made
-                  </a>
-                </p>
-              </div>
-            </footer>
-            <AppChrome />
-            <ServiceWorker />
-          </ThemeProvider>
+          <main {...stylex.props(styles.main)}>{children}</main>
+          <footer {...stylex.props(styles.footer)}>
+            <div {...stylex.props(styles.footerPill)}>
+              <p {...stylex.props(styles.footerText)}>
+                Made by{" "}
+                <a
+                  href="https://aadit.cc"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  {...stylex.props(styles.footerLink)}
+                >
+                  Aadit
+                </a>
+                {" • "}
+                <a
+                  href="https://tikm.coolstuff.work/docs/reference"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  {...stylex.props(styles.footerLink)}
+                >
+                  API Docs
+                </a>
+                {" • "}
+                <a
+                  href="https://github.com/aaditagrawal/fc-menu"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  {...stylex.props(styles.footerLink)}
+                >
+                  Open Source
+                </a>
+                {" • "}
+                <a
+                  href="https://blog.aadit.cc/posts/building-a-food-court-menu/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  {...stylex.props(styles.footerLink)}
+                >
+                  How it was made
+                </a>
+              </p>
+            </div>
+          </footer>
+          <AppChrome />
+          <ServiceWorker />
         </QueryProvider>
       </body>
     </html>

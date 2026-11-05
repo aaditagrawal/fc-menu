@@ -9,7 +9,7 @@
  * only reload that reliably gets them unstuck.
  */
 
-// next-themes' default storage key. Everything else is disposable, but wiping
+// Preserve the theme preference. Everything else is disposable, but wiping
 // this would flash a dark-mode user to light on the reload — a worse experience
 // than the error we're recovering from.
 const PRESERVED_LOCAL_STORAGE_KEYS = ["theme"];

@@ -1,9 +1,8 @@
-import Link from "next/link";
 import * as stylex from "@stylexjs/stylex";
 
 import { FullWeekView } from "@/components/FullWeekView";
 import type { WeekId } from "@/components/MenuViewer";
-import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button";
 
 const styles = stylex.create({
   page: {
@@ -82,11 +81,14 @@ export default async function FullWeekPage({ params }: PageProps) {
               <span {...stylex.props(styles.bannerTitle)}>You&apos;re on a week page.</span>
               <span>Want today&apos;s view instead?</span>
             </div>
-            <Button asChild variant="outline" style={styles.bannerButton}>
-              <Link href="/" title="Go to current menu">
-                Current Menu
-              </Link>
-            </Button>
+            <ButtonLink
+              variant="outline"
+              style={styles.bannerButton}
+              href="/"
+              title="Go to current menu"
+            >
+              Current Menu
+            </ButtonLink>
           </div>
         </div>
         <FullWeekView weekId={id} />

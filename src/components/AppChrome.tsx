@@ -2,7 +2,7 @@
 
 import * as stylex from "@stylexjs/stylex";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/toaster";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { useMountEffect } from "@/hooks/useMountEffect";
 import { RESET_PARAM } from "@/lib/hardReset";

@@ -5,7 +5,7 @@ import * as stylex from "@stylexjs/stylex";
  *
  * Colors are intentionally NOT defined here: theme colors live as plain CSS
  * custom properties in globals.css (`:root` / `.dark`) because dark mode is
- * class-based via next-themes. Styles reference them as raw strings, e.g.
+ * class-based via the theme store. Styles reference them as raw strings, e.g.
  * `color: "var(--muted-foreground)"`.
  */
 

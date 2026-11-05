@@ -2,11 +2,10 @@
 
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 import * as stylex from "@stylexjs/stylex";
 
 import { FullWeekView } from "@/components/FullWeekView";
-import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
 const spin = stylex.keyframes({
@@ -105,9 +104,9 @@ function FullWeekContent() {
     return (
       <div {...stylex.props(styles.emptyState)}>
         <div {...stylex.props(styles.emptyStateText)}>No week specified</div>
-        <Button asChild variant="outline">
-          <Link href="/">Go to Current Menu</Link>
-        </Button>
+        <ButtonLink variant="outline" href="/">
+          Go to Current Menu
+        </ButtonLink>
       </div>
     );
   }
@@ -125,11 +124,14 @@ export default function FullWeekPage() {
               <span {...stylex.props(styles.bannerTitle)}>Full week view.</span>
               <span>Want today&apos;s view instead?</span>
             </div>
-            <Button asChild variant="outline" style={styles.bannerButton}>
-              <Link href="/" title="Go to current menu">
-                Current Menu
-              </Link>
-            </Button>
+            <ButtonLink
+              variant="outline"
+              style={styles.bannerButton}
+              href="/"
+              title="Go to current menu"
+            >
+              Current Menu
+            </ButtonLink>
           </div>
         </div>
         <Suspense

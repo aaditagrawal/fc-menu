@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Slot } from "@radix-ui/react-slot";
+import Link from "next/link";
 import * as stylex from "@stylexjs/stylex";
 
 import { easing } from "@/lib/tokens.stylex";
@@ -140,15 +140,13 @@ export interface ButtonProps extends Omit<
 > {
   variant?: keyof typeof variantStyles;
   size?: keyof typeof sizeStyles;
-  asChild?: boolean;
   style?: stylex.StyleXStyles;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = "default", size = "default", asChild = false, style, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button";
+  ({ variant = "default", size = "default", style, ...props }, ref) => {
     return (
-      <Comp
+      <button
         {...stylex.props(styles.base, variantStyles[variant], sizeStyles[size], style)}
         ref={ref}
         {...props}
@@ -158,4 +156,24 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 );
 Button.displayName = "Button";
 
-export { Button };
+export interface ButtonLinkProps extends Omit<
+  React.ComponentPropsWithoutRef<typeof Link>,
+  "className" | "style"
+> {
+  variant?: ButtonProps["variant"];
+  size?: ButtonProps["size"];
+  style?: stylex.StyleXStyles;
+}
+
+const ButtonLink = React.forwardRef<HTMLAnchorElement, ButtonLinkProps>(
+  ({ variant = "default", size = "default", style, ...props }, ref) => (
+    <Link
+      {...stylex.props(styles.base, variantStyles[variant], sizeStyles[size], style)}
+      ref={ref}
+      {...props}
+    />
+  ),
+);
+ButtonLink.displayName = "ButtonLink";
+
+export { Button, ButtonLink };

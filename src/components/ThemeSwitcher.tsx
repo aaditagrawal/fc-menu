@@ -1,12 +1,10 @@
 "use client";
 
-import * as React from "react";
 import * as stylex from "@stylexjs/stylex";
 import { Moon, Sun, Monitor } from "lucide-react";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/hooks/useTheme";
 
 import { Button } from "@/components/ui/button";
-import { useMountEffect } from "@/hooks/useMountEffect";
 
 const styles = stylex.create({
   icon: {
@@ -34,13 +32,7 @@ const styles = stylex.create({
 
 export function ThemeSwitcher() {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = React.useState(false);
-
-  useMountEffect(() => {
-    setMounted(true);
-  });
-
-  if (!mounted) {
+  if (theme === undefined) {
     return (
       <Button variant="outline" size="icon" disabled>
         <Sun {...stylex.props(styles.icon)} />
