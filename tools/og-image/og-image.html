@@ -1,0 +1,167 @@
+<!doctype html>
+<!--
+  Source for public/og-image.png (the Open Graph / Twitter card).
+  Render with: bun run build:og-image
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Food Court Menus: Open Graph card</title>
+    <style>
+      @font-face {
+        font-family: "Geist";
+        src: url("./Geist.ttf") format("truetype");
+        font-weight: 100 900;
+      }
+      @font-face {
+        font-family: "Geist Mono";
+        src: url("./GeistMono-Regular.ttf") format("truetype");
+        font-weight: 400;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        background: #000;
+      }
+      body {
+        position: relative;
+        font-family: "Geist", system-ui, sans-serif;
+        color: #ededed;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: geometricPrecision;
+      }
+      /* Ordered-dither render of the cloche, drawn by the script below at one canvas pixel per cell. */
+      #dither {
+        position: absolute;
+        inset: 0;
+        width: 1200px;
+        height: 630px;
+        image-rendering: pixelated;
+      }
+      /* Icon, title and byline form one block, centred against the cloche and matching its height. */
+      .copy {
+        position: absolute;
+        left: 96px;
+        top: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 13px;
+      }
+      h1 {
+        margin-top: 36px;
+        font-size: 80px;
+        line-height: 0.98;
+        font-weight: 600;
+        letter-spacing: -0.055em;
+      }
+      p {
+        margin-top: 24px;
+        font-family: "Geist Mono", ui-monospace, monospace;
+        font-size: 20px;
+        line-height: 1;
+        letter-spacing: 0.01em;
+        color: #7d7d7d;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="dither"></canvas>
+
+
+    <div class="copy">
+      <svg class="icon" viewBox="0 0 100 100">
+        <defs>
+          <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#F59E0B" />
+            <stop offset="100%" stop-color="#D97706" />
+          </linearGradient>
+        </defs>
+        <rect width="100" height="100" fill="url(#bg)" />
+        <g fill="#fff">
+          <circle cx="50" cy="31" r="5" />
+          <path d="M 22 66 A 28 28 0 0 1 78 66 Z" />
+          <rect x="14" y="68" width="72" height="6" rx="3" />
+        </g>
+      </svg>
+      <h1>Food Court<br />Menus</h1>
+      <p>The Indian Kitchen</p>
+    </div>
+
+    <script>
+      // The app icon's cloche, lit as a solid and reduced to one colour with an 8x8 Bayer matrix.
+      const CELL = 3;
+      const canvas = document.getElementById("dither");
+      const cols = (canvas.width = 1200 / CELL);
+      const rows = (canvas.height = 630 / CELL);
+      const ctx = canvas.getContext("2d");
+
+      // prettier-ignore
+      const BAYER = [
+         0, 32,  8, 40,  2, 34, 10, 42,
+        48, 16, 56, 24, 50, 18, 58, 26,
+        12, 44,  4, 36, 14, 46,  6, 38,
+        60, 28, 52, 20, 62, 30, 54, 22,
+         3, 35, 11, 43,  1, 33,  9, 41,
+        51, 19, 59, 27, 49, 17, 57, 25,
+        15, 47,  7, 39, 13, 45,  5, 37,
+        63, 31, 55, 23, 61, 29, 53, 21,
+      ];
+
+      const CX = 834;
+      const BASE = 426;
+      const R = 222;
+      const KNOB = { y: BASE - R - 14, r: 22 };
+      const PLATE = { top: BASE + 12, height: 24, half: 270 };
+      const LIGHT = normalize([-0.55, -0.62, 0.56]);
+
+      function normalize([x, y, z]) {
+        const length = Math.hypot(x, y, z);
+        return [x / length, y / length, z / length];
+      }
+
+      /** Brightness of a sphere of radius r at offset (dx, dy) from its centre, or -1 outside it. */
+      function sphere(dx, dy, r) {
+        const z2 = r * r - dx * dx - dy * dy;
+        if (z2 < 0) return -1;
+        const z = Math.sqrt(z2);
+        const diffuse = Math.max(0, (dx * LIGHT[0] + dy * LIGHT[1] + z * LIGHT[2]) / r);
+        const rim = (1 - z / r) ** 5 * 0.22;
+        return 0.015 + diffuse ** 2.1 * 0.82 + rim;
+      }
+
+      function brightness(px, py) {
+        const dx = px - CX;
+        const knob = sphere(dx, py - KNOB.y, KNOB.r);
+        if (knob >= 0) return knob;
+        if (py <= BASE) return sphere(dx, py - BASE, R);
+        const t = (py - PLATE.top) / PLATE.height;
+        const end = PLATE.half - Math.abs(dx);
+        const cap = PLATE.height / 2;
+        const inCap = end < cap && Math.hypot(cap - end, (t - 0.5) * PLATE.height) > cap;
+        if (t < 0 || t > 1 || end < 0 || inCap) return -1;
+        return (0.6 - t * 0.42) * (0.92 - (dx + PLATE.half) / (PLATE.half * 2) * 0.72);
+      }
+
+      ctx.fillStyle = "#f59e0b";
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const level = brightness((x + 0.5) * CELL, (y + 0.5) * CELL);
+          if (level > (BAYER[(y & 7) * 8 + (x & 7)] + 0.5) / 64) ctx.fillRect(x, y, 1, 1);
+        }
+      }
+    </script>
+  </body>
+</html>

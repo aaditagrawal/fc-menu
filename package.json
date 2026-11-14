@@ -6,6 +6,7 @@
     "dev": "next dev --turbopack",
     "dev:portless": "portless run",
     "build:menu-data": "bun scripts/build-menu-data.mjs",
+    "build:og-image": "bun tools/og-image/render.mjs",
     "build": "bun scripts/build-menu-data.mjs && next build && bun run typecheck",
     "lint": "oxlint .",
     "lint:fix": "oxlint . --fix",

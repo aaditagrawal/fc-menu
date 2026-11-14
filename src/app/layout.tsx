@@ -92,18 +92,19 @@ export const metadata: Metadata = {
     description: "A fast, friendly viewer for weekly menus with time-aware highlighting (IST).",
     images: [
       {
-        url: "/icon-512.png",
-        width: 512,
-        height: 512,
-        alt: "Food Court Menus",
+        url: "/og-image.png",
+        width: 2400,
+        height: 1260,
+        type: "image/png",
+        alt: "Food Court Menus by The Indian Kitchen",
       },
     ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Food Court Menus - The Indian Kitchen",
     description: "A fast, friendly viewer for weekly menus with time-aware highlighting (IST).",
-    images: ["/icon-512.png"],
+    images: ["/og-image.png"],
   },
   icons: {
     icon: "/favicon.svg",
