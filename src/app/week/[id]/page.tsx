@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { preload } from "react-dom";
 import * as stylex from "@stylexjs/stylex";
 
 import { MenuViewer, type WeekId } from "@/components/MenuViewer";
 import { Button } from "@/components/ui/button";
+import { STATIC_MENU_MANIFEST_PATH } from "@/lib/staticMenuBundle";
 
 const styles = stylex.create({
   page: {
@@ -71,6 +73,7 @@ export async function generateStaticParams() {
 
 export default async function WeekPage({ params }: PageProps) {
   const { id } = await params;
+  preload(STATIC_MENU_MANIFEST_PATH, { as: "fetch", crossOrigin: "anonymous" });
   const initialWeek = await import("@/data/weeks")
     .then(({ getWeekMenu }) => getWeekMenu(id))
     .catch(() => null);

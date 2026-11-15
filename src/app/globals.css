@@ -439,9 +439,18 @@ body {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
     scroll-behavior: auto !important;
+  }
+
+  /* Spinners keep turning: a frozen spinner reads as stuck, not calm. Only
+     timing is overridden, so this works with any keyframes (incl. StyleX). */
+  .animate-spin {
+    animation-duration: 2s !important;
+    animation-iteration-count: infinite !important;
   }
 }
 
@@ -503,7 +512,14 @@ body {
 /* Compositor-only transitions with a strong ease-out */
 .smooth-transition {
   transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1),
-    opacity 0.12s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Opacity/shadow only — for surfaces whose transform is either unused or
+   written imperatively every frame (the MealCard gyro tilt), where a
+   transform transition would make each write chase the previous one */
+.smooth-transition-shadow {
+  transition: opacity 0.12s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -525,7 +541,14 @@ body {
 }
 
 /* Carousel cards: focus follows scroll position on the compositor thread.
-   Falls back to the state-driven highlight transition where unsupported. */
+   Falls back to a state-driven transition where unsupported (MealCarousel
+   then drives dim/scale from the centered card). */
+.carousel-card {
+  transition:
+    opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    scale 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 @media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: view(inline)) {
     .carousel-card {
@@ -555,15 +578,17 @@ body {
   animation: contentReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* A small lift rather than scale(0.98): scaling the whole menu root
+   resamples every glyph and image on the page */
 @keyframes contentReveal {
   from {
     opacity: 0;
-    transform: scale(0.98);
+    transform: translateY(4px);
   }
 
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: translateY(0);
   }
 }
 

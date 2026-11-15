@@ -69,6 +69,7 @@ export function DishCloud({ variations, maxCount = 15, accentColor = "rose" }: D
             {...tagProps}
             style={{
               ...tagProps.style,
+              // Staggers the gated scaleIn entrance in wrapped.css
               animationDelay: `${index * 50}ms`,
             }}
           >

@@ -10,9 +10,27 @@ import { Coffee, UtensilsCrossed, Cookie, Moon } from "lucide-react";
 import { filterMenuItems } from "@/lib/exceptions";
 import { sxc } from "@/lib/utils";
 import { easing } from "@/lib/tokens.stylex";
+import { useMountEffect } from "@/hooks/useMountEffect";
 
 interface ComprehensiveWeekViewProps {
   week: WeekMenu;
+}
+
+const DESKTOP_MEDIA_QUERY = "(min-width: 1024px)";
+
+function subscribeDesktopBreakpoint(callback: () => void) {
+  const mql = window.matchMedia(DESKTOP_MEDIA_QUERY);
+  mql.addEventListener("change", callback);
+  return () => mql.removeEventListener("change", callback);
+}
+
+function getDesktopSnapshot() {
+  return window.matchMedia(DESKTOP_MEDIA_QUERY).matches;
+}
+
+// Both trees render until mount, so this only has to be stable, not accurate.
+function getDesktopServerSnapshot() {
+  return true;
 }
 
 const mealOrder: MealKey[] = ["breakfast", "lunch", "snacks", "dinner"];
@@ -40,12 +58,17 @@ const styles = stylex.create({
     rowGap: "2rem",
   },
   mobileWrap: {
+    display: "flex",
+    flexDirection: "column",
+    rowGap: "1.5rem",
+  },
+  // Pre-mount only, while both trees are in the DOM: a lone tree carrying
+  // these would vanish at the other breakpoint.
+  mobileOnly: {
     display: {
       default: "flex",
       "@media (min-width: 1024px)": "none",
     },
-    flexDirection: "column",
-    rowGap: "1.5rem",
   },
   // alignSelf keeps the old inline-flex shrink-to-fit width now that the
   // parent is a flex column (which would otherwise stretch it).
@@ -65,7 +88,7 @@ const styles = stylex.create({
     fontSize: "0.75rem",
     lineHeight: "calc(1 / 0.75)",
   },
-  desktopWrap: {
+  desktopOnly: {
     display: {
       default: "none",
       "@media (min-width: 1024px)": "block",
@@ -204,118 +227,134 @@ export function ComprehensiveWeekView({ week }: ComprehensiveWeekViewProps) {
 
   const desktopCols = `200px repeat(${dayCount}, minmax(280px, 1fr))`;
 
+  // SSR and hydration must match, so both trees render (CSS hides one) until
+  // mount; after that only the matching tree is built, halving the DOM.
+  const [mounted, setMounted] = React.useState(false);
+  useMountEffect(() => {
+    setMounted(true);
+  });
+  const isDesktop = React.useSyncExternalStore(
+    subscribeDesktopBreakpoint,
+    getDesktopSnapshot,
+    getDesktopServerSnapshot,
+  );
+
   return (
     <div {...stylex.props(styles.root)}>
       {/* Mobile/Tablet View - Days stacked vertically */}
-      <div {...stylex.props(styles.mobileWrap)}>
-        <div {...stylex.props(styles.modeToggle)}>
-          <Button
-            type="button"
-            size="sm"
-            variant={mobileViewMode === "detailed" ? "default" : "ghost"}
-            onClick={() => setMobileViewMode("detailed")}
-            style={styles.modeToggleButton}
-          >
-            Detailed
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant={mobileViewMode === "compact" ? "default" : "ghost"}
-            onClick={() => setMobileViewMode("compact")}
-            style={styles.modeToggleButton}
-          >
-            Compact Grid
-          </Button>
-        </div>
+      {(!mounted || !isDesktop) && (
+        <div {...stylex.props(styles.mobileWrap, !mounted && styles.mobileOnly)}>
+          <div {...stylex.props(styles.modeToggle)}>
+            <Button
+              type="button"
+              size="sm"
+              variant={mobileViewMode === "detailed" ? "default" : "ghost"}
+              onClick={() => setMobileViewMode("detailed")}
+              style={styles.modeToggleButton}
+            >
+              Detailed
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={mobileViewMode === "compact" ? "default" : "ghost"}
+              onClick={() => setMobileViewMode("compact")}
+              style={styles.modeToggleButton}
+            >
+              Compact Grid
+            </Button>
+          </div>
 
-        {mobileViewMode === "detailed" ? (
-          sortedDays.map((dateKey) => {
-            const day = week.menu[dateKey];
-            return <DaySection key={dateKey} day={day} dateKey={dateKey} />;
-          })
-        ) : (
-          <MobileCompactWeekGrid week={week} sortedDays={sortedDays} />
-        )}
-      </div>
+          {mobileViewMode === "detailed" ? (
+            sortedDays.map((dateKey) => {
+              const day = week.menu[dateKey];
+              return <DaySection key={dateKey} day={day} dateKey={dateKey} />;
+            })
+          ) : (
+            <MobileCompactWeekGrid week={week} sortedDays={sortedDays} />
+          )}
+        </div>
+      )}
 
       {/* Desktop View - Transposed grid: Meals as rows, Days as columns */}
-      <div {...stylex.props(styles.desktopWrap)}>
-        <div {...sxc("scroll-container", styles.desktopScroll)}>
-          <div {...sxc("scroll-grid", styles.desktopGrid, styles.gridCols(desktopCols))}>
-            {/* Sticky Header row with days */}
-            <div {...stylex.props(styles.stickyHeaderRow)}>
-              <div {...stylex.props(styles.headerGrid, styles.gridCols(desktopCols))}>
-                <div>
-                  <h3 {...stylex.props(styles.mealsHeading)}>Meals</h3>
-                </div>
-                {sortedDays.map((dateKey) => {
-                  const day = week.menu[dateKey];
-                  return (
-                    <div key={`header-${dateKey}`} {...stylex.props(styles.dayHeaderCell)}>
-                      <h3 {...stylex.props(styles.semibold)}>{day.day}</h3>
-                      <p {...stylex.props(styles.dayHeaderDate)}>{dateKey}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Content rows */}
-            <div {...stylex.props(styles.contentGrid, styles.gridCols(desktopCols))}>
-              {/* Empty cell for meal type headers */}
-              <div></div>
-              {sortedDays.map((dateKey) => (
-                <div key={`spacer-${dateKey}`} {...stylex.props(styles.snapStart)}></div>
-              ))}
-            </div>
-
-            {/* Meal rows */}
-            {mealOrder.map((mealKey) => (
-              <React.Fragment key={mealKey}>
-                {/* Meal type header and content row */}
-                <div {...stylex.props(styles.mealRowGrid, styles.gridCols(desktopCols))}>
-                  {/* Meal type header */}
-                  <div {...stylex.props(styles.mealTypeHeader)}>
-                    <div {...stylex.props(styles.mealTypeRow)}>
-                      <span {...stylex.props(styles.mealTypeIconCircle)}>
-                        {React.createElement(mealIcons[mealKey], {
-                          ...stylex.props(styles.icon16),
-                        })}
-                      </span>
-                      <div>
-                        <span {...stylex.props(styles.medium)}>{mealTitles[mealKey]}</span>
-                      </div>
-                    </div>
+      {(!mounted || isDesktop) && (
+        <div {...stylex.props(!mounted && styles.desktopOnly)}>
+          <div {...sxc("scroll-container", styles.desktopScroll)}>
+            <div {...sxc("scroll-grid", styles.desktopGrid, styles.gridCols(desktopCols))}>
+              {/* Sticky Header row with days */}
+              <div {...stylex.props(styles.stickyHeaderRow)}>
+                <div {...stylex.props(styles.headerGrid, styles.gridCols(desktopCols))}>
+                  <div>
+                    <h3 {...stylex.props(styles.mealsHeading)}>Meals</h3>
                   </div>
-
-                  {/* Meal content for each day */}
                   {sortedDays.map((dateKey) => {
                     const day = week.menu[dateKey];
-                    const meal = day.meals[mealKey];
-
                     return (
-                      <div key={`${mealKey}-${dateKey}`} {...stylex.props(styles.dayCell)}>
-                        {meal ? (
-                          <MealGridCard
-                            meal={meal}
-                            mealKey={mealKey}
-                            timeRange={`${meal.startTime} – ${meal.endTime} IST`}
-                          />
-                        ) : (
-                          <div {...stylex.props(styles.noMealCell)}>
-                            <span {...stylex.props(styles.mutedSm)}>No meal</span>
-                          </div>
-                        )}
+                      <div key={`header-${dateKey}`} {...stylex.props(styles.dayHeaderCell)}>
+                        <h3 {...stylex.props(styles.semibold)}>{day.day}</h3>
+                        <p {...stylex.props(styles.dayHeaderDate)}>{dateKey}</p>
                       </div>
                     );
                   })}
                 </div>
-              </React.Fragment>
-            ))}
+              </div>
+
+              {/* Content rows */}
+              <div {...stylex.props(styles.contentGrid, styles.gridCols(desktopCols))}>
+                {/* Empty cell for meal type headers */}
+                <div></div>
+                {sortedDays.map((dateKey) => (
+                  <div key={`spacer-${dateKey}`} {...stylex.props(styles.snapStart)}></div>
+                ))}
+              </div>
+
+              {/* Meal rows */}
+              {mealOrder.map((mealKey) => (
+                <React.Fragment key={mealKey}>
+                  {/* Meal type header and content row */}
+                  <div {...stylex.props(styles.mealRowGrid, styles.gridCols(desktopCols))}>
+                    {/* Meal type header */}
+                    <div {...stylex.props(styles.mealTypeHeader)}>
+                      <div {...stylex.props(styles.mealTypeRow)}>
+                        <span {...stylex.props(styles.mealTypeIconCircle)}>
+                          {React.createElement(mealIcons[mealKey], {
+                            ...stylex.props(styles.icon16),
+                          })}
+                        </span>
+                        <div>
+                          <span {...stylex.props(styles.medium)}>{mealTitles[mealKey]}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Meal content for each day */}
+                    {sortedDays.map((dateKey) => {
+                      const day = week.menu[dateKey];
+                      const meal = day.meals[mealKey];
+
+                      return (
+                        <div key={`${mealKey}-${dateKey}`} {...stylex.props(styles.dayCell)}>
+                          {meal ? (
+                            <MealGridCard
+                              meal={meal}
+                              mealKey={mealKey}
+                              timeRange={`${meal.startTime} – ${meal.endTime} IST`}
+                            />
+                          ) : (
+                            <div {...stylex.props(styles.noMealCell)}>
+                              <span {...stylex.props(styles.mutedSm)}>No meal</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

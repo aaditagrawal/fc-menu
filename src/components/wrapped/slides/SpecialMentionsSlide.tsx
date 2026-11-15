@@ -58,32 +58,16 @@ export function SpecialMentionsSlide({ items, title, emoji, tagline }: SpecialMe
       <div {...stylex.props(styles.stack)}>
         <div {...sxc("animate-scale-in", styles.emoji)}>{emoji}</div>
 
-        <h2
-          {...sxc("animate-slide-up delay-100", styles.heading)}
-          style={{ opacity: 0, animationFillMode: "forwards" }}
-        >
-          {title}
-        </h2>
+        <h2 {...sxc("animate-slide-up stagger-1", styles.heading)}>{title}</h2>
 
-        <p
-          {...sxc("animate-slide-up delay-200", styles.tagline)}
-          style={{ opacity: 0, animationFillMode: "forwards" }}
-        >
-          {tagline}
-        </p>
+        <p {...sxc("animate-slide-up stagger-2", styles.tagline)}>{tagline}</p>
 
-        <div
-          className="animate-fade-in delay-400"
-          style={{ opacity: 0, animationFillMode: "forwards" }}
-        >
+        <div className="animate-fade-in stagger-4">
           <DishCloud variations={items} maxCount={12} accentColor="yellow" />
         </div>
 
         {items[0] && (
-          <p
-            {...sxc("animate-fade-in delay-600", styles.foot)}
-            style={{ opacity: 0, animationFillMode: "forwards" }}
-          >
+          <p {...sxc("animate-fade-in stagger-6", styles.foot)}>
             Top pick: <span {...stylex.props(styles.topPick)}>{items[0].name}</span>
           </p>
         )}

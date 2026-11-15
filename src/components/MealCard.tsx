@@ -103,7 +103,7 @@ const styles = stylex.create({
     lineHeight: 1,
   },
   // Replicates the Card base (ui/card.tsx) — this shell stays a plain div so
-  // the `smooth-transition` / `elevated-card` global classes (which carry a
+  // the `smooth-transition-shadow` / `elevated-card` global classes (which carry a
   // `.dark` shadow variant) can be applied as class strings.
   cardShell: {
     borderRadius: "1rem",
@@ -270,7 +270,7 @@ function MealCardBase({
     return (
       <div
         {...sxc(
-          highlight ? "smooth-transition elevated-card" : "smooth-transition",
+          highlight ? "smooth-transition-shadow elevated-card" : "smooth-transition-shadow",
           styles.cardShell,
           highlight ? styles.cardShellHighlight : styles.cardShellIdle,
         )}
@@ -283,7 +283,11 @@ function MealCardBase({
   return (
     <div
       ref={tiltRef}
-      {...sxc("smooth-transition elevated-card", styles.gradientShell, styles.gradientBg(gradient))}
+      {...sxc(
+        "smooth-transition-shadow elevated-card",
+        styles.gradientShell,
+        styles.gradientBg(gradient),
+      )}
     >
       <div {...stylex.props(styles.gradientInner)}>
         <Card style={styles.innerCard}>

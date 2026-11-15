@@ -3,11 +3,14 @@
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { preload } from "react-dom";
 import * as stylex from "@stylexjs/stylex";
+import { sxc } from "@/lib/utils";
 
 import { FullWeekView } from "@/components/FullWeekView";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { STATIC_MENU_MANIFEST_PATH } from "@/lib/staticMenuBundle";
 
 const spin = stylex.keyframes({
   from: { transform: "rotate(0deg)" },
@@ -116,6 +119,7 @@ function FullWeekContent() {
 }
 
 export default function FullWeekPage() {
+  preload(STATIC_MENU_MANIFEST_PATH, { as: "fetch", crossOrigin: "anonymous" });
   return (
     <div {...stylex.props(styles.page)}>
       <div {...stylex.props(styles.inner)}>
@@ -135,7 +139,7 @@ export default function FullWeekPage() {
         <Suspense
           fallback={
             <div {...stylex.props(styles.loading)}>
-              <Loader2 {...stylex.props(styles.spinner)} />
+              <Loader2 {...sxc("animate-spin", styles.spinner)} />
             </div>
           }
         >

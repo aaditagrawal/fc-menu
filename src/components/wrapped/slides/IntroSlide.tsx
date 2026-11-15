@@ -98,16 +98,10 @@ export function IntroSlide({ dateRange }: IntroSlideProps) {
         </div>
         <div {...stylex.props(styles.titleSub)}>Wrapped</div>
         <div {...sxc("accent-yellow", styles.year)}>{year}</div>
-        <p
-          {...sxc("animate-fade-in delay-300", styles.blurb)}
-          style={{ opacity: 0, animationFillMode: "forwards" }}
-        >
+        <p {...sxc("animate-fade-in stagger-3", styles.blurb)}>
           A look back at what Food Court 2 served this semester
         </p>
-        <p
-          {...sxc("animate-fade-in delay-500", styles.fineprint)}
-          style={{ opacity: 0, animationFillMode: "forwards" }}
-        >
+        <p {...sxc("animate-fade-in stagger-5", styles.fineprint)}>
           Data from mid-August to December 2025
           <br />
           <span {...stylex.props(styles.dim)}>Since the launch of fc2.coolstuff.work</span>

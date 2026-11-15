@@ -3,7 +3,10 @@
 import * as React from "react";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import type { PersistedClient } from "@tanstack/react-query-persist-client";
+import type {
+  PersistedClient,
+  PersistQueryClientOptions,
+} from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import type { ReactNode } from "react";
 import { QUERY_PERSIST_STORAGE_KEY } from "@/lib/queryPersistence";
@@ -45,6 +48,18 @@ const persister = createSyncStoragePersister({
   deserialize: deserializeValidated,
 });
 
+const persistOptions: Omit<PersistQueryClientOptions, "queryClient"> = {
+  persister,
+  buster: "v4",
+  maxAge: 12 * 60 * 60 * 1000,
+  dehydrateOptions: {
+    // Only finished weeks are worth re-serializing on every cache write; the
+    // history list is small and is revalidated on every mount anyway.
+    shouldDehydrateQuery: (query) =>
+      query.queryKey[0] === "weekMenu" && query.state.status === "success",
+  },
+};
+
 export function QueryProvider({ children }: { children: ReactNode }) {
   const [queryClient] = React.useState(
     () =>
@@ -61,7 +76,7 @@ export function QueryProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, buster: "v4" }}>
+    <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
       {children}
     </PersistQueryClientProvider>
   );

@@ -109,12 +109,7 @@ export function DayPatternsSlide({ patterns }: DayPatternsSlideProps) {
       <div {...stylex.props(styles.stack)}>
         <h2 {...sxc("animate-slide-up", styles.heading)}>Day Signatures</h2>
 
-        <p
-          {...sxc("animate-slide-up delay-100", styles.sub)}
-          style={{ opacity: 0, animationFillMode: "forwards" }}
-        >
-          Dishes that stood out each day
-        </p>
+        <p {...sxc("animate-slide-up stagger-1", styles.sub)}>Dishes that stood out each day</p>
 
         <div {...stylex.props(styles.grid)}>
           {patterns.slice(0, 6).map((pattern, index) => (
@@ -122,8 +117,6 @@ export function DayPatternsSlide({ patterns }: DayPatternsSlideProps) {
               key={pattern.dayName}
               {...sxc("stat-card animate-slide-up", styles.card)}
               style={{
-                opacity: 0,
-                animationFillMode: "forwards",
                 animationDelay: `${200 + index * 100}ms`,
               }}
             >
@@ -155,10 +148,7 @@ export function DayPatternsSlide({ patterns }: DayPatternsSlideProps) {
           ))}
         </div>
 
-        <p
-          {...sxc("animate-fade-in delay-800", styles.foot)}
-          style={{ opacity: 0, animationFillMode: "forwards" }}
-        >
+        <p {...sxc("animate-fade-in stagger-8", styles.foot)}>
           Excluding daily staples like rice, roti, and curd
         </p>
       </div>

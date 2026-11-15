@@ -74,12 +74,7 @@ export function CategorySlide({ category, tagline, subTagline }: CategorySlidePr
       <div {...stylex.props(styles.stack)}>
         <div {...sxc("animate-scale-in", styles.emoji)}>{category.emoji}</div>
 
-        <p
-          {...sxc("animate-slide-up delay-100", styles.tagline)}
-          style={{ opacity: 0, animationFillMode: "forwards" }}
-        >
-          {tagline}
-        </p>
+        <p {...sxc("animate-slide-up stagger-1", styles.tagline)}>{tagline}</p>
 
         <div {...stylex.props(styles.row)}>
           <StatNumber value={category.totalCount} className="accent-rose" />
@@ -87,36 +82,20 @@ export function CategorySlide({ category, tagline, subTagline }: CategorySlidePr
         </div>
 
         {variationCount > 1 && (
-          <p
-            {...sxc("animate-slide-up delay-300", styles.variation)}
-            style={{ opacity: 0, animationFillMode: "forwards" }}
-          >
+          <p {...sxc("animate-slide-up stagger-3", styles.variation)}>
             ...but with <span {...sxc("accent-yellow", styles.monoBold)}>{variationCount}</span>{" "}
             different names
           </p>
         )}
 
-        {subTagline && (
-          <p
-            {...sxc("animate-fade-in delay-400", styles.sub)}
-            style={{ opacity: 0, animationFillMode: "forwards" }}
-          >
-            {subTagline}
-          </p>
-        )}
+        {subTagline && <p {...sxc("animate-fade-in stagger-4", styles.sub)}>{subTagline}</p>}
 
-        <div
-          className="animate-fade-in delay-500"
-          style={{ opacity: 0, animationFillMode: "forwards" }}
-        >
+        <div className="animate-fade-in stagger-5">
           <DishCloud variations={category.variations} accentColor="rose" />
         </div>
 
         {category.variations[0] && (
-          <p
-            {...sxc("animate-fade-in delay-700", styles.footnote)}
-            style={{ opacity: 0, animationFillMode: "forwards" }}
-          >
+          <p {...sxc("animate-fade-in stagger-7", styles.footnote)}>
             Most popular:{" "}
             <span {...stylex.props(styles.popular)}>{category.variations[0].name}</span> (
             {category.variations[0].count}×)

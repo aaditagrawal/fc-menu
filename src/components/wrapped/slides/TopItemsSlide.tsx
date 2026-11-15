@@ -94,12 +94,7 @@ export function TopItemsSlide({ title, emoji, items, mealType }: TopItemsSlidePr
       <div {...stylex.props(styles.stack)}>
         <div {...sxc("animate-scale-in", styles.emoji)}>{emoji}</div>
 
-        <h2
-          {...sxc("animate-slide-up delay-100", styles.heading)}
-          style={{ opacity: 0, animationFillMode: "forwards" }}
-        >
-          {title}
-        </h2>
+        <h2 {...sxc("animate-slide-up stagger-1", styles.heading)}>{title}</h2>
 
         <div {...stylex.props(styles.list)}>
           {items.slice(0, 5).map((item, index) => (
@@ -107,8 +102,6 @@ export function TopItemsSlide({ title, emoji, items, mealType }: TopItemsSlidePr
               key={item.name}
               {...sxc("animate-slide-up", styles.row)}
               style={{
-                opacity: 0,
-                animationFillMode: "forwards",
                 animationDelay: `${200 + index * 100}ms`,
               }}
             >
@@ -141,10 +134,7 @@ export function TopItemsSlide({ title, emoji, items, mealType }: TopItemsSlidePr
         </div>
 
         {items[0] && (
-          <p
-            {...sxc("animate-fade-in delay-800", styles.foot)}
-            style={{ opacity: 0, animationFillMode: "forwards" }}
-          >
+          <p {...sxc("animate-fade-in stagger-8", styles.foot)}>
             You probably had <span {...sxc(accentClass, styles.medium)}>{items[0].name}</span> on
             most days!
           </p>

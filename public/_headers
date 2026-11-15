@@ -2,6 +2,17 @@
 # (fc2.coolstuff.work) is served by Vercel, which ignores this file — the same
 # rules are mirrored in vercel.json. Keep the two in sync.
 
+# Baseline hardening for every response. The CSP allows inline script/style
+# because the static export inlines the next-themes init and RSC payload
+# scripts and uses inline style attributes; scripts are still confined to
+# self + the analytics origin, and frame-ancestors replaces X-Frame-Options.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://stat.sys256.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://tikm.coolstuff.work https://stat.sys256.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+
 # Hashed build artifacts: safe to cache forever.
 /_next/static/*
   Cache-Control: public, max-age=31536000, immutable
@@ -18,6 +29,20 @@
 # (unchanged manifests are served as cheap 304s).
 /data/menu-bundle/manifest.json
   Cache-Control: public, max-age=0, must-revalidate
+
+# The web app manifest can change with each deploy.
+/manifest.json
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Icons change rarely; a day of caching is safe.
+/favicon.svg
+  Cache-Control: public, max-age=86400
+
+/icon-192.png
+  Cache-Control: public, max-age=86400
+
+/icon-512.png
+  Cache-Control: public, max-age=86400
 
 # The service worker must never be cached, or updates would lag a full cycle.
 /sw.js

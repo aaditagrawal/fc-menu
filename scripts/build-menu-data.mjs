@@ -28,6 +28,19 @@ function hashContent(value) {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex").slice(0, 12);
 }
 
+// API-controlled strings land in file paths and in the manifest; anything
+// that isn't a plain ISO date (e.g. containing "/.." from a compromised API)
+// must fail the build rather than write outside OUT_DIR.
+const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+function assertDateKey(value, label) {
+  const key = String(value);
+  if (!DATE_KEY_PATTERN.test(key)) {
+    throw new Error(`Invalid ${label} from API: expected YYYY-MM-DD, got ${JSON.stringify(value)}`);
+  }
+  return key;
+}
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -58,7 +71,10 @@ async function fetchJson(url, options = {}) {
 function getDateBounds(menu) {
   const dates = Object.keys(menu?.menu || {}).sort();
   if (dates.length === 0) return null;
-  return { startDate: dates[0], endDate: dates[dates.length - 1] };
+  return {
+    startDate: assertDateKey(dates[0], "menu date key"),
+    endDate: assertDateKey(dates[dates.length - 1], "menu date key"),
+  };
 }
 
 function normalizeSummary(summary, menu, type, filePath) {
@@ -80,20 +96,21 @@ function normalizeSummary(summary, menu, type, filePath) {
 
 async function writeWeek(type, summary) {
   if (!summary?.startDate) return null;
+  const weekStart = assertDateKey(summary.startDate, "week startDate");
 
   const endpoint = type === "jain" ? "jain-menu" : "menu";
   const url = new URL(`${API_BASE}/api/${endpoint}`);
-  url.searchParams.set("weekStart", summary.startDate);
+  url.searchParams.set("weekStart", weekStart);
   url.searchParams.set("v", "2");
 
   const menu = await fetchJson(url.toString(), { optional: type === "jain" });
   if (!menu || !menu.menu || Object.keys(menu.menu).length === 0) return null;
 
   const hash = hashContent(menu);
-  const fileName = `${summary.startDate}-${hash}.json`;
+  const fileName = `${weekStart}-${hash}.json`;
   const relativePath = `/data/menu-bundle/${type}/${fileName}`;
   const absolutePath = path.join(OUT_DIR, type, fileName);
-  await writeFile(absolutePath, `${JSON.stringify(menu, null, 2)}\n`);
+  await writeFile(absolutePath, `${JSON.stringify(menu)}\n`);
 
   return normalizeSummary(summary, menu, type, relativePath);
 }
@@ -156,7 +173,7 @@ async function main() {
     jain: { weeks: jain },
   };
 
-  await writeFile(path.join(OUT_DIR, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+  await writeFile(path.join(OUT_DIR, "manifest.json"), `${JSON.stringify(manifest)}\n`);
   console.log(`Built static menu bundle: ${normal.length} normal weeks, ${jain.length} Jain weeks`);
 }
 

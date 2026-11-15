@@ -83,26 +83,15 @@ export function StapleAlertSlide({ mostRepeated }: StapleAlertSlideProps) {
       <div {...stylex.props(styles.stack)}>
         <div {...sxc("animate-scale-in", styles.emoji)}>🍚</div>
 
-        <h2
-          {...sxc("animate-slide-up delay-100", styles.heading)}
-          style={{ opacity: 0, animationFillMode: "forwards" }}
-        >
-          The Real MVP
-        </h2>
+        <h2 {...sxc("animate-slide-up stagger-1", styles.heading)}>The Real MVP</h2>
 
-        <p
-          {...sxc("animate-slide-up delay-200", styles.sub)}
-          style={{ opacity: 0, animationFillMode: "forwards" }}
-        >
+        <p {...sxc("animate-slide-up stagger-2", styles.sub)}>
           Every hero needs a sidekick...
           <br />
           or in this case, a main character
         </p>
 
-        <div
-          {...sxc("stat-card border-rose animate-scale-in delay-300", styles.mvpCard)}
-          style={{ opacity: 0, animationFillMode: "forwards" }}
-        >
+        <div {...sxc("stat-card border-rose animate-scale-in stagger-3", styles.mvpCard)}>
           <p {...sxc("accent-rose", styles.mvpName)}>{mostRepeated.name}</p>
           <div {...stylex.props(styles.row)}>
             <StatNumber value={mostRepeated.count} style={styles.statSize} />
@@ -110,12 +99,7 @@ export function StapleAlertSlide({ mostRepeated }: StapleAlertSlideProps) {
           </div>
         </div>
 
-        <p
-          {...sxc("animate-fade-in delay-600", styles.foot)}
-          style={{ opacity: 0, animationFillMode: "forwards" }}
-        >
-          The unsung hero of every meal 🫡
-        </p>
+        <p {...sxc("animate-fade-in stagger-6", styles.foot)}>The unsung hero of every meal 🫡</p>
       </div>
     </Slide>
   );
