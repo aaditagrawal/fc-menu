@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useSyncExternalStore } from "react";
 import { isTodayMonday } from "@/lib/date";
 import type { WeekMenu, Meal, MealKey, MenuItem } from "@/lib/types";
@@ -85,7 +85,7 @@ export function useWeeksInfo() {
   });
 }
 
-async function fetchWeekMenu(weekId: string | null, menuType: MenuType): Promise<WeekMenu> {
+export async function fetchWeekMenu(weekId: string | null, menuType: MenuType): Promise<WeekMenu> {
   const endpoint = menuType === "jain" ? "jain-menu" : "menu";
   const startDate = normalizeWeekIdToStartDate(weekId);
 
@@ -104,25 +104,6 @@ async function fetchWeekMenu(weekId: string | null, menuType: MenuType): Promise
         if (staticWeek !== null && hasMenuDays(staticWeek)) return staticWeek;
       } catch {
         // Fall through to the live API.
-      }
-    } else if (menuType === "jain" && manifest.jain.weeks.length > 0) {
-      // Jain absence can sometimes be answered from the bundle, but only
-      // carefully. Jain entries' startDate comes from the payload's first day,
-      // not the week's Monday, so match by date-range overlap — never startDate
-      // equality. An empty jain list proves nothing: the build fetches jain
-      // history as optional, so [] may just mean that request failed. Only when
-      // the bundle demonstrably covers this week's normal menu and no jain week
-      // overlaps its range is the jain menu known absent at build time — answer
-      // immediately instead of firing a doomed fetch and making the normal
-      // fallback wait on it. Everything else falls through to fetch-and-infer.
-      const normalEntry = manifest.normal.weeks.find((week) => week.startDate === startDate);
-      if (
-        normalEntry &&
-        !manifest.jain.weeks.some(
-          (week) => week.startDate <= normalEntry.endDate && normalEntry.startDate <= week.endDate,
-        )
-      ) {
-        throw new EmptyWeekError(weekId);
       }
     }
   }
@@ -187,16 +168,4 @@ function getServerSnapshot() {
 
 export function useOfflineStatus() {
   return useSyncExternalStore(subscribeOnline, getOnlineSnapshot, getServerSnapshot);
-}
-
-export function usePrefetchWeekMenu() {
-  const queryClient = useQueryClient();
-
-  return (weekId: string, menuType: MenuType = "normal") => {
-    queryClient.prefetchQuery({
-      queryKey: ["weekMenu", weekId, menuType],
-      queryFn: () => fetchWeekMenu(weekId, menuType),
-      retry: retryWeekQuery,
-    });
-  };
 }

@@ -28,19 +28,6 @@ export function sortDateKeysAsc(keys: string[]): string[] {
   return [...keys].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 }
 
-export function mealOrder(meal: MealKey): number {
-  switch (meal) {
-    case "breakfast":
-      return 0;
-    case "lunch":
-      return 1;
-    case "snacks":
-      return 2;
-    case "dinner":
-      return 3;
-  }
-}
-
 export function findCurrentOrUpcomingMeal(
   week: WeekMenu,
   nowIST: Date = getISTNow(),

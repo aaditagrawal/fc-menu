@@ -119,7 +119,9 @@ export const MealCarousel = React.forwardRef<
     container.scrollTo({ left: scrollX, behavior: "instant" });
   }, [highlightIndex]);
 
+  const latestScroll = React.useRef(scrollToHighlight);
   React.useLayoutEffect(() => {
+    latestScroll.current = scrollToHighlight;
     scrollToHighlight();
   }, [scrollToHighlight]);
 
@@ -127,7 +129,7 @@ export const MealCarousel = React.forwardRef<
     let resizeTimeout: ReturnType<typeof setTimeout>;
     const handleResize = () => {
       clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(scrollToHighlight, 100);
+      resizeTimeout = setTimeout(() => latestScroll.current(), 100);
     };
     window.addEventListener("resize", handleResize, { passive: true });
     return () => {
