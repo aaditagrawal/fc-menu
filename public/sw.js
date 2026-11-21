@@ -47,14 +47,18 @@ async function putInCache(request, response) {
   await cache.put(request, clone);
 }
 
-function networkFirst(request, fallbackPath) {
+function cacheResponse(event, response) {
+  if (response.ok) {
+    // A quota/storage error must not discard a successful network response.
+    event.waitUntil(putInCache(event.request, response).catch(() => {}));
+  }
+  return response;
+}
+
+function networkFirst(event, fallbackPath) {
+  const { request } = event;
   return fetch(request)
-    .then((response) => {
-      if (response.ok) {
-        putInCache(request, response);
-      }
-      return response;
-    })
+    .then((response) => cacheResponse(event, response))
     .catch(async () => {
       const cached = await caches.match(request);
       if (cached) return cached;
@@ -66,6 +70,13 @@ function networkFirst(request, fallbackPath) {
     });
 }
 
+function cacheFirst(event) {
+  const { request } = event;
+  return caches
+    .match(request)
+    .then((cached) => cached || fetch(request).then((response) => cacheResponse(event, response)));
+}
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
@@ -75,7 +86,7 @@ self.addEventListener("fetch", (event) => {
   // Always prefer network for navigations so reloads get the latest HTML,
   // but keep a cached copy so the app still opens offline.
   if (request.mode === "navigate") {
-    event.respondWith(networkFirst(request, "/"));
+    event.respondWith(networkFirst(event, "/"));
     return;
   }
 
@@ -83,38 +94,18 @@ self.addEventListener("fetch", (event) => {
     // The manifest is the freshness gate for menu data: network-first, cached
     // only as an offline fallback.
     if (url.pathname === MENU_MANIFEST_PATH) {
-      event.respondWith(networkFirst(request));
+      event.respondWith(networkFirst(event));
       return;
     }
 
     // Week files are content-hashed and immutable: cache-first.
-    event.respondWith(
-      caches.match(request).then(
-        (cached) =>
-          cached ||
-          fetch(request).then((response) => {
-            if (response.ok) {
-              putInCache(request, response);
-            }
-            return response;
-          }),
-      ),
-    );
+    event.respondWith(cacheFirst(event));
     return;
   }
 
   // Network-first for other cross-origin requests (live API fallback)
   if (url.hostname !== self.location.hostname) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.ok && isCacheableAsset(request, url)) {
-            putInCache(request, response);
-          }
-          return response;
-        })
-        .catch(() => caches.match(request)),
-    );
+    event.respondWith(networkFirst(event));
     return;
   }
 
@@ -122,15 +113,19 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Cache-first for immutable/static assets only
+  // Next build assets use content hashes, so cache hits need no revalidation.
+  if (url.pathname.startsWith("/_next/static/")) {
+    event.respondWith(cacheFirst(event));
+    return;
+  }
+
+  // Mutable assets such as icons still refresh in the background.
   event.respondWith(
     caches.match(request).then((cached) => {
-      const fetchPromise = fetch(request).then((response) => {
-        if (response.ok) {
-          putInCache(request, response);
-        }
-        return response;
-      });
+      const fetchPromise = fetch(request)
+        .then((response) => cacheResponse(event, response))
+        .catch(() => cached || Response.error());
+      event.waitUntil(fetchPromise.then(() => {}));
       return cached || fetchPromise;
     }),
   );

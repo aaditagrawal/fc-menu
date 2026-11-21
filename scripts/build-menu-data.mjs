@@ -1,6 +1,7 @@
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 const API_BASE = (
   process.env.MENU_API_URL ||
@@ -15,14 +16,13 @@ const OUT_DIR = path.join(process.cwd(), "public", "data", "menu-bundle");
 // from *before* the upload and bakes a bundle that is missing the new week.
 // `cache: "no-store"` only bypasses Node's own fetch cache, so every request
 // also gets a unique cache-key param to force an origin hit.
-const BUILD_ID = Date.now().toString(36);
-let requestCounter = 0;
-
 // The deploy hook can also fire fractionally before the upload is readable, so
 // a missing current week is retried before it is accepted as "not posted yet".
 const CURRENT_WEEK_RETRIES = 3;
 const CURRENT_WEEK_RETRY_DELAY_MS = 5_000;
 const IST_OFFSET_MS = (5 * 60 + 30) * 60_000;
+const FETCH_CONCURRENCY = 6;
+const REQUEST_TIMEOUT_MS = 30_000;
 
 function hashContent(value) {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex").slice(0, 12);
@@ -40,23 +40,24 @@ function coversDate(entries, dateKey) {
   return entries.some((entry) => entry.startDate <= dateKey && dateKey <= entry.endDate);
 }
 
-async function fetchJson(url, options = {}) {
-  const target = new URL(url);
-  target.searchParams.set("_cb", `${BUILD_ID}-${requestCounter++}`);
-
-  const res = await fetch(target, {
-    cache: "no-store",
-    headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
-  });
-  if (!res.ok) {
-    if (options.optional) return null;
-    throw new Error(`Failed to fetch ${url}: ${res.status}`);
-  }
-  return res.json();
+function limitRequests(limit) {
+  let active = 0;
+  const waiting = [];
+  return async (task) => {
+    if (active < limit) active += 1;
+    else await new Promise((resolve) => waiting.push(resolve));
+    try {
+      return await task();
+    } finally {
+      const next = waiting.shift();
+      if (next) next();
+      else active -= 1;
+    }
+  };
 }
 
 function getDateBounds(menu) {
-  const dates = Object.keys(menu?.menu || {}).sort();
+  const dates = Object.keys(menu?.menu || {}).toSorted();
   if (dates.length === 0) return null;
   return { startDate: dates[0], endDate: dates[dates.length - 1] };
 }
@@ -78,89 +79,149 @@ function normalizeSummary(summary, menu, type, filePath) {
   };
 }
 
-async function writeWeek(type, summary) {
-  if (!summary?.startDate) return null;
+export async function buildMenuBundle({
+  apiBase = API_BASE,
+  outDir = OUT_DIR,
+  today = istDateKey(),
+  retryDelayMs = CURRENT_WEEK_RETRY_DELAY_MS,
+  requestTimeoutMs = REQUEST_TIMEOUT_MS,
+} = {}) {
+  const buildId = Date.now().toString(36);
+  const monday = new Date(`${today}T00:00:00Z`);
+  monday.setUTCDate(monday.getUTCDate() - ((monday.getUTCDay() + 6) % 7));
+  const currentWeekStart = monday.toISOString().slice(0, 10);
+  let requestCounter = 0;
+  let normalRetried = false;
+  const request = limitRequests(FETCH_CONCURRENCY);
 
-  const endpoint = type === "jain" ? "jain-menu" : "menu";
-  const url = new URL(`${API_BASE}/api/${endpoint}`);
-  url.searchParams.set("weekStart", summary.startDate);
-  url.searchParams.set("v", "2");
-
-  const menu = await fetchJson(url.toString(), { optional: type === "jain" });
-  if (!menu || !menu.menu || Object.keys(menu.menu).length === 0) return null;
-
-  const hash = hashContent(menu);
-  const fileName = `${summary.startDate}-${hash}.json`;
-  const relativePath = `/data/menu-bundle/${type}/${fileName}`;
-  const absolutePath = path.join(OUT_DIR, type, fileName);
-  await writeFile(absolutePath, `${JSON.stringify(menu, null, 2)}\n`);
-
-  return normalizeSummary(summary, menu, type, relativePath);
-}
-
-async function buildType(type) {
-  // Rebuilt from scratch each attempt so a retry can't leave behind week files
-  // that the manifest no longer references.
-  const typeDir = path.join(OUT_DIR, type);
-  await rm(typeDir, { recursive: true, force: true });
-  await mkdir(typeDir, { recursive: true });
-
-  const endpoint = type === "jain" ? "jain-history" : "history";
-  const history = await fetchJson(`${API_BASE}/api/${endpoint}?v=2`, { optional: type === "jain" });
-  const summaries = Array.isArray(history?.weeks) ? history.weeks : [];
-  const entries = [];
-
-  for (const summary of summaries) {
-    const entry = await writeWeek(type, summary);
-    if (entry) entries.push(entry);
+  function fetchJson(url, optional = false) {
+    return request(async () => {
+      const target = new URL(url);
+      target.searchParams.set("_cb", `${buildId}-${requestCounter++}`);
+      const res = await fetch(target, {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+        signal: AbortSignal.timeout(requestTimeoutMs),
+      });
+      if (!res.ok) {
+        if (optional) return null;
+        throw new Error(`Failed to fetch ${url}: ${res.status}`);
+      }
+      return res.json();
+    });
   }
 
-  entries.sort((a, b) => a.startDate.localeCompare(b.startDate));
-  return entries;
-}
+  async function writeWeek(type, summary) {
+    if (!summary?.startDate) return null;
+    const endpoint = type === "jain" ? "jain-menu" : "menu";
+    const url = new URL(`${apiBase}/api/${endpoint}`);
+    url.searchParams.set("weekStart", summary.startDate);
+    url.searchParams.set("v", "2");
+    const menu = await fetchJson(url.toString(), type === "jain");
+    if (!menu || !menu.menu || Object.keys(menu.menu).length === 0) return null;
 
-async function main() {
-  await rm(OUT_DIR, { recursive: true, force: true });
-  await mkdir(OUT_DIR, { recursive: true });
+    const fileName = `${summary.startDate}-${hashContent(menu)}.json`;
+    const relativePath = `/data/menu-bundle/${type}/${fileName}`;
+    await writeFile(path.join(outDir, type, fileName), `${JSON.stringify(menu)}\n`);
+    return normalizeSummary(summary, menu, type, relativePath);
+  }
 
-  const today = istDateKey();
-  let normal = await buildType("normal");
-
-  for (
-    let attempt = 1;
-    attempt <= CURRENT_WEEK_RETRIES && !coversDate(normal, today);
-    attempt += 1
-  ) {
-    console.log(
-      `No week covers ${today} (IST) after ${normal.length} weeks; retrying history in ${CURRENT_WEEK_RETRY_DELAY_MS / 1000}s (${attempt}/${CURRENT_WEEK_RETRIES})`,
+  async function buildType(type, previous = new Map()) {
+    const typeDir = path.join(outDir, type);
+    await mkdir(typeDir, { recursive: true });
+    const endpoint = type === "jain" ? "jain-history" : "history";
+    const history = await fetchJson(`${apiBase}/api/${endpoint}?v=2`, type === "jain");
+    const summaries = Array.isArray(history?.weeks) ? history.weeks : [];
+    const newest = summaries.reduce(
+      (latest, summary) => (summary?.startDate > latest ? summary.startDate : latest),
+      "",
     );
-    await sleep(CURRENT_WEEK_RETRY_DELAY_MS);
-    normal = await buildType("normal");
-  }
-
-  if (!coversDate(normal, today)) {
-    console.warn(
-      `WARNING: bundle has no week covering ${today} (IST) — the app will show the stale-week notice.`,
+    const current = new Map();
+    const weeks = await Promise.all(
+      summaries.map(async (summary) => {
+        const cached = previous.get(summary?.startDate);
+        const signature = JSON.stringify(summary);
+        // Reuse only versioned, unchanged menus whose summary and payload both
+        // ended before today. Partial current-week uploads can look historical,
+        // so also exclude this calendar week even when a newer future week exists.
+        const reusable =
+          summary?.lastModified &&
+          summary.endDate &&
+          summary.endDate < today &&
+          summary.startDate < currentWeekStart &&
+          summary.startDate !== newest &&
+          cached?.signature === signature &&
+          cached.entry.endDate < today;
+        const entry = reusable ? cached.entry : await writeWeek(type, summary);
+        if (entry) current.set(summary.startDate, { signature, entry });
+        return entry;
+      }),
     );
+    const entries = weeks
+      .filter(Boolean)
+      .toSorted((a, b) => a.startDate.localeCompare(b.startDate));
+    const referenced = new Set(entries.map((entry) => path.basename(entry.path)));
+    // Retried uploads can replace or remove a week. Retain only files referenced
+    // by this attempt, including when the refreshed history is empty.
+    await Promise.all(
+      (await readdir(typeDir))
+        .filter((file) => !referenced.has(file))
+        .map((file) => rm(path.join(typeDir, file), { force: true })),
+    );
+    return { entries, cache: current };
   }
 
-  const jain = await buildType("jain");
+  async function buildNormal() {
+    let result = await buildType("normal");
+    for (
+      let attempt = 1;
+      attempt <= CURRENT_WEEK_RETRIES && !coversDate(result.entries, today);
+      attempt += 1
+    ) {
+      console.log(
+        `No week covers ${today} (IST) after ${result.entries.length} weeks; retrying history in ${retryDelayMs / 1000}s (${attempt}/${CURRENT_WEEK_RETRIES})`,
+      );
+      normalRetried = true;
+      // eslint-disable-next-line no-await-in-loop -- Wait for the upload before refreshing its history.
+      await sleep(retryDelayMs);
+      // eslint-disable-next-line no-await-in-loop -- Each retry depends on the preceding history result.
+      result = await buildType("normal", result.cache);
+    }
+    if (!coversDate(result.entries, today)) {
+      console.warn(
+        `WARNING: bundle has no week covering ${today} (IST) — the app will show the stale-week notice.`,
+      );
+    }
+    return result.entries;
+  }
+
+  await rm(outDir, { recursive: true, force: true });
+  await mkdir(outDir, { recursive: true });
+  const [normal, jainResult] = await Promise.all([buildNormal(), buildType("jain")]);
+  // A Jain upload may have arrived while normal history was being retried.
+  // Refresh after that wait, as the sequential builder did.
+  const jain = normalRetried
+    ? (await buildType("jain", jainResult.cache)).entries
+    : jainResult.entries;
   const generatedAt = new Date().toISOString();
-  const version = hashContent({ generatedAt, normal, jain });
+  const version = hashContent({ source: apiBase, normal, jain });
 
   const manifest = {
     generatedAt,
     version,
-    source: API_BASE,
+    source: apiBase,
     normal: { weeks: normal },
     jain: { weeks: jain },
   };
 
-  await writeFile(path.join(OUT_DIR, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+  await writeFile(path.join(outDir, "manifest.json"), `${JSON.stringify(manifest)}\n`);
   console.log(`Built static menu bundle: ${normal.length} normal weeks, ${jain.length} Jain weeks`);
+  return manifest;
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  buildMenuBundle().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}

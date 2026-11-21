@@ -82,67 +82,71 @@ export function filterMenuItems(items: MenuItem[], filter: DietaryFilter): MenuI
     return items;
   }
 
-  if (filter === "veg-only") {
-    // Remove items tagged as non-veg or non-veg-special
-    return items.filter(
-      (item) => !item.tags.includes("non-veg") && !item.tags.includes("non-veg-special"),
-    );
+  // Keep the original array until an item actually needs removing. Besides
+  // avoiding copies, this lets memoized cards reuse unchanged meals.
+  let filtered: MenuItem[] | undefined;
+  for (let index = 0; index < items.length; index += 1) {
+    const item = items[index];
+    const excluded =
+      filter === "veg-only"
+        ? item.tags.includes("non-veg") || item.tags.includes("non-veg-special")
+        : item.tags.includes("veg-special");
+    if (excluded) {
+      filtered ??= items.slice(0, index);
+    } else {
+      filtered?.push(item);
+    }
   }
-
-  if (filter === "non-veg-only") {
-    // Remove veg-special items, keep everything else
-    return items.filter((item) => !item.tags.includes("veg-special"));
-  }
-
-  return items;
+  return filtered ?? items;
 }
 
 /**
  * Filter a meal's items based on dietary preference.
  */
 export function filterMeal(meal: Meal, filter: DietaryFilter): Meal {
-  return {
-    ...meal,
-    items: filterMenuItems(meal.items, filter),
-  };
+  const items = filterMenuItems(meal.items, filter);
+  return items === meal.items ? meal : { ...meal, items };
 }
 
 /**
  * Filter a day menu based on dietary preference.
  */
 export function filterDayMenu(dayMenu: DayMenu, filter: DietaryFilter): DayMenu {
-  const filteredMeals: DayMenu["meals"] = {};
+  let filteredMeals = dayMenu.meals;
 
   for (const key of MEAL_KEYS) {
     const meal = dayMenu.meals[key];
-    if (!meal) continue;
-    const filtered = filterMeal(meal, filter);
+    const filtered = meal ? filterMeal(meal, filter) : undefined;
     // Only include meal if it has items after filtering
-    if (filtered.items.length > 0) {
-      filteredMeals[key] = filtered;
+    if (filtered && filtered.items.length > 0) {
+      if (filtered !== meal) {
+        if (filteredMeals === dayMenu.meals) filteredMeals = { ...dayMenu.meals };
+        filteredMeals[key] = filtered;
+      }
+    } else if (key in filteredMeals) {
+      if (filteredMeals === dayMenu.meals) filteredMeals = { ...dayMenu.meals };
+      delete filteredMeals[key];
     }
   }
 
-  return {
-    ...dayMenu,
-    meals: filteredMeals,
-  };
+  return filteredMeals === dayMenu.meals ? dayMenu : { ...dayMenu, meals: filteredMeals };
 }
 
 /**
  * Filter an entire week menu based on dietary preference.
  */
 export function filterWeekMenu(weekMenu: WeekMenu, filter: DietaryFilter): WeekMenu {
-  const filteredMenu: WeekMenu["menu"] = {};
+  let filteredMenu = weekMenu.menu;
 
   for (const [dateKey, dayMenu] of Object.entries(weekMenu.menu)) {
-    filteredMenu[dateKey] = filterDayMenu(dayMenu, filter);
+    const filteredDay = filterDayMenu(dayMenu, filter);
+    if (filteredDay !== dayMenu) {
+      if (filteredMenu === weekMenu.menu) filteredMenu = { ...weekMenu.menu };
+      filteredMenu[dateKey] = filteredDay;
+    }
   }
 
-  return {
-    ...weekMenu,
-    menu: filteredMenu,
-  };
+  return filteredMenu === weekMenu.menu ? weekMenu : { ...weekMenu, menu: filteredMenu };
 }
 
 /**

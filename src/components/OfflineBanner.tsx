@@ -3,7 +3,7 @@
 import * as stylex from "@stylexjs/stylex";
 import { useOfflineStatus } from "@/hooks/useMenuData";
 import { WifiOff, Wifi } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { easing } from "@/lib/tokens.stylex";
 
 const styles = stylex.create({
@@ -59,30 +59,56 @@ const styles = stylex.create({
   },
 });
 
-function useOfflineBannerVisibility(isOffline: boolean) {
-  const wasOffline = useRef(false);
-  const [visible, setVisible] = useState(false);
+function createOfflineBannerStore() {
+  let visible = false;
+  let wasOffline = false;
+  let hideAt = 0;
+  return {
+    getSnapshot: () => visible,
+    getServerSnapshot: () => false,
+    subscribe(onChange: () => void) {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const update = () => {
+        clearTimeout(timer);
+        if (!navigator.onLine) {
+          wasOffline = true;
+          hideAt = 0;
+          visible = true;
+        } else {
+          if (wasOffline) {
+            wasOffline = false;
+            hideAt = Date.now() + 3000;
+          }
+          visible = hideAt > Date.now();
+          if (visible) {
+            timer = setTimeout(() => {
+              visible = false;
+              onChange();
+            }, hideAt - Date.now());
+          }
+        }
+        onChange();
+      };
+      window.addEventListener("online", update);
+      window.addEventListener("offline", update);
+      update();
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener("online", update);
+        window.removeEventListener("offline", update);
+      };
+    },
+  };
+}
 
-  useEffect(() => {
-    if (isOffline) {
-      wasOffline.current = true;
-      setVisible(true);
-      return;
-    }
-    if (wasOffline.current) {
-      wasOffline.current = false;
-      setVisible(true);
-      const timer = setTimeout(() => setVisible(false), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [isOffline]);
-
-  return visible;
+function useOfflineBannerVisibility() {
+  const [store] = useState(createOfflineBannerStore);
+  return useSyncExternalStore(store.subscribe, store.getSnapshot, store.getServerSnapshot);
 }
 
 export function OfflineBanner() {
   const isOffline = useOfflineStatus();
-  const visible = useOfflineBannerVisibility(isOffline);
+  const visible = useOfflineBannerVisibility();
 
   return (
     <div

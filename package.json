@@ -8,53 +8,46 @@
     "build:menu-data": "bun scripts/build-menu-data.mjs",
     "build:og-image": "bun tools/og-image/render.mjs",
     "build": "bun scripts/build-menu-data.mjs && next build && bun run typecheck",
+    "start": "next start",
+    "test": "bun test",
     "lint": "oxlint .",
     "lint:fix": "oxlint . --fix",
     "format": "oxfmt --write \"**/*.{js,mjs,cjs,ts,tsx,jsx}\" \"!tools/oxlint/anti-slop/**\" --ignore-path .gitignore --no-error-on-unmatched-pattern",
     "format:check": "oxfmt --check \"**/*.{js,mjs,cjs,ts,tsx,jsx}\" \"!tools/oxlint/anti-slop/**\" --ignore-path .gitignore --no-error-on-unmatched-pattern",
-    "typecheck": "node_modules/@typescript/native-preview/bin/tsc --noEmit"
+    "typecheck": "bunx --bun tsrs --noEmit",
+    "test:security": "node scripts/security-braces.mjs"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.5.0",
-    "@stylexjs/stylex": "^0.19.1",
-    "@tanstack/query-sync-storage-persister": "^5.105.0",
-    "@tanstack/react-query": "^5.105.0",
-    "@tanstack/react-query-persist-client": "^5.105.0",
-    "lucide-react": "^1.64.0",
-    "next": "^16.4.3",
+    "@stylexjs/stylex": "^0.19.2",
+    "@tanstack/query-sync-storage-persister": "^5.108.2",
+    "@tanstack/react-query": "^5.108.2",
+    "@tanstack/react-query-persist-client": "^5.108.2",
+    "lucide-react": "^1.77.0",
+    "next": "^16.4.6",
     "next-themes": "^0.4.6",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "sonner": "^2.0.8"
   },
   "devDependencies": {
-    "@oxlint/plugins": "1.90.0",
-    "@stylexjs/babel-plugin": "^0.19.1",
-    "@stylexjs/postcss-plugin": "^0.19.1",
+    "@oxlint/plugins": "^1.94.0",
+    "@stylexjs/babel-plugin": "^0.19.2",
+    "@stylexjs/postcss-plugin": "^0.19.2",
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "@typescript/native-preview": "npm:typescript@^7.0.2",
-    "autoprefixer": "^10.6.2",
-    "oxfmt": "^0.75.0",
-    "oxlint": "1.90.0",
+    "autoprefixer": "^10.7.0",
+    "oxfmt": "^0.79.0",
+    "oxlint": "^1.94.0",
+    "tsrs": "7.1.0-beta.tsrs4",
     "typescript": "7.0.2"
   },
-  "packageManager": "bun@1.4.2",
-  "//typescript": [
-    "TypeScript 7 (native Go compiler). See CONTRIBUTING.md -> 'TypeScript 7' for the full story.",
-    "The `@typescript/native-preview` entry is an ALIAS for typescript@7 GA -- Next only accepts a",
-    "native compiler if that exact package name resolves, and the real native-preview package is a",
-    "stale 7.0.0-dev build. TS 7 ships no programmatic JS API until 7.1, so Next CANNOT type-check",
-    "the build itself; it detects the native compiler and skips type checking with a log line.",
-    "THEREFORE: the `&& bun run typecheck` at the end of `build` IS the type-safety gate. Removing",
-    "it means type errors ship silently. It must stay AFTER `next build` so .next/types route",
-    "definitions exist and get checked.",
-    "WHEN TS 7.1 SHIPS AND NEXT SUPPORTS IT: replace the alias with a plain \"typescript\": \"^7.x\"",
-    "devDependency, point `typecheck` at node_modules/typescript/bin/tsc, and drop the",
-    "`&& bun run typecheck` from `build` since Next will type-check natively again."
-  ],
+  "packageManager": "bun@1.4.4",
   "trustedDependencies": [
     "unrs-resolver"
-  ]
+  ],
+  "patchedDependencies": {
+    "braces@3.0.3": "patches/braces@3.0.3.patch"
+  }
 }

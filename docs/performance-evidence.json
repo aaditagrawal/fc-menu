@@ -1,0 +1,418 @@
+{
+  "parity": [
+    {
+      "path": "/",
+      "width": 390,
+      "theme": "light",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/weeks",
+      "width": 390,
+      "theme": "light",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/week/2026-08-31_to_2026-09-06",
+      "width": 390,
+      "theme": "light",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/week/2026-08-31_to_2026-09-06/full",
+      "width": 390,
+      "theme": "light",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/week/full?id=2026-08-31_to_2026-09-06",
+      "width": 390,
+      "theme": "light",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/contributing",
+      "width": 390,
+      "theme": "light",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/wrapped",
+      "width": 390,
+      "theme": "light",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/",
+      "width": 390,
+      "theme": "dark",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/weeks",
+      "width": 390,
+      "theme": "dark",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/week/2026-08-31_to_2026-09-06",
+      "width": 390,
+      "theme": "dark",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/week/2026-08-31_to_2026-09-06/full",
+      "width": 390,
+      "theme": "dark",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/week/full?id=2026-08-31_to_2026-09-06",
+      "width": 390,
+      "theme": "dark",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/contributing",
+      "width": 390,
+      "theme": "dark",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/wrapped",
+      "width": 390,
+      "theme": "dark",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/",
+      "width": 1440,
+      "theme": "light",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/weeks",
+      "width": 1440,
+      "theme": "light",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/week/2026-08-31_to_2026-09-06",
+      "width": 1440,
+      "theme": "light",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/week/2026-08-31_to_2026-09-06/full",
+      "width": 1440,
+      "theme": "light",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/week/full?id=2026-08-31_to_2026-09-06",
+      "width": 1440,
+      "theme": "light",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/contributing",
+      "width": 1440,
+      "theme": "light",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/wrapped",
+      "width": 1440,
+      "theme": "light",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/",
+      "width": 1440,
+      "theme": "dark",
+      "pixels": 1,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/weeks",
+      "width": 1440,
+      "theme": "dark",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/week/2026-08-31_to_2026-09-06",
+      "width": 1440,
+      "theme": "dark",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/week/2026-08-31_to_2026-09-06/full",
+      "width": 1440,
+      "theme": "dark",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/week/full?id=2026-08-31_to_2026-09-06",
+      "width": 1440,
+      "theme": "dark",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/contributing",
+      "width": 1440,
+      "theme": "dark",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    },
+    {
+      "path": "/wrapped",
+      "width": 1440,
+      "theme": "dark",
+      "pixels": 0,
+      "text": true,
+      "geometry": true,
+      "errors": []
+    }
+  ],
+  "interactions": [
+    {
+      "name": "day-monday",
+      "width": 390,
+      "text": true,
+      "pixels": 0
+    },
+    {
+      "name": "filter-Veg",
+      "width": 390,
+      "text": true,
+      "pixels": 0
+    },
+    {
+      "name": "filter-Non-Veg",
+      "width": 390,
+      "text": true,
+      "pixels": 0
+    },
+    {
+      "name": "filter-All",
+      "width": 390,
+      "text": true,
+      "pixels": 0
+    },
+    {
+      "name": "filter-Jain",
+      "width": 390,
+      "text": true,
+      "pixels": 0
+    },
+    {
+      "name": "refreshed",
+      "width": 390,
+      "text": true,
+      "pixels": 0
+    },
+    {
+      "name": "full-navigation",
+      "width": 390,
+      "text": true,
+      "pixels": 0
+    },
+    {
+      "name": "compact",
+      "width": 390,
+      "text": true,
+      "pixels": 0
+    },
+    {
+      "name": "detailed",
+      "width": 390,
+      "text": true,
+      "pixels": 0
+    },
+    {
+      "name": "full-veg",
+      "width": 390,
+      "text": true,
+      "pixels": 0
+    },
+    {
+      "name": "daily-return",
+      "width": 390,
+      "text": true,
+      "pixels": 0
+    },
+    {
+      "name": "dark-toggle",
+      "width": 390,
+      "text": true,
+      "pixels": 0
+    },
+    {
+      "name": "day-monday",
+      "width": 1440,
+      "text": true,
+      "pixels": 0
+    },
+    {
+      "name": "filter-Veg",
+      "width": 1440,
+      "text": true,
+      "pixels": 0
+    },
+    {
+      "name": "filter-Non-Veg",
+      "width": 1440,
+      "text": true,
+      "pixels": 0
+    },
+    {
+      "name": "filter-All",
+      "width": 1440,
+      "text": true,
+      "pixels": 0
+    },
+    {
+      "name": "filter-Jain",
+      "width": 1440,
+      "text": true,
+      "pixels": 0
+    },
+    {
+      "name": "refreshed",
+      "width": 1440,
+      "text": true,
+      "pixels": 0
+    },
+    {
+      "name": "full-navigation",
+      "width": 1440,
+      "text": true,
+      "pixels": 0
+    },
+    {
+      "name": "full-veg",
+      "width": 1440,
+      "text": true,
+      "pixels": 0
+    },
+    {
+      "name": "daily-return",
+      "width": 1440,
+      "text": true,
+      "pixels": 0
+    },
+    {
+      "name": "dark-toggle",
+      "width": 1440,
+      "text": true,
+      "pixels": 0
+    }
+  ],
+  "sw-browser": {
+    "controlled": true,
+    "cachedImmutableAssets": 14,
+    "resources": [],
+    "offlineMenu": true,
+    "onlineRefresh": true
+  },
+  "menu-benchmark": {
+    "fixture": "48 normal + 48 Jain weeks, 40 ms per API response, no retries",
+    "contentParity": true,
+    "baseline": {
+      "elapsedMs": 4228,
+      "bytes": 304991
+    },
+    "optimized": {
+      "elapsedMs": 732,
+      "bytes": 136174
+    },
+    "speedup": "5.78x",
+    "byteReductionPercent": 55.4
+  },
+  "real-menu-bytes": {
+    "menus": 49,
+    "before": 1158774,
+    "after": 493572,
+    "gzipBefore": 87724,
+    "gzipAfter": 79326
+  }
+}

@@ -75,9 +75,10 @@ export async function getAllWeeks(): Promise<WeekId[]> {
 export async function getLatestWeekId(): Promise<WeekId> {
   const manifest = await readStaticManifest();
   if (manifest) {
-    const latest = [...manifest.normal.weeks].sort((a, b) =>
-      b.startDate.localeCompare(a.startDate),
-    )[0];
+    let latest: StaticWeekEntry | undefined;
+    for (const entry of manifest.normal.weeks) {
+      if (!latest || entry.startDate > latest.startDate) latest = entry;
+    }
     if (latest) return computeWeekIdFromEntry(latest);
   }
 
@@ -89,14 +90,7 @@ export async function getWeekMenu(id: WeekId): Promise<WeekMenu> {
   const start = id.split("_to_")[0] ?? id;
   const manifest = await readStaticManifest();
   const entry = manifest?.normal.weeks.find((week) => week.startDate === start);
-  if (entry) {
-    const filePath = path.join(process.cwd(), "public", entry.path.replace(/^\//, ""));
-    const raw = await fs.readFile(filePath, "utf-8");
-    const parsed: JsonValue = JSON.parse(raw);
-    const week = parseWeekMenu(parsed);
-    if (week === null) throw new Error(`Malformed static week menu: ${entry.path}`);
-    return week;
-  }
+  if (entry) return readStaticWeek(entry);
 
   return fetchMenuFromAPI({ weekStart: start });
 }
@@ -114,28 +108,54 @@ export async function getEffectiveWeekMenu(): Promise<WeekMenu | null> {
   if (!entry) return null;
 
   try {
-    return await getWeekMenu(`${entry.startDate}_to_${entry.endDate}`);
+    return await readStaticWeek(entry);
   } catch {
     return null;
   }
 }
 
 export async function getWeeksMeta(): Promise<WeekMeta[]> {
-  const ids = await getAllWeeks();
-  const metas: WeekMeta[] = [];
-  for (const id of ids) {
-    try {
-      const menu = await getWeekMenu(id);
-      metas.push({ id, year: id.slice(0, 4), foodCourt: menu.foodCourt, week: menu.week });
-    } catch {
-      // skip
-    }
+  const manifest = await readStaticManifest();
+  if (manifest) {
+    const metas = await Promise.all(
+      manifest.normal.weeks.map(async (entry): Promise<WeekMeta | null> => {
+        try {
+          const menu = await readStaticWeek(entry);
+          const id = computeWeekIdFromEntry(entry);
+          return { id, year: id.slice(0, 4), foodCourt: menu.foodCourt, week: menu.week };
+        } catch {
+          return null;
+        }
+      }),
+    );
+    return metas.filter((meta) => meta !== null);
   }
-  return metas;
+
+  const ids = await getAllWeeks();
+  const metas = await Promise.all(
+    ids.map(async (id): Promise<WeekMeta | null> => {
+      try {
+        const menu = await getWeekMenu(id);
+        return { id, year: id.slice(0, 4), foodCourt: menu.foodCourt, week: menu.week };
+      } catch {
+        return null;
+      }
+    }),
+  );
+  return metas.filter((meta) => meta !== null);
 }
 
 function computeWeekIdFromEntry(entry: StaticWeekEntry): WeekId {
   return `${entry.startDate}_to_${entry.endDate}`;
+}
+
+async function readStaticWeek(entry: StaticWeekEntry): Promise<WeekMenu> {
+  const filePath = path.join(process.cwd(), "public", entry.path.replace(/^\//, ""));
+  const raw = await fs.readFile(filePath, "utf-8");
+  const parsed: JsonValue = JSON.parse(raw);
+  const week = parseWeekMenu(parsed);
+  if (week === null) throw new Error(`Malformed static week menu: ${entry.path}`);
+  return week;
 }
 
 async function readStaticManifest(): Promise<StaticMenuManifest | null> {
